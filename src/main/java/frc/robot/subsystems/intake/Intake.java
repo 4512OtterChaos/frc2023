@@ -6,8 +6,8 @@ import edu.wpi.first.wpilibj2.command.SubsystemBase;
 
 public class Intake extends SubsystemBase{
     
-    Spark leftMotor = new Spark(5);
-    Spark rightMotor = new Spark(4);
+    Spark leftMotor = new Spark(6);
+    Spark rightMotor = new Spark(5);
 
     public Intake(){
         rightMotor.setSafetyEnabled(false);

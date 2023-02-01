@@ -6,6 +6,11 @@
           "open": true
         }
       },
+      "1": {
+        "header": {
+          "open": true
+        }
+      },
       "window": {
         "visible": true
       }
@@ -33,6 +38,13 @@
         "window": {
           "visible": true
         }
+      }
+    }
+  },
+  "NetworkTables": {
+    "transitory": {
+      "SmartDashboard": {
+        "open": true
       }
     }
   }

@@ -10,7 +10,9 @@ import edu.wpi.first.math.system.plant.DCMotor;
 import edu.wpi.first.math.system.plant.LinearSystemId;
 import edu.wpi.first.math.trajectory.TrapezoidProfile;
 import edu.wpi.first.math.util.Units;
+import edu.wpi.first.wpilibj.DoubleSolenoid;
 import edu.wpi.first.wpilibj.Encoder;
+import edu.wpi.first.wpilibj.PneumaticsModuleType;
 import edu.wpi.first.wpilibj.motorcontrol.VictorSP;
 import edu.wpi.first.wpilibj.simulation.EncoderSim;
 import edu.wpi.first.wpilibj.simulation.PWMSim;
@@ -20,6 +22,7 @@ import edu.wpi.first.wpilibj.smartdashboard.MechanismLigament2d;
 import edu.wpi.first.wpilibj.smartdashboard.MechanismRoot2d;
 import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
 import edu.wpi.first.wpilibj.util.Color8Bit;
+import edu.wpi.first.wpilibj2.command.Command;
 import edu.wpi.first.wpilibj2.command.CommandBase;
 import edu.wpi.first.wpilibj2.command.SubsystemBase;
 import static frc.robot.subsystems.arm.ArmConstants.*;
@@ -28,12 +31,20 @@ import static frc.robot.subsystems.arm.ArmConstants.*;
 public class Arm extends SubsystemBase {
 	VictorSP motorA = new VictorSP(0);
 	VictorSP motorB = new VictorSP(1);
-	
-	private Encoder encoder = new Encoder(6,7);
-	ProfiledPIDController pid = new ProfiledPIDController(6, 0, 0, new TrapezoidProfile.Constraints(0.5, 0.5));
-	public boolean isActive = false;
+	VictorSP motorC = new VictorSP(2);
+	VictorSP motorD = new VictorSP(3);
+	VictorSP motorE = new VictorSP(4);
+
+	private Encoder shoulderEncoder = new Encoder(6,7);
+	private Encoder wristEncoder = new Encoder(8,9);
 	
 
+	ProfiledPIDController shoulderPid = new ProfiledPIDController(6, 0, 0, new TrapezoidProfile.Constraints(0.5, 0.5));
+	ProfiledPIDController wristPid = new ProfiledPIDController(6, 0, 0, new TrapezoidProfile.Constraints(0.5, 0.5));
+
+	public boolean isActive = false;
+	
+	//Ligaments of arm simulation, rooted to different each and every ligament.
 	Mechanism2d mech = new Mechanism2d(2.5, 2.5, new Color8Bit(0, 100, 150));
 	MechanismRoot2d mechRoot = mech.getRoot("arm", 2, 0.5);
 	
@@ -47,12 +58,17 @@ public class Arm extends SubsystemBase {
 	MechanismLigament2d mechExtension = mechArm.append(new MechanismLigament2d("armExtension", Units.inchesToMeters(18), 0, 7, new Color8Bit(0,0,180)));
 	MechanismLigament2d mechWrist = mechExtension.append(new MechanismLigament2d("armWrist", Units.inchesToMeters(16), 0, 8, new Color8Bit(0,0,180)));
 
-	PWMSim motorSim = new PWMSim(motorA);
-	EncoderSim encoderSim = new EncoderSim(encoder);
+	PWMSim shoulderMotorSim = new PWMSim(motorA);
+	PWMSim wristMotorSim = new PWMSim(motorD);
+	EncoderSim shoulderEncoderSim = new EncoderSim(shoulderEncoder);
+	EncoderSim wristEncoderSim = new EncoderSim(wristEncoder);
+
+	DoubleSolenoid piston = new DoubleSolenoid(PneumaticsModuleType.CTREPCM, 0, 1);
+
 	SingleJointedArmSim armSim = new SingleJointedArmSim(
 		LinearSystemId.identifyPositionSystem(
-            kFF.kv, 
-            kFF.ka
+            kShoulderFF.kv, 
+            kShoulderFF.ka
         ),
 		DCMotor.getCIM(2), 
 		100, 
@@ -61,64 +77,117 @@ public class Arm extends SubsystemBase {
 		Units.degreesToRadians(30), 
 		Units.lbsToKilograms(12), 
 		true);
+	SingleJointedArmSim wristSim = new SingleJointedArmSim(
+			LinearSystemId.identifyPositionSystem(
+				kWristFF.kv, 
+				kWristFF.ka
+			),
+			DCMotor.getCIM(2), 
+			100, 
+			1,
+			Units.degreesToRadians(-45),
+			Units.degreesToRadians(30), 
+			Units.lbsToKilograms(7), 
+			true);
 	
 	
 	public Arm() {
 		SmartDashboard .putData("Mech2d", mech);
-		encoder.setDistancePerPulse(2*(Math.PI)/kEncoderPPR);
+		shoulderEncoder.setDistancePerPulse(2*(Math.PI)/kEncoderPPR);
+		wristEncoder.setDistancePerPulse(2*(Math.PI)/kEncoderPPR);
 	}
 	
 	@Override
 	public void periodic() {
-		mechArm.setAngle(90-Units.radiansToDegrees(encoder.getDistance()));
-		setpointArm.setAngle(90-Units.radiansToDegrees(pid.getGoal().position));
-		SmartDashboard.putNumber("Arm Angle: Radians", getPosRadians());
-		SmartDashboard.putNumber("Arm Angle: Degrees", Units.radiansToDegrees(getPosRadians()));
+		mechArm.setAngle(90-Units.radiansToDegrees(shoulderEncoder.getDistance()));
+		mechWrist.setAngle(Units.radiansToDegrees(wristEncoder.getDistance()));
+		setpointArm.setAngle(90-Units.radiansToDegrees(shoulderPid.getGoal().position));
+		setpointWrist.setAngle(Units.radiansToDegrees(wristPid.getGoal().position));
+		SmartDashboard.putNumber("Shoulder Angle: Radians", getShoulderPosRadians());
+		SmartDashboard.putNumber("Shoulder Angle: Degrees", Units.radiansToDegrees(getShoulderPosRadians()));
+		SmartDashboard.putNumber("Wrist Angle: Radians", getWristPosRadians());
+		SmartDashboard.putNumber("Wrist Angle: Degrees", Units.radiansToDegrees(getWristPosRadians()));
+		SmartDashboard.putNumber("Wrist Setpoint: Degrees", Units.radiansToDegrees(getWristPosRadians()));
 
+		double shoulderPidVolts = shoulderPid.calculate(getShoulderPosRadians());
+        var shoulderSetpoint = shoulderPid.getSetpoint();
+        double shoulderFFVolts = kShoulderFF.calculate(shoulderSetpoint.position, shoulderSetpoint.velocity);
+        setShoulderVoltage(shoulderPidVolts+shoulderFFVolts);
 
-		double pidVolts = pid.calculate(getPosRadians());
-        var setpoint = pid.getSetpoint();
-        double ffVolts = kFF.calculate(setpoint.position, setpoint.velocity);
-        setVoltage(pidVolts+ffVolts);
+		double wristPidVolts = wristPid.calculate(getShoulderPosRadians());
+        var wristSetpoint = wristPid.getSetpoint();
+        double wristFFVolts = kWristFF.calculate(wristSetpoint.position, wristSetpoint.velocity);
+        setWristVoltage(wristPidVolts+wristFFVolts);
 	}
 
 	public void setSpeed(double percent){
-        setVoltage(percent*12);
+        setShoulderVoltage(percent*12);
 	}
 
 	public CommandBase setSpeedC(double percent) {
         return runEnd(()->setSpeed(percent), ()->setSpeed(0));
     }
 
-	public void setVoltage(double volts){
+	public void setShoulderVoltage(double volts){
 		volts = MathUtil.clamp(volts, -9, 9);
         motorA.setVoltage(volts);
         motorB.setVoltage(volts);
 	}
 
-	public double getPosRadians(){
-        return encoder.getDistance();
+	public void setWristVoltage(double volts){
+		volts = MathUtil.clamp(volts, -9, 9);
+        motorD.setVoltage(volts);
+        motorE.setVoltage(volts);
+	}
+
+	public double getShoulderPosRadians(){
+        return shoulderEncoder.getDistance();
     }
-    public void setPosRadians(double posRadians) {
-        pid.setGoal(posRadians);
-    }
-    public CommandBase setPosRadiansC(double posRadians) {
-        return run(()->setPosRadians(posRadians)).until(()->pid.atGoal());
+
+	public double getWristPosRadians(){
+		return wristEncoder.getDistance();
+	}
+
+    public void setShoulderPosRadians(double posRadians) {
+        shoulderPid.setGoal(posRadians);
     }
     
+	public CommandBase setShoulderPosRadiansC(double posRadians) {
+        return run(()->setShoulderPosRadians(posRadians)).until(()->shoulderPid.atGoal());
+    }
+	
+	public void setWristPosRadians(double posRadians){
+		wristPid.setGoal(posRadians);
+	}
+	
+	public CommandBase setWristPosRadiansC(double posRadians){
+		return run(()->setWristPosRadians(posRadians)).until(()->wristPid.atGoal());
+	}
+
+
+
+
 
 	public void simulationPeriodic() {
 		// get "voltage" after static friction
-		double voltage = motorSim.getSpeed()*12;
+		double shoulderVoltage = shoulderMotorSim.getSpeed()*12;
+		double wristVoltage = wristMotorSim.getSpeed()*12;
+
 		// if(voltage >= 0) voltage = Math.max(0, voltage-kFF.ks);
 		// else voltage = Math.min(0, voltage+kFF.ks);
 		
 		// apply this voltage to the simulated physics model
-		armSim.setInput(voltage);
+		armSim.setInput(shoulderVoltage);
 		armSim.update(0.02);
+
+		wristSim.setInput(wristVoltage);
+		wristSim.update(0.02);
 		// update our sensors with the results
-		encoderSim.setDistance(armSim.getAngleRads());
-		encoderSim.setRate(armSim.getVelocityRadPerSec());
+		shoulderEncoderSim.setDistance(armSim.getAngleRads());
+		shoulderEncoderSim.setRate(armSim.getVelocityRadPerSec());
+		
+		wristEncoderSim.setDistance(wristSim.getAngleRads());
+		wristEncoderSim.setRate(wristSim.getVelocityRadPerSec());
 		
 	}
 }

@@ -117,8 +117,8 @@ public class DuggElevator extends SubsystemBase {
     DIOSim bottomSwitchSim = new DIOSim(bottomSwitch);
     ElevatorSim elevatorSim = new ElevatorSim(
         LinearSystemId.identifyPositionSystem(
-            kFF.kv, 
-            kFF.ka
+            kShoulderFF.kv, 
+            kShoulderFF.ka
         ),
         DCMotor.getCIM(2), 
         10, 

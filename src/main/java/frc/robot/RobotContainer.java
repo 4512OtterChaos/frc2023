@@ -38,17 +38,24 @@ public class RobotContainer {
                 drive
             )
         );
-        controller.rightBumper()
-            .whileTrue(run(()->arm.setSpeed(0.5), arm));
-        controller.leftBumper()
-            .whileTrue(run(()->arm.setSpeed(-0.5), arm));
+        // controller.rightBumper()
+        //     .whileTrue(run(()->arm.setSpeed(0.5), arm));
+        // controller.leftBumper()
+        //     .whileTrue(run(()->arm.setSpeed(-0.5), arm));
 
         controller.a()
-            .whileTrue(arm.setPosRadiansC(Units.degreesToRadians(-25)));
+            .whileTrue(arm.setShoulderPosRadiansC(Units.degreesToRadians(-25)));
         controller.x()
-            .whileTrue(arm.setPosRadiansC(Units.degreesToRadians(0)));
+            .whileTrue(arm.setShoulderPosRadiansC(Units.degreesToRadians(0)));
         controller.y()
-            .whileTrue(arm.setPosRadiansC(Units.degreesToRadians(25)));
+            .whileTrue(arm.setShoulderPosRadiansC(Units.degreesToRadians(25)));
+        controller.povUp()
+            .whileTrue(arm.setWristPosRadiansC(Units.degreesToRadians(-25)));
+        controller.povLeft()
+            .whileTrue(arm.setWristPosRadiansC(Units.degreesToRadians(0)));
+        controller.povDown()
+            .whileTrue(arm.setWristPosRadiansC(Units.degreesToRadians(25)));
+
 
     }
 
