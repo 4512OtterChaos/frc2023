@@ -20,8 +20,8 @@ public final class ArmConstants{
     );
     public static  ArmFeedforward kWristFF= new ArmFeedforward(
         0, // Voltage to break static friction
-        0.5, // Voltage to counteract gravity
-        2, // Volts per meter per second
-        0.05 // Volts per meter per second squared
+        2.9, // Voltage to counteract gravity
+        5, // Volts per meter per second
+        0.1 // Volts per meter per second squared
     );
 }

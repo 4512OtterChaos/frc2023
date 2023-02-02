@@ -45,16 +45,19 @@ public class RobotContainer {
 
         controller.a()
             .whileTrue(arm.setShoulderPosRadiansC(Units.degreesToRadians(-25)));
+        controller.b()
+            .onTrue(arm.toggleExstensionExtendedC());
         controller.x()
             .whileTrue(arm.setShoulderPosRadiansC(Units.degreesToRadians(0)));
         controller.y()
             .whileTrue(arm.setShoulderPosRadiansC(Units.degreesToRadians(25)));
+
         controller.povUp()
-            .whileTrue(arm.setWristPosRadiansC(Units.degreesToRadians(-25)));
+            .whileTrue(arm.setWristPosRadiansC(Units.degreesToRadians(25)));
         controller.povLeft()
             .whileTrue(arm.setWristPosRadiansC(Units.degreesToRadians(0)));
         controller.povDown()
-            .whileTrue(arm.setWristPosRadiansC(Units.degreesToRadians(25)));
+            .whileTrue(arm.setWristPosRadiansC(Units.degreesToRadians(-25)));
 
 
     }
