@@ -43,7 +43,7 @@ public class Arm extends SubsystemBase {
 
 	// Ligaments of arm simulation, rooted to different each and every ligament.
 	Mechanism2d mech = new Mechanism2d(2.5, 2.5, new Color8Bit(0, 100, 150));
-	MechanismRoot2d mechRoot = mech.getRoot("arm", 2, 0.5);
+	MechanismRoot2d mechRoot = mech.getRoot("arm", 1.25, 0.1);
 
 	MechanismLigament2d setpointArmBase = mechRoot.append(
 			new MechanismLigament2d("setpointArmBase", Units.inchesToMeters(40), 90, 6, new Color8Bit(150, 0, 0)));
@@ -70,14 +70,14 @@ public class Arm extends SubsystemBase {
 
 	DoubleSolenoid exstensionPiston = new DoubleSolenoid(PneumaticsModuleType.CTREPCM, 0, 1);
 
-	SingleJointedArmSim armSim = new SingleJointedArmSim(
+	SingleJointedArmSim shoulderSim = new SingleJointedArmSim(
 			LinearSystemId.identifyPositionSystem(
 					kShoulderFF.kv,
 					kShoulderFF.ka),
 			DCMotor.getCIM(2),
 			100,
 			1,
-			Units.degreesToRadians(-45),
+			Units.degreesToRadians(-90),
 			Units.degreesToRadians(30),
 			Units.lbsToKilograms(12),
 			true);
@@ -126,21 +126,60 @@ public class Arm extends SubsystemBase {
 		SmartDashboard.putNumber("Wrist Angle: Degrees", Units.radiansToDegrees(getWristPosRadians()));
 		SmartDashboard.putNumber("Wrist Setpoint: Degrees", Units.radiansToDegrees(getWristPosRadians()));
 
+		
+
 		double shoulderPidVolts = shoulderPid.calculate(getShoulderPosRadians());
 		var shoulderSetpoint = shoulderPid.getSetpoint();
 		double shoulderFFVolts = kShoulderFF.calculate(shoulderSetpoint.position, shoulderSetpoint.velocity);
-		setShoulderVoltage(shoulderPidVolts + shoulderFFVolts);
+		double shoulderVolts = shoulderPidVolts + shoulderFFVolts;
 
 		double wristPidVolts = wristPid.calculate(getWristPosRadians());
 		var wristSetpoint = wristPid.getSetpoint();
 		double wristFFVolts = kWristFF.calculate(wristSetpoint.position, wristSetpoint.velocity);
-		setWristVoltage(wristPidVolts + wristFFVolts);
+		double wristVolts = wristPidVolts + wristFFVolts;
+
+		double testAngleDeg = -30;
+		if (Units.radiansToDegrees(getShoulderPosRadians()) <= testAngleDeg){
+			shoulderVolts = MathUtil.clamp(shoulderVolts, kShoulderFF.kg*Math.cos(Math.toRadians(testAngleDeg)), 12);
+			wristVolts = MathUtil.clamp(wristVolts, kWristFF.kg*Math.cos(Math.toRadians(testAngleDeg)), 12);
+		}
+
+		setWristVoltage(wristVolts);
+		setShoulderVoltage(shoulderVolts);
 	}
+
+
+	
+	// private boolean safety(){
+	// 	double shoulderAngle = 90 - Math.abs(Units.radiansToDegrees(getWristPosRadians()));
+	// 	double wristAngle = shoulderAngle + Math.abs(Units.radiansToDegrees(getWristPosRadians()));
+
+	// 	double armBaseHeight = 40;
+	// 	double H = armBaseHeight*Math.cos(shoulderAngle);
+
+	// 	double h = 48;
+	// 	double M = (h/H)*armBaseHeight;
+		
+
+
+	// 	double K = 16;
+	// 	double m = K/Math.cos(wristAngle);
+
+	// 	if (M+m>=35){
+	// 		return true;
+	// 	}
+	// 	else{
+	// 		return false;
+	// 	}
+		
+	// }
 
 	public void setSpeed(double percent) {
 		setShoulderVoltage(percent * 12);
 	}
-
+	// public void armSafety(){
+	// 	double 
+	// }
 	public CommandBase setSpeedC(double percent) {
 		return runEnd(() -> setSpeed(percent), () -> setSpeed(0));
 	}
@@ -189,23 +228,30 @@ public class Arm extends SubsystemBase {
 		return runOnce(()-> toggleExstensionExtended());
 	}
 	
-	public void exstensionExtended(Value extensionState){
-		exstensionPiston.set(extensionState);
+	public void exstensionExtended(Value exstensionState){
+		exstensionPiston.set(exstensionState);
 	}
 
-	public CommandBase exstensionExtendedC(Value extensionState){
-		return run(()-> exstensionExtended(extensionState));
+	public CommandBase exstensionExtendedC(Value exstensionState){
+		return run(()-> exstensionExtended(exstensionState));
 	}
 	
+	public Value getExtensionState(){
+		return exstensionPiston.get();
+	}
+
 	public void setArmState(double shoulderPosRadians, double wristPosRadians, Value extensionState){
 		setShoulderPosRadians(shoulderPosRadians);
 		setWristPosRadians(wristPosRadians);
 		exstensionExtended(extensionState);
 	}
 
+
 	public CommandBase setArmStateC(double shoulderPosRadians, double wristPosRadians, Value extensionState){
 		return run(()->setArmState(shoulderPosRadians, wristPosRadians, extensionState));
 	}
+
+	
 
 	public void simulationPeriodic() {
 		// get "voltage" after static friction
@@ -216,14 +262,14 @@ public class Arm extends SubsystemBase {
 		// else voltage = Math.min(0, voltage+kFF.ks);
 
 		// apply this voltage to the simulated physics model
-		armSim.setInput(shoulderVoltage);
-		armSim.update(0.02);
+		shoulderSim.setInput(shoulderVoltage);
+		shoulderSim.update(0.02);
 
 		wristSim.setInput(wristVoltage);
 		wristSim.update(0.02);
 		// update our sensors with the results
-		shoulderEncoderSim.setDistance(armSim.getAngleRads());
-		shoulderEncoderSim.setRate(armSim.getVelocityRadPerSec());
+		shoulderEncoderSim.setDistance(shoulderSim.getAngleRads());
+		shoulderEncoderSim.setRate(shoulderSim.getVelocityRadPerSec());
 
 		wristEncoderSim.setDistance(wristSim.getAngleRads());
 		wristEncoderSim.setRate(wristSim.getVelocityRadPerSec());
