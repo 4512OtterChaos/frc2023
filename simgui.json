@@ -24,6 +24,7 @@
   "NTProvider": {
     "types": {
       "/FMSInfo": "FMSInfo",
+      "/SmartDashboard/Arm Subsystem": "Subsystem",
       "/SmartDashboard/Auto Options": "String Chooser",
       "/SmartDashboard/Auto choices": "String Chooser",
       "/SmartDashboard/Mech2d": "Mechanism2d",
@@ -47,6 +48,9 @@
       "open": false
     },
     "transitory": {
+      "LiveWindow": {
+        "open": true
+      },
       "SmartDashboard": {
         "open": true
       }
@@ -58,7 +62,6 @@
     },
     "Connections": {
       "open": true
-    },
-    "visible": true
+    }
   }
 }

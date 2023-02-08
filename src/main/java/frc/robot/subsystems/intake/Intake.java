@@ -15,12 +15,20 @@ public class Intake extends SubsystemBase{
         rightMotor.setInverted(true);
     }
  
+    /**
+     * Sets the speed of the intake.
+     * @param speed Speed to set the intake to.
+     */
     public void setSpeed(double speed){
         leftMotor.set(speed);
         rightMotor.set(speed);
     }
 
-    // Command factories
+    /**
+     * Sets the speed of the intake.
+     * @param speed Speed to set the intake to.
+     * @return The command to set the intake speed.
+     */
     public CommandBase setSpeedC(double speed) {
         return runEnd(()->setSpeed(speed), ()->setSpeed(0));
     }

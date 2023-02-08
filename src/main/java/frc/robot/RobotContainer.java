@@ -68,7 +68,7 @@ public class RobotContainer {
         controller.povDown()
             .whileTrue(arm.setWristPosRadiansC(Units.degreesToRadians(-25)));
         controller.povRight()
-            .whileTrue(arm.setArmStateC(-60, -45, Value.kForward));
+            .whileTrue(arm.setArmStateC(Math.toRadians(-60), Math.toRadians(-45), Value.kForward));
 
 
     }

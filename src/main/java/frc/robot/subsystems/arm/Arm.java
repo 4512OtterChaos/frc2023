@@ -102,6 +102,7 @@ public class Arm extends SubsystemBase {
 		motorD.setInverted(false);
 		motorE.setInverted(false);
 		exstensionPiston.set(Value.kReverse);
+		SmartDashboard.putData("Arm Subsystem", this);
 	}
 
 	@Override
@@ -120,11 +121,10 @@ public class Arm extends SubsystemBase {
 		setpointArm.setAngle(90 - Units.radiansToDegrees(shoulderPid.getGoal().position));
 		setpointWrist.setAngle(-Units.radiansToDegrees(wristPid.getGoal().position));
 
-		SmartDashboard.putNumber("Shoulder Angle: Radians", getShoulderPosRadians());
 		SmartDashboard.putNumber("Shoulder Angle: Degrees", Units.radiansToDegrees(getShoulderPosRadians()));
-		SmartDashboard.putNumber("Wrist Angle: Radians", getWristPosRadians());
+		SmartDashboard.putNumber("Shoulder Goal: Degrees", Units.radiansToDegrees(shoulderPid.getGoal().position));
 		SmartDashboard.putNumber("Wrist Angle: Degrees", Units.radiansToDegrees(getWristPosRadians()));
-		SmartDashboard.putNumber("Wrist Setpoint: Degrees", Units.radiansToDegrees(getWristPosRadians()));
+		SmartDashboard.putNumber("Wrist Goal: Degrees", Units.radiansToDegrees(wristPid.getGoal().position));
 
 		
 
@@ -138,7 +138,7 @@ public class Arm extends SubsystemBase {
 		double wristFFVolts = kWristFF.calculate(wristSetpoint.position, wristSetpoint.velocity);
 		double wristVolts = wristPidVolts + wristFFVolts;
 
-		double testAngleDeg = -30;
+		double testAngleDeg = -40;
 		if (Units.radiansToDegrees(getShoulderPosRadians()) <= testAngleDeg){
 			shoulderVolts = MathUtil.clamp(shoulderVolts, kShoulderFF.kg*Math.cos(Math.toRadians(testAngleDeg)), 12);
 			wristVolts = MathUtil.clamp(wristVolts, kWristFF.kg*Math.cos(Math.toRadians(testAngleDeg)), 12);
@@ -174,79 +174,151 @@ public class Arm extends SubsystemBase {
 		
 	// }
 
-	public void setSpeed(double percent) {
-		setShoulderVoltage(percent * 12);
-	}
+	// public void setSpeed(double percent) {
+	// 	setShoulderVoltage(percent * 12);
+	// }
 	// public void armSafety(){
 	// 	double 
 	// }
-	public CommandBase setSpeedC(double percent) {
-		return runEnd(() -> setSpeed(percent), () -> setSpeed(0));
-	}
+	// public CommandBase setSpeedC(double percent) {
+	// 	return runEnd(() -> setSpeed(percent), () -> setSpeed(0));
+	// }
 
+	/**
+	 * Sets the voltage for shoulder motors (angle at the top of the arm).
+	 * @param volts The voltage to set the shoulder motors to (between -12 and 12).
+	 */
 	public void setShoulderVoltage(double volts) {
-		volts = MathUtil.clamp(volts, -9, 9);
 		motorA.setVoltage(volts);
 		motorB.setVoltage(volts);
 	}
 
+	/**
+	 * Sets the voltage for the wrist motors (angle at the bottom of the arm connected to the intake).
+	 * @param volts The voltage to set the wrist motors to (between -12 and 12).
+	 */
 	public void setWristVoltage(double volts) {
-		volts = MathUtil.clamp(volts, -9, 9);
 		motorD.setVoltage(volts);
 		motorE.setVoltage(volts);
 	}
 
+	/**
+	 * 
+	 * @return The shoulder position in radians.
+	 */
 	public double getShoulderPosRadians() {
 		return shoulderEncoder.getDistance();
 	}
 
+
+	/**
+	 * 
+	 * @return The wrist position in radians.
+	 */
 	public double getWristPosRadians() {
 		return wristEncoder.getDistance();
 	}
 
+	/**
+	 * Sets the position of the shoulder while clamping the angle to stay within a safe range.
+	 * @param posRadians The radian value to set the shoulder angle to (between -40 and 30).
+	 */
 	public void setShoulderPosRadians(double posRadians) {
-		shoulderPid.setGoal(posRadians);
+		double clampedPosRadians = MathUtil.clamp(posRadians, Units.degreesToRadians(-40), Units.degreesToRadians(30));
+		setWristPosRadians(Units.radiansToDegrees(wristPid.getGoal().position));
+		shoulderPid.setGoal(clampedPosRadians);
 	}
 
+	/**
+	 * Sets the position of the shoulder in a command.
+	 * @param posRadians The radian value to set the shoulder angle to (between -40 and 30).
+	 * @return The command to set the position of the shoulder.
+	 */
 	public CommandBase setShoulderPosRadiansC(double posRadians) {
 		return run(() -> setShoulderPosRadians(posRadians)).until(() -> shoulderPid.atGoal());
 	}
 
+	/**
+	 * Sets the position of the wrist while clamping the angle to stay within a safe range that changes depending on the shoulder angle.
+	 * @param posRadians The radian value to set the wrist angle to (between -45 and 45).
+	 */
 	public void setWristPosRadians(double posRadians) {
-		wristPid.setGoal(posRadians);
+		double lowerClamp=-45;
+		if (Units.radiansToDegrees(shoulderPid.getGoal().position)<-30){
+			lowerClamp=-Units.radiansToDegrees(shoulderPid.getGoal().position);
+		}
+		double clampedPosRadians = MathUtil.clamp(posRadians, Units.degreesToRadians(lowerClamp), Units.degreesToRadians(45));
+		wristPid.setGoal(clampedPosRadians);
 	}
 
+	/**
+	 * Sets the position of the wrist in a command.
+	 * @param posRadians The radian value to set the wrist angle to (between -45 and 45).
+	 * @return The command to set the position of the wrist.
+	 */
 	public CommandBase setWristPosRadiansC(double posRadians) {
 		return run(() -> setWristPosRadians(posRadians)).until(() -> wristPid.atGoal());
 	}
 
+	/**
+	 * Toggles the extension piston between forward (out) and reverse (in).
+	 */
 	public void toggleExstensionExtended(){
 		exstensionPiston.toggle();
 	}
 
+	/**
+	 * Toggles the extension piston between forward (out) and reverse (in) in a command.
+	 * @return The command to toggle the extension piston.
+	 */
 	public CommandBase toggleExstensionExtendedC(){
 		return runOnce(()-> toggleExstensionExtended());
 	}
 	
+	/**
+	 * Sets the state of the exstension pistion to the desired state.
+	 * @param exstensionState The value to set the exstension pistion to (forward, off or reverse).
+	 */
 	public void exstensionExtended(Value exstensionState){
 		exstensionPiston.set(exstensionState);
 	}
 
+	/**
+	 * Sets the state of the exstension pistion to the desired state in a command.
+	 * @param exstensionState The value to set the exstension pistion to (forward, off or reverse).
+	 * @return The command to set the exstension pistion.
+	 */
 	public CommandBase exstensionExtendedC(Value exstensionState){
 		return run(()-> exstensionExtended(exstensionState));
 	}
 	
+	/**
+	 * 
+	 * @return The current state of the exstension piston.
+	 */
 	public Value getExtensionState(){
 		return exstensionPiston.get();
 	}
 
+	/**
+	 * Sets the state of the entire arm.
+	 * @param shoulderPosRadians The radian value to set the shoulder angle to (between -40 and 30).
+	 * @param wristPosRadians The radian value to set the wrist angle to (between -45 and 45).
+	 * @param extensionState The value to set the exstension pistion to (forward, off or reverse).
+	 */
 	public void setArmState(double shoulderPosRadians, double wristPosRadians, Value extensionState){
 		setShoulderPosRadians(shoulderPosRadians);
 		setWristPosRadians(wristPosRadians);
 		exstensionExtended(extensionState);
 	}
 
-
+	/**
+	 * Sets the state of the entire arm in a command.
+	 * @param shoulderPosRadians The radian value to set the shoulder angle to (between -40 and 30).
+	 * @param wristPosRadians The radian value to set the wrist angle to (between -45 and 45).
+	 * @param extensionState The value to set the exstension pistion to (forward, off or reverse).
+	 * @return The command to set the state of the arm.
+	 */
 	public CommandBase setArmStateC(double shoulderPosRadians, double wristPosRadians, Value extensionState){
 		return run(()->setArmState(shoulderPosRadians, wristPosRadians, extensionState));
 	}
@@ -257,6 +329,7 @@ public class Arm extends SubsystemBase {
 		// get "voltage" after static friction
 		double shoulderVoltage = shoulderMotorSim.getSpeed() * 12;
 		double wristVoltage = wristMotorSim.getSpeed() * 12;
+		
 
 		// if(voltage >= 0) voltage = Math.max(0, voltage-kFF.ks);
 		// else voltage = Math.min(0, voltage+kFF.ks);
