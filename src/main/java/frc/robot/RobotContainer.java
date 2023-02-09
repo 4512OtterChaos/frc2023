@@ -9,6 +9,8 @@ import frc.robot.util.OCXboxController;
 
 import static edu.wpi.first.wpilibj2.command.Commands.*;
 
+import edu.wpi.first.math.geometry.Pose2d;
+import edu.wpi.first.math.geometry.Rotation2d;
 import edu.wpi.first.math.util.Units;
 import edu.wpi.first.wpilibj.DoubleSolenoid.Value;
 import edu.wpi.first.wpilibj.smartdashboard.Field2d;
@@ -36,6 +38,22 @@ public class RobotContainer {
     }
 
     private void configureDriverBinds(OCXboxController controller) {
+
+        // toggle between field-relative and robot-relative control
+        controller.back().onTrue(runOnce(()->{
+            drive.setIsFieldRelative(!drive.getIsFieldRelative());
+        }));
+
+        // reset the robot heading to 0
+        controller.start().onTrue(runOnce(()->{
+            drive.resetOdometry(
+                new Pose2d(
+                    drive.getPose().getTranslation(),
+                    new Rotation2d()
+                )
+            );
+        }));
+
         drive.setDefaultCommand(
             run(()->
                 drive.drive(
@@ -77,4 +95,5 @@ public class RobotContainer {
         field.setRobotPose(drive.getPose());
         LogUtil.logPose("drivePose2d", drive.getPose());
     }
+    
 }
