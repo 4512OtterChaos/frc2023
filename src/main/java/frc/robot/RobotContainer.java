@@ -15,6 +15,7 @@ import edu.wpi.first.math.util.Units;
 import edu.wpi.first.wpilibj.DoubleSolenoid.Value;
 import edu.wpi.first.wpilibj.smartdashboard.Field2d;
 import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
+import edu.wpi.first.wpilibj2.command.CommandBase;
 
 public class RobotContainer {
     private final Arm arm = new Arm();
@@ -86,7 +87,7 @@ public class RobotContainer {
         controller.povDown()
             .whileTrue(arm.setWristPosRadiansC(Units.degreesToRadians(-25)));
         controller.povRight()
-            .whileTrue(arm.setArmStateC(Math.toRadians(-60), Math.toRadians(-45), Value.kForward));
+            .whileTrue(arm.setArmStateC(Math.toRadians(-60), Math.toRadians(-45), arm.getExtensionState()));
 
 
     }
@@ -94,6 +95,9 @@ public class RobotContainer {
     public void periodic() {
         field.setRobotPose(drive.getPose());
         LogUtil.logPose("drivePose2d", drive.getPose());
+    }
+    public CommandBase getAutoCommand(){
+        return autoOptions.getAutoCommand();
     }
     
 }

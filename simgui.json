@@ -31,6 +31,11 @@
       "/SmartDashboard/field": "Field2d"
     },
     "windows": {
+      "/SmartDashboard/Auto Options": {
+        "window": {
+          "visible": true
+        }
+      },
       "/SmartDashboard/Mech2d": {
         "window": {
           "visible": true

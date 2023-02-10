@@ -48,7 +48,7 @@ public class Arm extends SubsystemBase {
 	MechanismLigament2d setpointArmBase = mechRoot.append(
 			new MechanismLigament2d("setpointArmBase", Units.inchesToMeters(40), 90, 6, new Color8Bit(150, 0, 0)));
 	MechanismLigament2d setpointArm = setpointArmBase
-			.append(new MechanismLigament2d("setpointArm", Units.inchesToMeters(30), 90, 6, new Color8Bit(150, 0, 0)));
+			.append(new MechanismLigament2d("setpointArm", Units.inchesToMeters(30), -90, 6, new Color8Bit(150, 0, 0)));
 	MechanismLigament2d setpointExtension = setpointArm.append(
 			new MechanismLigament2d("setpointExtension", Units.inchesToMeters(18), 0, 4, new Color8Bit(180, 0, 0)));
 	MechanismLigament2d setpointWrist = setpointExtension
@@ -57,7 +57,7 @@ public class Arm extends SubsystemBase {
 	MechanismLigament2d mechArmBase = mechRoot
 			.append(new MechanismLigament2d("base", Units.inchesToMeters(40), 90, 10, new Color8Bit(0, 0, 150)));
 	MechanismLigament2d mechArm = mechArmBase
-			.append(new MechanismLigament2d("arm", Units.inchesToMeters(30), 90, 10, new Color8Bit(0, 0, 150)));
+			.append(new MechanismLigament2d("arm", Units.inchesToMeters(30), -90, 10, new Color8Bit(0, 0, 150)));
 	MechanismLigament2d mechExtension = mechArm
 			.append(new MechanismLigament2d("armExtension", Units.inchesToMeters(18), 0, 7, new Color8Bit(0, 0, 180)));
 	MechanismLigament2d mechWrist = mechExtension
@@ -107,8 +107,8 @@ public class Arm extends SubsystemBase {
 
 	@Override
 	public void periodic() {
-		mechArm.setAngle(90 - Units.radiansToDegrees(shoulderEncoder.getDistance()));
-		mechWrist.setAngle(-Units.radiansToDegrees(wristEncoder.getDistance()));
+		mechArm.setAngle(-90 + Units.radiansToDegrees(shoulderEncoder.getDistance()));
+		mechWrist.setAngle(Units.radiansToDegrees(wristEncoder.getDistance()));
 		if (exstensionPiston.get()==Value.kForward){
 			mechExtension.setLength(Units.inchesToMeters(18));
 			setpointExtension.setLength(Units.inchesToMeters(18));
@@ -118,8 +118,8 @@ public class Arm extends SubsystemBase {
 			setpointExtension.setLength(Units.inchesToMeters(0));
 		}
 		
-		setpointArm.setAngle(90 - Units.radiansToDegrees(shoulderPid.getGoal().position));
-		setpointWrist.setAngle(-Units.radiansToDegrees(wristPid.getGoal().position));
+		setpointArm.setAngle(-90 + Units.radiansToDegrees(shoulderPid.getGoal().position));
+		setpointWrist.setAngle(Units.radiansToDegrees(wristPid.getGoal().position));
 
 		SmartDashboard.putNumber("Shoulder Angle: Degrees", Units.radiansToDegrees(getShoulderPosRadians()));
 		SmartDashboard.putNumber("Shoulder Goal: Degrees", Units.radiansToDegrees(shoulderPid.getGoal().position));
@@ -138,51 +138,21 @@ public class Arm extends SubsystemBase {
 		double wristFFVolts = kWristFF.calculate(wristSetpoint.position, wristSetpoint.velocity);
 		double wristVolts = wristPidVolts + wristFFVolts;
 
-		double testAngleDeg = -40;
-		if (Units.radiansToDegrees(getShoulderPosRadians()) <= testAngleDeg){
-			shoulderVolts = MathUtil.clamp(shoulderVolts, kShoulderFF.kg*Math.cos(Math.toRadians(testAngleDeg)), 12);
-			wristVolts = MathUtil.clamp(wristVolts, kWristFF.kg*Math.cos(Math.toRadians(testAngleDeg)), 12);
-		}
-
-		setWristVoltage(wristVolts);
-		setShoulderVoltage(shoulderVolts);
+		shoulderSafety();
 	}
 
 
 	
-	// private boolean safety(){
-	// 	double shoulderAngle = 90 - Math.abs(Units.radiansToDegrees(getWristPosRadians()));
-	// 	double wristAngle = shoulderAngle + Math.abs(Units.radiansToDegrees(getWristPosRadians()));
+	private void shoulderSafety(double targetShoulderPosRadians, boolean extensionState, double wristPosRadians){
+		double minimumPosRadians = -87;
+		if (extensionState){
+			minimumPosRadians = -40;
+		}
+		if (wristPosRadians<=){
 
-	// 	double armBaseHeight = 40;
-	// 	double H = armBaseHeight*Math.cos(shoulderAngle);
-
-	// 	double h = 48;
-	// 	double M = (h/H)*armBaseHeight;
-		
-
-
-	// 	double K = 16;
-	// 	double m = K/Math.cos(wristAngle);
-
-	// 	if (M+m>=35){
-	// 		return true;
-	// 	}
-	// 	else{
-	// 		return false;
-	// 	}
-		
-	// }
-
-	// public void setSpeed(double percent) {
-	// 	setShoulderVoltage(percent * 12);
-	// }
-	// public void armSafety(){
-	// 	double 
-	// }
-	// public CommandBase setSpeedC(double percent) {
-	// 	return runEnd(() -> setSpeed(percent), () -> setSpeed(0));
-	// }
+		}
+		setShoulderVoltage(MathUtil.clamp(shoulderVolts, low, 12));
+	}
 
 	/**
 	 * Sets the voltage for shoulder motors (angle at the top of the arm).
@@ -224,7 +194,14 @@ public class Arm extends SubsystemBase {
 	 * @param posRadians The radian value to set the shoulder angle to (between -40 and 30).
 	 */
 	public void setShoulderPosRadians(double posRadians) {
-		double clampedPosRadians = MathUtil.clamp(posRadians, Units.degreesToRadians(-40), Units.degreesToRadians(30));
+		double lowerClamp=-40;
+		if (getExtensionState()==true){
+			lowerClamp=-40;
+		}
+		else{
+			lowerClamp=-87;
+		}
+		double clampedPosRadians = MathUtil.clamp(posRadians, Units.degreesToRadians(lowerClamp), Units.degreesToRadians(30));
 		setWristPosRadians(Units.radiansToDegrees(wristPid.getGoal().position));
 		shoulderPid.setGoal(clampedPosRadians);
 	}
@@ -294,10 +271,15 @@ public class Arm extends SubsystemBase {
 	
 	/**
 	 * 
-	 * @return The current state of the exstension piston.
+	 * @return Whether the extension is extended.
 	 */
-	public Value getExtensionState(){
-		return exstensionPiston.get();
+	public boolean getExtensionState(){
+		if (exstensionPiston.get()==Value.kForward){
+			return true;
+		}
+		else{
+			return false;
+		}
 	}
 
 	/**
