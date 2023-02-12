@@ -125,6 +125,7 @@ public class Arm extends SubsystemBase {
 		SmartDashboard.putNumber("Shoulder Goal: Degrees", Units.radiansToDegrees(shoulderPid.getGoal().position));
 		SmartDashboard.putNumber("Wrist Angle: Degrees", Units.radiansToDegrees(getWristPosRadians()));
 		SmartDashboard.putNumber("Wrist Goal: Degrees", Units.radiansToDegrees(wristPid.getGoal().position));
+		SmartDashboard.putBoolean("Extension State", getExtensionState());
 
 		
 
@@ -138,20 +139,42 @@ public class Arm extends SubsystemBase {
 		double wristFFVolts = kWristFF.calculate(wristSetpoint.position, wristSetpoint.velocity);
 		double wristVolts = wristPidVolts + wristFFVolts;
 
-		shoulderSafety();
+		shoulderSafety(shoulderPid.getGoal().position, getExtensionState(), shoulderVolts);
+		wristSafety(wristPid.getGoal().position, getShoulderPosRadians(), getExtensionState(), wristVolts);
 	}
 
 
 	
-	private void shoulderSafety(double targetShoulderPosRadians, boolean extensionState, double wristPosRadians){
-		double minimumPosRadians = -87;
-		if (extensionState){
-			minimumPosRadians = -40;
+	private void shoulderSafety(double targetShoulderPosRadians, boolean extensionState, double shoulderVolts){
+		double minimumPosRadians = Units.degreesToRadians(-87);
+		double lowerClamp = -12;
+		if (extensionState == true){
+			minimumPosRadians = Units.degreesToRadians(-40);
 		}
-		if (wristPosRadians<=){
+		if (minimumPosRadians > getShoulderPosRadians()){
+			lowerClamp = 0;
+		}
+		setShoulderVoltage(MathUtil.clamp(shoulderVolts, lowerClamp, 12));
+	}
 
+	private void wristSafety(double targetWristPosRadians, double shoulderPosRadians, boolean extensionState, double wristVolts){
+		double minimumPosRadians = Units.degreesToRadians(-45);
+		double maximumPosRadians = Units.degreesToRadians(45);
+		double lowerClamp = -12;
+		double upperClamp = 12;
+		if (extensionState == true && Units.radiansToDegrees(shoulderPid.getGoal().position)<-30){
+			minimumPosRadians = -shoulderPosRadians;
 		}
-		setShoulderVoltage(MathUtil.clamp(shoulderVolts, low, 12));
+		else if (extensionState == false && Units.radiansToDegrees(shoulderPid.getGoal().position)<-57){
+			minimumPosRadians = -shoulderPosRadians;
+		}
+		if (minimumPosRadians > getWristPosRadians()){
+			lowerClamp = 0;
+		}
+		if (maximumPosRadians < getShoulderPosRadians()){
+			upperClamp = 0;
+		}
+		setWristVoltage(MathUtil.clamp(wristVolts, lowerClamp, upperClamp));
 	}
 
 	/**
@@ -191,7 +214,7 @@ public class Arm extends SubsystemBase {
 
 	/**
 	 * Sets the position of the shoulder while clamping the angle to stay within a safe range.
-	 * @param posRadians The radian value to set the shoulder angle to (between -40 and 30).
+	 * @param posRadians The radian value to set the shoulder angle to (between -87 and 30).
 	 */
 	public void setShoulderPosRadians(double posRadians) {
 		double lowerClamp=-40;
@@ -241,7 +264,11 @@ public class Arm extends SubsystemBase {
 	 * Toggles the extension piston between forward (out) and reverse (in).
 	 */
 	public void toggleExstensionExtended(){
-		exstensionPiston.toggle();
+		if (getExtensionState() == true || getShoulderPosRadians() > Units.degreesToRadians(-40)){
+			 exstensionPiston.toggle();
+		}
+		setShoulderPosRadians(getShoulderPosRadians());
+		setWristPosRadians(getWristPosRadians());
 	}
 
 	/**
@@ -256,17 +283,24 @@ public class Arm extends SubsystemBase {
 	 * Sets the state of the exstension pistion to the desired state.
 	 * @param exstensionState The value to set the exstension pistion to (forward, off or reverse).
 	 */
-	public void exstensionExtended(Value exstensionState){
-		exstensionPiston.set(exstensionState);
+	public void exstensionExtended(boolean exstended){
+		if (exstended==true && getShoulderPosRadians() > Units.degreesToRadians(-40)){
+			exstensionPiston.set(Value.kForward);
+		}
+		else{
+			exstensionPiston.set(Value.kReverse);
+		}
+		// setShoulderPosRadians(Units.radiansToDegrees(shoulderPid.getGoal().position));
+		// setWristPosRadians(Units.radiansToDegrees(wristPid.getGoal().position));
 	}
 
 	/**
 	 * Sets the state of the exstension pistion to the desired state in a command.
-	 * @param exstensionState The value to set the exstension pistion to (forward, off or reverse).
+	 * @param exstended The value to set the exstension pistion to (forward, off or reverse).
 	 * @return The command to set the exstension pistion.
 	 */
-	public CommandBase exstensionExtendedC(Value exstensionState){
-		return run(()-> exstensionExtended(exstensionState));
+	public CommandBase exstensionExtendedC(boolean exstended){
+		return run(()-> exstensionExtended(exstended));
 	}
 	
 	/**
@@ -286,23 +320,23 @@ public class Arm extends SubsystemBase {
 	 * Sets the state of the entire arm.
 	 * @param shoulderPosRadians The radian value to set the shoulder angle to (between -40 and 30).
 	 * @param wristPosRadians The radian value to set the wrist angle to (between -45 and 45).
-	 * @param extensionState The value to set the exstension pistion to (forward, off or reverse).
+	 * @param extended The value to set the exstension pistion to (forward, off or reverse).
 	 */
-	public void setArmState(double shoulderPosRadians, double wristPosRadians, Value extensionState){
+	public void setArmState(double shoulderPosRadians, double wristPosRadians, boolean extended){
 		setShoulderPosRadians(shoulderPosRadians);
 		setWristPosRadians(wristPosRadians);
-		exstensionExtended(extensionState);
+		exstensionExtended(extended);
 	}
 
 	/**
 	 * Sets the state of the entire arm in a command.
 	 * @param shoulderPosRadians The radian value to set the shoulder angle to (between -40 and 30).
 	 * @param wristPosRadians The radian value to set the wrist angle to (between -45 and 45).
-	 * @param extensionState The value to set the exstension pistion to (forward, off or reverse).
+	 * @param extended Whether the extension is extended.
 	 * @return The command to set the state of the arm.
 	 */
-	public CommandBase setArmStateC(double shoulderPosRadians, double wristPosRadians, Value extensionState){
-		return run(()->setArmState(shoulderPosRadians, wristPosRadians, extensionState));
+	public CommandBase setArmStateC(double shoulderPosRadians, double wristPosRadians, boolean extended){
+		return run(()->setArmState(shoulderPosRadians, wristPosRadians, extended));
 	}
 
 	
