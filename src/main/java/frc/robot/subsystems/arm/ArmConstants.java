@@ -14,13 +14,13 @@ public final class ArmConstants{
 
     public static  ArmFeedforward kShoulderFF= new ArmFeedforward(
         0, // Voltage to break static friction
-        3, // Voltage to counteract gravity
+        1.5, // Voltage to counteract gravity
         3, // Volts per meter per second
         0.1 // Volts per meter per second squared
     );
     public static  ArmFeedforward kWristFF= new ArmFeedforward(
         0, // Voltage to break static friction
-        2.9, // Voltage to counteract gravity
+        1.4, // Voltage to counteract gravity
         5, // Volts per meter per second
         0.1 // Volts per meter per second squared
     );

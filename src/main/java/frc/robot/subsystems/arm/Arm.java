@@ -38,8 +38,8 @@ public class Arm extends SubsystemBase {
 	private Encoder shoulderEncoder = new Encoder(6, 7);
 	private Encoder wristEncoder = new Encoder(8, 9);
 
-	ProfiledPIDController shoulderPid = new ProfiledPIDController(6, 0, 0, new TrapezoidProfile.Constraints(0.5, 0.5));
-	ProfiledPIDController wristPid = new ProfiledPIDController(6, 0, 0, new TrapezoidProfile.Constraints(0.5, 0.5));
+	ProfiledPIDController shoulderPid = new ProfiledPIDController(6, 0, 0, new TrapezoidProfile.Constraints(0.7, 0.7));
+	ProfiledPIDController wristPid = new ProfiledPIDController(6, 0, 0, new TrapezoidProfile.Constraints(0.7, 0.7));
 
 	// Ligaments of arm simulation, rooted to different each and every ligament.
 	Mechanism2d mech = new Mechanism2d(2.5, 2.5, new Color8Bit(0, 100, 150));
@@ -79,7 +79,6 @@ public class Arm extends SubsystemBase {
 			1,
 			Units.degreesToRadians(-90),
 			Units.degreesToRadians(30),
-			Units.lbsToKilograms(12),
 			true);
 
 	SingleJointedArmSim wristSim = new SingleJointedArmSim(
@@ -91,7 +90,6 @@ public class Arm extends SubsystemBase {
 			1,
 			Units.degreesToRadians(-90),
 			Units.degreesToRadians(90),
-			Units.lbsToKilograms(7),
 			true);
 
 	public Arm() {
@@ -129,52 +127,66 @@ public class Arm extends SubsystemBase {
 
 		
 
-		double shoulderPidVolts = shoulderPid.calculate(getShoulderPosRadians());
+		double shoulderPosRadians = getShoulderPosRadians();
+		// Calculate shoulder volts using feedforward and PID
 		var shoulderSetpoint = shoulderPid.getSetpoint();
-		double shoulderFFVolts = kShoulderFF.calculate(shoulderSetpoint.position, shoulderSetpoint.velocity);
-		double shoulderVolts = shoulderPidVolts + shoulderFFVolts;
+		double shoulderVolts = shoulderPid.calculate(shoulderPosRadians) + kShoulderFF.calculate(shoulderSetpoint.position, shoulderSetpoint.velocity);
 
-		double wristPidVolts = wristPid.calculate(getWristPosRadians());
+		// Clamp shoulder position to an appropriate angle.
+		double clampedShoulderPos = shoulderSafety(shoulderPosRadians, getExtensionState());
+
+		// Clamp shoulder volts to have the shoulder stay inside/go into appropriate angle range.
+		if (clampedShoulderPos > shoulderPosRadians){
+			shoulderVolts = Math.max(0, shoulderVolts);
+		}
+		if (clampedShoulderPos<shoulderPosRadians){
+			shoulderVolts = Math.min(0, shoulderVolts);
+		}
+		//Set shoulder motors to the clamped voltage.
+		setShoulderVoltage(shoulderVolts);
+		
+
+
+		double wristPosRadians = getWristPosRadians();
+		// Calculate wrist volts using feedforward and PID
 		var wristSetpoint = wristPid.getSetpoint();
-		double wristFFVolts = kWristFF.calculate(wristSetpoint.position, wristSetpoint.velocity);
-		double wristVolts = wristPidVolts + wristFFVolts;
+		double wristVolts = wristPid.calculate(getWristPosRadians()) + kWristFF.calculate(wristSetpoint.position, wristSetpoint.velocity);
 
-		shoulderSafety(shoulderPid.getGoal().position, getExtensionState(), shoulderVolts);
-		wristSafety(wristPid.getGoal().position, getShoulderPosRadians(), getExtensionState(), wristVolts);
+		// Clamp wrist position to an appropriate angle.
+		double clampedWristPos = wristSafety(wristPosRadians, shoulderPosRadians, getExtensionState());
+		System.out.println("clampedWristPos: " + clampedWristPos);
+		// Clamp wrist volts to have the wrist stay inside/go into appropriate angle range.
+		if (clampedWristPos > wristPosRadians){
+			wristVolts = Math.max(0, wristVolts);
+		}
+		if (clampedWristPos < wristPosRadians){
+			wristVolts = Math.min(0, wristVolts);
+		}
+		//Set wrist motors to the clamped voltage.
+		setWristVoltage(wristVolts);
+		
+
 	}
 
 
 	
-	private void shoulderSafety(double targetShoulderPosRadians, boolean extensionState, double shoulderVolts){
+	private double shoulderSafety(double shoulderPosRadians, boolean extensionState){
 		double minimumPosRadians = Units.degreesToRadians(-87);
-		double lowerClamp = -12;
 		if (extensionState == true){
 			minimumPosRadians = Units.degreesToRadians(-40);
 		}
-		if (minimumPosRadians > getShoulderPosRadians()){
-			lowerClamp = 0;
-		}
-		setShoulderVoltage(MathUtil.clamp(shoulderVolts, lowerClamp, 12));
+		return MathUtil.clamp(shoulderPosRadians, minimumPosRadians, Units.degreesToRadians(30));
 	}
 
-	private void wristSafety(double targetWristPosRadians, double shoulderPosRadians, boolean extensionState, double wristVolts){
+	private double wristSafety(double wristPosRadians, double shoulderPosRadians, boolean extensionState){
 		double minimumPosRadians = Units.degreesToRadians(-45);
-		double maximumPosRadians = Units.degreesToRadians(45);
-		double lowerClamp = -12;
-		double upperClamp = 12;
 		if (extensionState == true && Units.radiansToDegrees(shoulderPid.getGoal().position)<-30){
 			minimumPosRadians = -shoulderPosRadians;
 		}
-		else if (extensionState == false && Units.radiansToDegrees(shoulderPid.getGoal().position)<-57){
+		if (extensionState == false && Units.radiansToDegrees(shoulderPid.getGoal().position)<-57){
 			minimumPosRadians = -shoulderPosRadians;
 		}
-		if (minimumPosRadians > getWristPosRadians()){
-			lowerClamp = 0;
-		}
-		if (maximumPosRadians < getShoulderPosRadians()){
-			upperClamp = 0;
-		}
-		setWristVoltage(MathUtil.clamp(wristVolts, lowerClamp, upperClamp));
+		return MathUtil.clamp(wristPosRadians, minimumPosRadians, Units.degreesToRadians(45));
 	}
 
 	/**
@@ -187,45 +199,11 @@ public class Arm extends SubsystemBase {
 	}
 
 	/**
-	 * Sets the voltage for the wrist motors (angle at the bottom of the arm connected to the intake).
-	 * @param volts The voltage to set the wrist motors to (between -12 and 12).
-	 */
-	public void setWristVoltage(double volts) {
-		motorD.setVoltage(volts);
-		motorE.setVoltage(volts);
-	}
-
-	/**
-	 * 
-	 * @return The shoulder position in radians.
-	 */
-	public double getShoulderPosRadians() {
-		return shoulderEncoder.getDistance();
-	}
-
-
-	/**
-	 * 
-	 * @return The wrist position in radians.
-	 */
-	public double getWristPosRadians() {
-		return wristEncoder.getDistance();
-	}
-
-	/**
 	 * Sets the position of the shoulder while clamping the angle to stay within a safe range.
 	 * @param posRadians The radian value to set the shoulder angle to (between -87 and 30).
 	 */
 	public void setShoulderPosRadians(double posRadians) {
-		double lowerClamp=-40;
-		if (getExtensionState()==true){
-			lowerClamp=-40;
-		}
-		else{
-			lowerClamp=-87;
-		}
-		double clampedPosRadians = MathUtil.clamp(posRadians, Units.degreesToRadians(lowerClamp), Units.degreesToRadians(30));
-		setWristPosRadians(Units.radiansToDegrees(wristPid.getGoal().position));
+		double clampedPosRadians = shoulderSafety(posRadians, getExtensionState());
 		shoulderPid.setGoal(clampedPosRadians);
 	}
 
@@ -239,15 +217,28 @@ public class Arm extends SubsystemBase {
 	}
 
 	/**
+	 * 
+	 * @return The shoulder position in radians.
+	 */
+	public double getShoulderPosRadians() {
+		return shoulderEncoder.getDistance();
+	}
+
+	/**
+	 * Sets the voltage for the wrist motors (angle at the bottom of the arm connected to the intake).
+	 * @param volts The voltage to set the wrist motors to (between -12 and 12).
+	 */
+	public void setWristVoltage(double volts) {
+		motorD.setVoltage(volts);
+		motorE.setVoltage(volts);
+	}
+
+	/**
 	 * Sets the position of the wrist while clamping the angle to stay within a safe range that changes depending on the shoulder angle.
 	 * @param posRadians The radian value to set the wrist angle to (between -45 and 45).
 	 */
 	public void setWristPosRadians(double posRadians) {
-		double lowerClamp=-45;
-		if (Units.radiansToDegrees(shoulderPid.getGoal().position)<-30){
-			lowerClamp=-Units.radiansToDegrees(shoulderPid.getGoal().position);
-		}
-		double clampedPosRadians = MathUtil.clamp(posRadians, Units.degreesToRadians(lowerClamp), Units.degreesToRadians(45));
+		double clampedPosRadians = wristSafety(posRadians, shoulderPid.getGoal().position, getExtensionState());
 		wristPid.setGoal(clampedPosRadians);
 	}
 
@@ -261,14 +252,22 @@ public class Arm extends SubsystemBase {
 	}
 
 	/**
+	 * 
+	 * @return The wrist position in radians.
+	 */
+	public double getWristPosRadians() {
+		return wristEncoder.getDistance();
+	}
+
+	/**
 	 * Toggles the extension piston between forward (out) and reverse (in).
 	 */
 	public void toggleExstensionExtended(){
 		if (getExtensionState() == true || getShoulderPosRadians() > Units.degreesToRadians(-40)){
 			 exstensionPiston.toggle();
 		}
-		setShoulderPosRadians(getShoulderPosRadians());
-		setWristPosRadians(getWristPosRadians());
+		setShoulderPosRadians(shoulderPid.getGoal().position);
+		setWristPosRadians(wristPid.getGoal().position);
 	}
 
 	/**
@@ -283,15 +282,15 @@ public class Arm extends SubsystemBase {
 	 * Sets the state of the exstension pistion to the desired state.
 	 * @param exstensionState The value to set the exstension pistion to (forward, off or reverse).
 	 */
-	public void exstensionExtended(boolean exstended){
+	public void setExstensionExtended(boolean exstended){
 		if (exstended==true && getShoulderPosRadians() > Units.degreesToRadians(-40)){
 			exstensionPiston.set(Value.kForward);
 		}
 		else{
 			exstensionPiston.set(Value.kReverse);
 		}
-		// setShoulderPosRadians(Units.radiansToDegrees(shoulderPid.getGoal().position));
-		// setWristPosRadians(Units.radiansToDegrees(wristPid.getGoal().position));
+		setShoulderPosRadians(shoulderPid.getGoal().position);
+		setWristPosRadians(wristPid.getGoal().position);
 	}
 
 	/**
@@ -299,8 +298,8 @@ public class Arm extends SubsystemBase {
 	 * @param exstended The value to set the exstension pistion to (forward, off or reverse).
 	 * @return The command to set the exstension pistion.
 	 */
-	public CommandBase exstensionExtendedC(boolean exstended){
-		return run(()-> exstensionExtended(exstended));
+	public CommandBase setExstensionExtendedC(boolean exstended){
+		return run(()-> setExstensionExtended(exstended));
 	}
 	
 	/**
@@ -325,7 +324,7 @@ public class Arm extends SubsystemBase {
 	public void setArmState(double shoulderPosRadians, double wristPosRadians, boolean extended){
 		setShoulderPosRadians(shoulderPosRadians);
 		setWristPosRadians(wristPosRadians);
-		exstensionExtended(extended);
+		setExstensionExtended(extended);
 	}
 
 	/**

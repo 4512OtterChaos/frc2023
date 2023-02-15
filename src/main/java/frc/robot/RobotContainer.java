@@ -3,15 +3,23 @@ package frc.robot;
 import frc.robot.auto.AutoOptions;
 import frc.robot.subsystems.arm.Arm;
 import frc.robot.subsystems.drive.SwerveDrive;
-import frc.robot.subsystems.intake.Intake;
+import frc.robot.subsystems.drive.intake.Intake;
 import frc.robot.util.LogUtil;
 import frc.robot.util.OCXboxController;
 
 import static edu.wpi.first.wpilibj2.command.Commands.*;
 
+import org.photonvision.PhotonCamera;
+import org.photonvision.PhotonPoseEstimator;
+import org.photonvision.PhotonPoseEstimator.PoseStrategy;
+
+import edu.wpi.first.apriltag.AprilTagFieldLayout;
+import edu.wpi.first.apriltag.AprilTagFields;
 import edu.wpi.first.math.geometry.Pose2d;
 import edu.wpi.first.math.geometry.Rotation2d;
+import edu.wpi.first.math.geometry.Transform3d;
 import edu.wpi.first.math.util.Units;
+import edu.wpi.first.wpilibj.Timer;
 import edu.wpi.first.wpilibj.DoubleSolenoid.Value;
 import edu.wpi.first.wpilibj.smartdashboard.Field2d;
 import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
@@ -24,9 +32,19 @@ public class RobotContainer {
     private final OCXboxController driver = new OCXboxController(0);
     private final Field2d field = new Field2d();
     private final AutoOptions autoOptions = new AutoOptions(drive, intake);
-
+    private final PhotonCamera camera = new PhotonCamera("camera");
+    private final PhotonPoseEstimator photonEstimator;
+    private final AprilTagFieldLayout tagLayout;
     
     public RobotContainer() {
+        
+        try {
+            tagLayout = AprilTagFields.k2023ChargedUp.loadAprilTagLayoutField();
+        } catch(Exception e) {
+            throw new RuntimeException("AprilTagFieldLayout loading failed!", e);
+        }
+        photonEstimator = new PhotonPoseEstimator(tagLayout, PoseStrategy.LOWEST_AMBIGUITY, camera, new Transform3d());
+        
         configureEventBinds();
         configureDriverBinds(driver);
         SmartDashboard.putData("field", field);
@@ -100,6 +118,10 @@ public class RobotContainer {
     public void periodic() {
         field.setRobotPose(drive.getPose());
         LogUtil.logPose("drivePose2d", drive.getPose());
+        camera.getLatestResult().getTargets();
+        photonEstimator.update().ifPresent(est -> {
+            drive.addVisionMeasurement(est.estimatedPose.toPose2d(), Timer.getFPGATimestamp() - est.timestampSeconds);
+        });
     }
     public CommandBase getAutoCommand(){
         return autoOptions.getAutoCommand();
