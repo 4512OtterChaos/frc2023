@@ -23,8 +23,8 @@ import edu.wpi.first.wpilibj.smartdashboard.MechanismLigament2d;
 import edu.wpi.first.wpilibj.smartdashboard.MechanismRoot2d;
 import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
 import edu.wpi.first.wpilibj.util.Color8Bit;
-import edu.wpi.first.wpilibj2.command.Command;
 import edu.wpi.first.wpilibj2.command.CommandBase;
+import static edu.wpi.first.wpilibj2.command.Commands.*;
 import edu.wpi.first.wpilibj2.command.SubsystemBase;
 import static frc.robot.subsystems.arm.ArmConstants.*;
 
@@ -38,8 +38,8 @@ public class Arm extends SubsystemBase {
 	private Encoder shoulderEncoder = new Encoder(6, 7);
 	private Encoder wristEncoder = new Encoder(8, 9);
 
-	ProfiledPIDController shoulderPid = new ProfiledPIDController(6, 0, 0, new TrapezoidProfile.Constraints(0.7, 0.7));
-	ProfiledPIDController wristPid = new ProfiledPIDController(6, 0, 0, new TrapezoidProfile.Constraints(0.7, 0.7));
+	public ProfiledPIDController shoulderPid = new ProfiledPIDController(6, 0, 0, new TrapezoidProfile.Constraints(0.7, 0.7));
+	public ProfiledPIDController wristPid = new ProfiledPIDController(6, 0, 0, new TrapezoidProfile.Constraints(0.7, 0.7));
 
 	// Ligaments of arm simulation, rooted to different each and every ligament.
 	Mechanism2d mech = new Mechanism2d(2.5, 2.5, new Color8Bit(0, 100, 150));
@@ -88,7 +88,7 @@ public class Arm extends SubsystemBase {
 			DCMotor.getCIM(2),
 			100,
 			1,
-			Units.degreesToRadians(-90),
+			Units.degreesToRadians(-45),
 			Units.degreesToRadians(90),
 			true);
 
@@ -128,12 +128,14 @@ public class Arm extends SubsystemBase {
 		
 
 		double shoulderPosRadians = getShoulderPosRadians();
+		double wristPosRadians = getWristPosRadians();
+
 		// Calculate shoulder volts using feedforward and PID
 		var shoulderSetpoint = shoulderPid.getSetpoint();
 		double shoulderVolts = shoulderPid.calculate(shoulderPosRadians) + kShoulderFF.calculate(shoulderSetpoint.position, shoulderSetpoint.velocity);
 
 		// Clamp shoulder position to an appropriate angle.
-		double clampedShoulderPos = shoulderSafety(shoulderPosRadians, getExtensionState());
+		double clampedShoulderPos = shoulderSafety(shoulderPosRadians, wristPosRadians, getExtensionState());
 
 		// Clamp shoulder volts to have the shoulder stay inside/go into appropriate angle range.
 		if (clampedShoulderPos > shoulderPosRadians){
@@ -147,14 +149,13 @@ public class Arm extends SubsystemBase {
 		
 
 
-		double wristPosRadians = getWristPosRadians();
 		// Calculate wrist volts using feedforward and PID
 		var wristSetpoint = wristPid.getSetpoint();
 		double wristVolts = wristPid.calculate(getWristPosRadians()) + kWristFF.calculate(wristSetpoint.position, wristSetpoint.velocity);
 
 		// Clamp wrist position to an appropriate angle.
 		double clampedWristPos = wristSafety(wristPosRadians, shoulderPosRadians, getExtensionState());
-		System.out.println("clampedWristPos: " + clampedWristPos);
+		// System.out.println("clampedWristPos: " + Units.radiansToDegrees(clampedWristPos));
 		// Clamp wrist volts to have the wrist stay inside/go into appropriate angle range.
 		if (clampedWristPos > wristPosRadians){
 			wristVolts = Math.max(0, wristVolts);
@@ -170,23 +171,32 @@ public class Arm extends SubsystemBase {
 
 
 	
-	private double shoulderSafety(double shoulderPosRadians, boolean extensionState){
-		double minimumPosRadians = Units.degreesToRadians(-87);
+	private double shoulderSafety(double shoulderPosRadians, double wristPosRadians, boolean extensionState){
+		double minimumPosRadians = kShoulderMinimumAngle;
 		if (extensionState == true){
-			minimumPosRadians = Units.degreesToRadians(-40);
+			if (wristPosRadians<-shoulderPosRadians){
+				minimumPosRadians = Units.degreesToRadians(-35);
+			}
+			else{
+				minimumPosRadians = Units.degreesToRadians(-40);
+			}
 		}
-		return MathUtil.clamp(shoulderPosRadians, minimumPosRadians, Units.degreesToRadians(30));
+		else if (extensionState == false && wristPosRadians<-shoulderPosRadians){
+			minimumPosRadians = kShoulderMinimumAngle-Units.degreesToRadians(5);
+			
+		}
+		return MathUtil.clamp(shoulderPosRadians, minimumPosRadians, kShoulderMaximumAngle);
 	}
 
 	private double wristSafety(double wristPosRadians, double shoulderPosRadians, boolean extensionState){
-		double minimumPosRadians = Units.degreesToRadians(-45);
+		double minimumPosRadians = kWristMinimumAngle;
 		if (extensionState == true && Units.radiansToDegrees(shoulderPid.getGoal().position)<-30){
 			minimumPosRadians = -shoulderPosRadians;
 		}
 		if (extensionState == false && Units.radiansToDegrees(shoulderPid.getGoal().position)<-57){
 			minimumPosRadians = -shoulderPosRadians;
 		}
-		return MathUtil.clamp(wristPosRadians, minimumPosRadians, Units.degreesToRadians(45));
+		return MathUtil.clamp(wristPosRadians, minimumPosRadians, kWristMaximumAngle);
 	}
 
 	/**
@@ -200,16 +210,17 @@ public class Arm extends SubsystemBase {
 
 	/**
 	 * Sets the position of the shoulder while clamping the angle to stay within a safe range.
-	 * @param posRadians The radian value to set the shoulder angle to (between -87 and 30).
+	 * @param posRadians The radian value to set the shoulder angle to (between -90 and 30).
 	 */
 	public void setShoulderPosRadians(double posRadians) {
-		double clampedPosRadians = shoulderSafety(posRadians, getExtensionState());
+		double clampedPosRadians = shoulderSafety(posRadians, getWristPosRadians() , getExtensionState());
 		shoulderPid.setGoal(clampedPosRadians);
+		setWristPosRadians(wristPid.getGoal().position);
 	}
 
 	/**
 	 * Sets the position of the shoulder in a command.
-	 * @param posRadians The radian value to set the shoulder angle to (between -40 and 30).
+	 * @param posRadians The radian value to set the shoulder angle to (between -90 and 30).
 	 * @return The command to set the position of the shoulder.
 	 */
 	public CommandBase setShoulderPosRadiansC(double posRadians) {
@@ -238,7 +249,9 @@ public class Arm extends SubsystemBase {
 	 * @param posRadians The radian value to set the wrist angle to (between -45 and 45).
 	 */
 	public void setWristPosRadians(double posRadians) {
+		System.out.println("posRadians" + posRadians);
 		double clampedPosRadians = wristSafety(posRadians, shoulderPid.getGoal().position, getExtensionState());
+		System.out.println("clampedPosRadians" + clampedPosRadians);
 		wristPid.setGoal(clampedPosRadians);
 	}
 
@@ -317,7 +330,7 @@ public class Arm extends SubsystemBase {
 
 	/**
 	 * Sets the state of the entire arm.
-	 * @param shoulderPosRadians The radian value to set the shoulder angle to (between -40 and 30).
+	 * @param shoulderPosRadians The radian value to set the shoulder angle to (between -90 and 30).
 	 * @param wristPosRadians The radian value to set the wrist angle to (between -45 and 45).
 	 * @param extended The value to set the exstension pistion to (forward, off or reverse).
 	 */
@@ -329,7 +342,7 @@ public class Arm extends SubsystemBase {
 
 	/**
 	 * Sets the state of the entire arm in a command.
-	 * @param shoulderPosRadians The radian value to set the shoulder angle to (between -40 and 30).
+	 * @param shoulderPosRadians The radian value to set the shoulder angle to (between -90 and 30).
 	 * @param wristPosRadians The radian value to set the wrist angle to (between -45 and 45).
 	 * @param extended Whether the extension is extended.
 	 * @return The command to set the state of the arm.
@@ -338,7 +351,32 @@ public class Arm extends SubsystemBase {
 		return run(()->setArmState(shoulderPosRadians, wristPosRadians, extended));
 	}
 
-	
+	public CommandBase inC(){
+		return sequence(
+                    setShoulderPosRadiansC(Units.degreesToRadians(-90)),
+                    setWristPosRadiansC(Units.degreesToRadians(90))
+                );
+	}
+
+	// public CommandBase scoreLowerC(){
+		
+	// }
+
+	// public CommandBase scoreMidC(){
+		
+	// }
+
+	// public CommandBase scoreUpperC(){
+		
+	// }
+
+	// public CommandBase pickUpGroundC(){
+		
+	// }
+
+	// public CommandBase pickUpDoubleSubC(){
+		
+	// }
 
 	public void simulationPeriodic() {
 		// get "voltage" after static friction

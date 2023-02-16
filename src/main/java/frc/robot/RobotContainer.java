@@ -20,7 +20,6 @@ import edu.wpi.first.math.geometry.Rotation2d;
 import edu.wpi.first.math.geometry.Transform3d;
 import edu.wpi.first.math.util.Units;
 import edu.wpi.first.wpilibj.Timer;
-import edu.wpi.first.wpilibj.DoubleSolenoid.Value;
 import edu.wpi.first.wpilibj.smartdashboard.Field2d;
 import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
 import edu.wpi.first.wpilibj2.command.CommandBase;
@@ -84,10 +83,15 @@ public class RobotContainer {
                 drive
             )
         );
-        // controller.rightBumper()
-        //     .whileTrue(run(()->arm.setSpeed(0.5), arm));
-        // controller.leftBumper()
-        //     .whileTrue(run(()->arm.setSpeed(-0.5), arm));
+        controller.rightBumper()
+            .whileTrue(run(()->arm.setShoulderPosRadians(arm.shoulderPid.getGoal().position+Units.degreesToRadians(0.5)), arm));
+        controller.leftBumper()
+            .whileTrue(run(()->arm.setShoulderPosRadians(arm.shoulderPid.getGoal().position-Units.degreesToRadians(0.5)), arm));
+
+        controller.rightTrigger(0.2)
+            .whileTrue(run(()->arm.setWristPosRadians(arm.wristPid.getGoal().position+Units.degreesToRadians(0.5)), arm));
+        controller.leftTrigger(0.2)
+            .whileTrue(run(()->arm.setWristPosRadians(arm.wristPid.getGoal().position-Units.degreesToRadians(0.5)), arm));
 
         controller.a()
             .whileTrue(arm.setShoulderPosRadiansC(Units.degreesToRadians(-25)));
@@ -107,7 +111,7 @@ public class RobotContainer {
         controller.povRight()
             .whileTrue(
                 sequence(
-                    arm.setShoulderPosRadiansC(Units.degreesToRadians(-60)),
+                    arm.setShoulderPosRadiansC(Units.degreesToRadians(-600)),
                     arm.setWristPosRadiansC(Units.degreesToRadians(-45))
                 )
             );

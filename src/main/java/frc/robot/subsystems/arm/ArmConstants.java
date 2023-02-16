@@ -24,4 +24,10 @@ public final class ArmConstants{
         5, // Volts per meter per second
         0.1 // Volts per meter per second squared
     );
+
+    public static double kWristMinimumAngle = Units.degreesToRadians(-45);
+    public static double kWristMaximumAngle = Units.degreesToRadians(45);
+
+    public static double kShoulderMinimumAngle = Units.degreesToRadians(-90);
+    public static double kShoulderMaximumAngle = Units.degreesToRadians(30);
 }
