@@ -30,7 +30,6 @@ import frc.robot.subsystems.drive.SwerveModule.SwerveModulesLog;
 import io.github.oblarg.oblog.Loggable;
 import io.github.oblarg.oblog.annotations.*;
 
-@Log.Exclude
 public class SwerveDrive extends SubsystemBase implements Loggable {
 
     // construct our modules in order with their specific constants
@@ -225,6 +224,12 @@ public class SwerveDrive extends SubsystemBase implements Loggable {
      */
     public Rotation2d getGyroYaw(){
         return gyro.getRotation2d();
+    }
+    public Rotation2d getGyroPitch(){
+        return Rotation2d.fromDegrees(gyro.getPitch());
+    }
+    public Rotation2d getGyroRoll(){
+        return Rotation2d.fromDegrees(gyro.getRoll());
     }
     /**
      * Adjust the measurement noise/trust of vision estimation as robot velocities change.

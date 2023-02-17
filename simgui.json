@@ -24,6 +24,8 @@
   "NTProvider": {
     "types": {
       "/FMSInfo": "FMSInfo",
+      "/Shuffleboard/SwerveDrive/xController": "PIDController",
+      "/Shuffleboard/SwerveDrive/yController": "PIDController",
       "/SmartDashboard/Arm Subsystem": "Subsystem",
       "/SmartDashboard/Auto Options": "String Chooser",
       "/SmartDashboard/Auto choices": "String Chooser",
@@ -56,7 +58,16 @@
       "LiveWindow": {
         "open": true
       },
+      "Shuffleboard": {
+        "Arm": {
+          "open": true
+        },
+        "open": true
+      },
       "SmartDashboard": {
+        "field": {
+          "open": true
+        },
         "open": true
       }
     }

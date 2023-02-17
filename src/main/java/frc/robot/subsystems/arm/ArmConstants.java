@@ -2,6 +2,7 @@ package frc.robot.subsystems.arm;
 
 import edu.wpi.first.math.controller.ArmFeedforward;
 import edu.wpi.first.math.util.Units;
+import io.github.oblarg.oblog.annotations.Config;
 
 public final class ArmConstants{
 
@@ -25,9 +26,10 @@ public final class ArmConstants{
         0.1 // Volts per meter per second squared
     );
 
-    public static double kWristMinimumAngle = Units.degreesToRadians(-45);
-    public static double kWristMaximumAngle = Units.degreesToRadians(45);
+    public static final double kWristMinimumAngle = Units.degreesToRadians(-45);
+    public static final double kWristMaximumAngle = Units.degreesToRadians(45);
 
-    public static double kShoulderMinimumAngle = Units.degreesToRadians(-90);
-    public static double kShoulderMaximumAngle = Units.degreesToRadians(30);
+    public static final double kShoulderMinimumAngle = Units.degreesToRadians(-90);
+    public static final double kShoulderMinimumAngleExtension = Units.degreesToRadians(-40);
+    public static final double kShoulderMaximumAngle = Units.degreesToRadians(30);
 }

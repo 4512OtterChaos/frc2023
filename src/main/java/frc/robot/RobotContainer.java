@@ -6,6 +6,8 @@ import frc.robot.subsystems.drive.SwerveDrive;
 import frc.robot.subsystems.drive.intake.Intake;
 import frc.robot.util.LogUtil;
 import frc.robot.util.OCXboxController;
+import io.github.oblarg.oblog.Logger;
+import io.github.oblarg.oblog.annotations.Log;
 
 import static edu.wpi.first.wpilibj2.command.Commands.*;
 
@@ -49,6 +51,8 @@ public class RobotContainer {
         SmartDashboard.putData("field", field);
 
         autoOptions.submit();
+
+        Logger.configureLoggingAndConfig(this, false);
     }
     
     private void configureEventBinds() {
@@ -101,6 +105,7 @@ public class RobotContainer {
             .whileTrue(arm.setShoulderPosRadiansC(Units.degreesToRadians(0)));
         controller.y()
             .whileTrue(arm.setShoulderPosRadiansC(Units.degreesToRadians(25)));
+        
 
         controller.povUp()
             .whileTrue(arm.setWristPosRadiansC(Units.degreesToRadians(25)));
@@ -126,6 +131,7 @@ public class RobotContainer {
         photonEstimator.update().ifPresent(est -> {
             drive.addVisionMeasurement(est.estimatedPose.toPose2d(), Timer.getFPGATimestamp() - est.timestampSeconds);
         });
+        Logger.updateEntries();
     }
     public CommandBase getAutoCommand(){
         return autoOptions.getAutoCommand();
