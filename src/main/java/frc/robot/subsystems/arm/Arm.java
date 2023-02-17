@@ -26,9 +26,12 @@ import edu.wpi.first.wpilibj.util.Color8Bit;
 import edu.wpi.first.wpilibj2.command.CommandBase;
 import static edu.wpi.first.wpilibj2.command.Commands.*;
 import edu.wpi.first.wpilibj2.command.SubsystemBase;
+import io.github.oblarg.oblog.Loggable;
+import io.github.oblarg.oblog.annotations.Config;
+
 import static frc.robot.subsystems.arm.ArmConstants.*;
 
-public class Arm extends SubsystemBase {
+public class Arm extends SubsystemBase implements Loggable{
 	VictorSP motorA = new VictorSP(0);
 	VictorSP motorB = new VictorSP(1);
 	VictorSP motorC = new VictorSP(2);
@@ -37,7 +40,7 @@ public class Arm extends SubsystemBase {
 
 	private Encoder shoulderEncoder = new Encoder(6, 7);
 	private Encoder wristEncoder = new Encoder(8, 9);
-
+	
 	public ProfiledPIDController shoulderPid = new ProfiledPIDController(6, 0, 0, new TrapezoidProfile.Constraints(0.7, 0.7));
 	public ProfiledPIDController wristPid = new ProfiledPIDController(6, 0, 0, new TrapezoidProfile.Constraints(0.7, 0.7));
 
@@ -79,7 +82,8 @@ public class Arm extends SubsystemBase {
 			1,
 			Units.degreesToRadians(-90),
 			Units.degreesToRadians(30),
-			true);
+			true
+	);
 
 	SingleJointedArmSim wristSim = new SingleJointedArmSim(
 			LinearSystemId.identifyPositionSystem(
@@ -90,7 +94,19 @@ public class Arm extends SubsystemBase {
 			1,
 			Units.degreesToRadians(-45),
 			Units.degreesToRadians(90),
-			true);
+			true
+	);
+	@Config
+	void configWristMinimumAngle(double wristMinimumAngle) {
+		wristMinimumAngle = kwristMinimumAngle;
+	}
+	public double wristMinimumAngle = kWristMinimumAngle;
+    public double wristMaximumAngle = kWristMaximumAngle;
+
+    public double shoulderMinimumAngle = kShoulderMinimumAngle;
+    public double shoulderMinimumAngleExtension = kShoulderMinimumAngleExtension;
+    public double shoulderMaximumAngle = kShoulderMaximumAngle;
+	
 
 	public Arm() {
 		SmartDashboard.putData("Mech2d", mech);
@@ -175,10 +191,10 @@ public class Arm extends SubsystemBase {
 		double minimumPosRadians = kShoulderMinimumAngle;
 		if (extensionState == true){
 			if (wristPosRadians<-shoulderPosRadians){
-				minimumPosRadians = Units.degreesToRadians(-35);
+				minimumPosRadians = kShoulderMinimumAngleExtension+Units.degreesToRadians(5);
 			}
 			else{
-				minimumPosRadians = Units.degreesToRadians(-40);
+				minimumPosRadians = kShoulderMinimumAngleExtension;
 			}
 		}
 		else if (extensionState == false && wristPosRadians<-shoulderPosRadians){
@@ -249,9 +265,7 @@ public class Arm extends SubsystemBase {
 	 * @param posRadians The radian value to set the wrist angle to (between -45 and 45).
 	 */
 	public void setWristPosRadians(double posRadians) {
-		System.out.println("posRadians" + posRadians);
 		double clampedPosRadians = wristSafety(posRadians, shoulderPid.getGoal().position, getExtensionState());
-		System.out.println("clampedPosRadians" + clampedPosRadians);
 		wristPid.setGoal(clampedPosRadians);
 	}
 
@@ -354,7 +368,8 @@ public class Arm extends SubsystemBase {
 	public CommandBase inC(){
 		return sequence(
                     setShoulderPosRadiansC(Units.degreesToRadians(-90)),
-                    setWristPosRadiansC(Units.degreesToRadians(90))
+                    setWristPosRadiansC(Units.degreesToRadians(90)),
+					setExstensionExtendedC(false)
                 );
 	}
 
@@ -362,13 +377,21 @@ public class Arm extends SubsystemBase {
 		
 	// }
 
-	// public CommandBase scoreMidC(){
-		
-	// }
+	public CommandBase scoreMidC(){
+		return sequence(
+                    setShoulderPosRadiansC(Units.degreesToRadians(-7)),
+                    setWristPosRadiansC(Units.degreesToRadians(7)),
+					setExstensionExtendedC(false)
+                );
+	}
 
-	// public CommandBase scoreUpperC(){
-		
-	// }
+	public CommandBase scoreUpperC(){
+		return sequence(
+                    setShoulderPosRadiansC(Units.degreesToRadians(14)),
+                    setWristPosRadiansC(Units.degreesToRadians(-14)),
+					setExstensionExtendedC(false)
+                );
+	}
 
 	// public CommandBase pickUpGroundC(){
 		
