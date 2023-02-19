@@ -117,7 +117,7 @@ public class RobotContainer {
             .whileTrue(
                 sequence(
                     arm.setShoulderPosRadiansC(Units.degreesToRadians(-600)),
-                    arm.setWristPosRadiansC(Units.degreesToRadians(-45))
+                    arm.setWristPosRadiansC(Units.degreesToRadians(-450))
                 )
             );
 
