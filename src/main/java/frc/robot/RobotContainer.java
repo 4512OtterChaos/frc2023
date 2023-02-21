@@ -3,11 +3,10 @@ package frc.robot;
 import frc.robot.auto.AutoOptions;
 import frc.robot.subsystems.arm.Arm;
 import frc.robot.subsystems.drive.SwerveDrive;
-import frc.robot.subsystems.drive.intake.Intake;
+import frc.robot.subsystems.intake.Intake;
 import frc.robot.util.LogUtil;
 import frc.robot.util.OCXboxController;
 import io.github.oblarg.oblog.Logger;
-import io.github.oblarg.oblog.annotations.Log;
 
 import static edu.wpi.first.wpilibj2.command.Commands.*;
 
@@ -88,14 +87,14 @@ public class RobotContainer {
             )
         );
         controller.rightBumper()
-            .whileTrue(run(()->arm.setShoulderPosRadians(arm.shoulderPid.getGoal().position+Units.degreesToRadians(0.5)), arm));
+            .whileTrue(run(()->arm.setShoulderPosRadians(arm.shoulderPid.getGoal().position+Units.degreesToRadians(1.5)), arm));
         controller.leftBumper()
-            .whileTrue(run(()->arm.setShoulderPosRadians(arm.shoulderPid.getGoal().position-Units.degreesToRadians(0.5)), arm));
+            .whileTrue(run(()->arm.setShoulderPosRadians(arm.shoulderPid.getGoal().position-Units.degreesToRadians(1.5)), arm));
 
         controller.rightTrigger(0.2)
-            .whileTrue(run(()->arm.setWristPosRadians(arm.wristPid.getGoal().position+Units.degreesToRadians(0.5)), arm));
+            .whileTrue(run(()->arm.setWristPosRadians(arm.wristPid.getGoal().position+Units.degreesToRadians(1.5)), arm));
         controller.leftTrigger(0.2)
-            .whileTrue(run(()->arm.setWristPosRadians(arm.wristPid.getGoal().position-Units.degreesToRadians(0.5)), arm));
+            .whileTrue(run(()->arm.setWristPosRadians(arm.wristPid.getGoal().position-Units.degreesToRadians(1.5)), arm));
 
         controller.a()
             .whileTrue(arm.setShoulderPosRadiansC(Units.degreesToRadians(-25)));

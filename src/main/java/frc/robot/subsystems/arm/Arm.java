@@ -44,7 +44,7 @@ public class Arm extends SubsystemBase implements Loggable{
 	private Encoder wristEncoder = new Encoder(8, 9);
 	
 	public ProfiledPIDController shoulderPid = new ProfiledPIDController(6, 0, 0, new TrapezoidProfile.Constraints(0.7, 0.7));
-	public ProfiledPIDController wristPid = new ProfiledPIDController(6, 0, 0, new TrapezoidProfile.Constraints(0.7, 0.7));
+	public ProfiledPIDController wristPid = new ProfiledPIDController(6, 0, 0, new TrapezoidProfile.Constraints(0.8, 0.8));
 
 	// Ligaments of arm simulation, rooted to different each and every ligament.
 	Mechanism2d mech = new Mechanism2d(2.5, 2.5, new Color8Bit(0, 100, 150));
@@ -110,7 +110,7 @@ public class Arm extends SubsystemBase implements Loggable{
     public double shoulderMinimumAngleExtension = kShoulderMinimumAngleExtension;
     public double shoulderMinimumAngleExtensionWrist = kShoulderMinimumAngleExtensionWrist;
     public double shoulderMaximumAngle = kShoulderMaximumAngle;
-	// public static final double kWristMinimumAngle = 0;
+	public static final double kWristMinimumAngle = 0;
 	@Config(defaultValueNumeric = kWristMinimumAngle)
 	void configWristMinimumAngle(double wristMinimumAngle) {
 		this.wristMinimumAngle = (wristMinimumAngle);
@@ -189,16 +189,18 @@ public class Arm extends SubsystemBase implements Loggable{
 		// Calculate shoulder volts using feedforward and PID
 		var shoulderSetpoint = shoulderPid.getSetpoint();
 		double shoulderVolts = shoulderPid.calculate(shoulderPosRadians) + kShoulderFF.calculate(shoulderSetpoint.position, shoulderSetpoint.velocity);
+		
+		double standardShoulderVolts = Math.cos(shoulderPosRadians)*kWristFF.kg;
 
 		// Clamp shoulder position to an appropriate angle.
 		double clampedShoulderPos = shoulderSafety(shoulderPosRadians, wristPosRadians, getExtensionState());
 
 		// Clamp shoulder volts to have the shoulder stay inside/go into appropriate angle range.
 		if (clampedShoulderPos > shoulderPosRadians){
-			shoulderVolts = Math.max(0, shoulderVolts);
+			shoulderVolts = Math.max(standardShoulderVolts, shoulderVolts);
 		}
 		if (clampedShoulderPos<shoulderPosRadians){
-			shoulderVolts = Math.min(0, shoulderVolts);
+			shoulderVolts = Math.min(standardShoulderVolts, shoulderVolts);
 		}
 		//Set shoulder motors to the clamped voltage.
 		setShoulderVoltage(shoulderVolts);
@@ -209,15 +211,17 @@ public class Arm extends SubsystemBase implements Loggable{
 		var wristSetpoint = wristPid.getSetpoint();
 		double wristVolts = wristPid.calculate(getWristPosRadians()) + kWristFF.calculate(wristSetpoint.position, wristSetpoint.velocity);
 
+		double standardWristVolts = Math.cos(wristPosRadians)*kWristFF.kg;
+
 		// Clamp wrist position to an appropriate angle.
 		double clampedWristPos = wristSafety(wristPosRadians, shoulderPosRadians, getExtensionState());
 		// System.out.println("clampedWristPos: " + Units.radiansToDegrees(clampedWristPos));
 		// Clamp wrist volts to have the wrist stay inside/go into appropriate angle range.
 		if (clampedWristPos > wristPosRadians){
-			wristVolts = Math.max(0, wristVolts);
+			wristVolts = Math.max(standardWristVolts, wristVolts);
 		}
 		if (clampedWristPos < wristPosRadians){
-			wristVolts = Math.min(0, wristVolts);
+			wristVolts = Math.min(standardWristVolts, wristVolts);
 		}
 		//Set wrist motors to the clamped voltage.
 		setWristVoltage(wristVolts);
@@ -257,6 +261,7 @@ public class Arm extends SubsystemBase implements Loggable{
 		if (extensionState == false && shoulderPid.getGoal().position < shoulderWristLevel){
 			minimumPosRadians = -shoulderPosRadians;
 		}
+		
 		return MathUtil.clamp(wristPosRadians, minimumPosRadians, wristMaximumAngle);
 	}
 
@@ -274,8 +279,8 @@ public class Arm extends SubsystemBase implements Loggable{
 	 * @param posRadians The radian value to set the shoulder angle to (between -90 and 30).
 	 */
 	public void setShoulderPosRadians(double posRadians) {
-		double clampedPosRadians = shoulderSafety(posRadians, getWristPosRadians() , getExtensionState());
-		shoulderPid.setGoal(clampedPosRadians);
+		// double clampedPosRadians = shoulderSafety(posRadians, getWristPosRadians() , getExtensionState());
+		shoulderPid.setGoal(posRadians);
 		setWristPosRadians(wristPid.getGoal().position);
 	}
 
@@ -310,8 +315,8 @@ public class Arm extends SubsystemBase implements Loggable{
 	 * @param posRadians The radian value to set the wrist angle to (between -45 and 45).
 	 */
 	public void setWristPosRadians(double posRadians) {
-		double clampedPosRadians = wristSafety(posRadians, shoulderPid.getGoal().position, getExtensionState());
-		wristPid.setGoal(clampedPosRadians);
+		// double clampedPosRadians = wristSafety(posRadians, shoulderPid.getGoal().position, getExtensionState());
+		wristPid.setGoal(posRadians);
 	}
 
 	/**
