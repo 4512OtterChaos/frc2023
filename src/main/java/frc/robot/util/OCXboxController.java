@@ -20,12 +20,15 @@ public class OCXboxController extends CommandXboxController {
 
     private static final double kDeadband = 0.12;
 
+    public static final double kSpeedSlow = .3;
     public static final double kSpeedDefault = .6;
     public static final double kSpeedFast = 0.8;
     public static final double kSpeedMax = 1.0;
     
     private double drivespeed = kSpeedDefault;
-    private static final double kTurnDrivespeed = 0.5;
+    private double turnSpeed = kTurnSpeed;
+    public static final double kTurnSpeedSlow = 0.3;
+    public static final double kTurnSpeed = 0.5;
 
     private SlewRateLimiter forwardLimiter = new SlewRateLimiter(1.0 / 0.6); // 1 / x seconds to full
     private SlewRateLimiter strafeLimiter = new SlewRateLimiter(1.0 / 0.6);
@@ -55,6 +58,14 @@ public class OCXboxController extends CommandXboxController {
 
     public double getDriveSpeed() {
         return drivespeed;
+    }
+
+    public void setTurnSpeed(double turnSpeed) {
+        this.turnSpeed = turnSpeed;
+    }
+
+    public double getTurnSpeed() {
+        return turnSpeed;
     }
 
     @Override
@@ -113,7 +124,7 @@ public class OCXboxController extends CommandXboxController {
      * @return Percentage(-1 to 1)
      */
     public double getTurn() {
-        return turnLimiter.calculate(getRightX(2) * kTurnDrivespeed);
+        return turnLimiter.calculate(getRightX(2) * turnSpeed);
     }
 
     /**

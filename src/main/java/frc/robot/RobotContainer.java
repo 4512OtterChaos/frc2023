@@ -90,8 +90,18 @@ public class RobotContainer {
 
         // push-to-change driving "speed"
         controller.rightBumper()
-            .onTrue(runOnce(()->controller.setDriveSpeed(OCXboxController.kSpeedMax)))
+            .onTrue(runOnce(()->controller.setDriveSpeed(OCXboxController.kSpeedFast)))
             .onFalse(runOnce(()->controller.setDriveSpeed(OCXboxController.kSpeedDefault)));
+
+        controller.leftBumper()
+            .onTrue(runOnce(()->{
+                controller.setDriveSpeed(OCXboxController.kSpeedSlow);
+                controller.setTurnSpeed(OCXboxController.kTurnSpeedSlow);
+            }))
+            .onFalse(runOnce(()->{
+                controller.setDriveSpeed(OCXboxController.kSpeedDefault);
+                controller.setTurnSpeed(OCXboxController.kTurnSpeed);
+            }));
 
 
         // toggle between field-relative and robot-relative control
