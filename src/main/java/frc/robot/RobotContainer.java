@@ -12,6 +12,8 @@ import static edu.wpi.first.wpilibj2.command.Commands.*;
 
 import org.photonvision.PhotonCamera;
 import org.photonvision.PhotonPoseEstimator;
+import org.photonvision.SimPhotonCamera;
+import org.photonvision.SimVisionSystem;
 import org.photonvision.PhotonPoseEstimator.PoseStrategy;
 
 import edu.wpi.first.apriltag.AprilTagFieldLayout;
@@ -19,6 +21,7 @@ import edu.wpi.first.apriltag.AprilTagFields;
 import edu.wpi.first.math.geometry.Pose2d;
 import edu.wpi.first.math.geometry.Rotation2d;
 import edu.wpi.first.math.geometry.Transform3d;
+import edu.wpi.first.math.kinematics.SwerveModuleState;
 import edu.wpi.first.math.util.Units;
 import edu.wpi.first.wpilibj.Timer;
 import edu.wpi.first.wpilibj.smartdashboard.Field2d;
@@ -30,9 +33,13 @@ public class RobotContainer {
     private final Intake intake = new Intake();
     private final SwerveDrive drive = new SwerveDrive(); 
     private final OCXboxController driver = new OCXboxController(0);
+    private final OCXboxController operator = new OCXboxController(1);
+    private final OCXboxController king = new OCXboxController(0);
     private final Field2d field = new Field2d();
     private final AutoOptions autoOptions = new AutoOptions(drive, intake);
     private final PhotonCamera camera = new PhotonCamera("camera");
+    private final SimPhotonCamera simCamera = new SimPhotonCamera("camera");
+    private final SimVisionSystem visionSim = new SimVisionSystem("camera", 90, new Transform3d(), 10, 640, 480, .01);
     private final PhotonPoseEstimator photonEstimator;
     private final AprilTagFieldLayout tagLayout;
     
@@ -44,9 +51,18 @@ public class RobotContainer {
             throw new RuntimeException("AprilTagFieldLayout loading failed!", e);
         }
         photonEstimator = new PhotonPoseEstimator(tagLayout, PoseStrategy.LOWEST_AMBIGUITY, camera, new Transform3d());
+        visionSim.addVisionTargets(tagLayout);
         
         configureEventBinds();
-        configureDriverBinds(driver);
+        if (Robot.isReal()){
+            configureDriverBinds(driver);
+            configureOperatorBinds(operator);
+        }
+        else{
+            configureDriverBinds(king);
+            configureOperatorBinds(king);
+        }
+        
         SmartDashboard.putData("field", field);
 
         autoOptions.submit();
@@ -60,21 +76,6 @@ public class RobotContainer {
 
     private void configureDriverBinds(OCXboxController controller) {
 
-        // toggle between field-relative and robot-relative control
-        controller.back().onTrue(runOnce(()->{
-            drive.setIsFieldRelative(!drive.getIsFieldRelative());
-        }));
-
-        // reset the robot heading to 0
-        controller.start().onTrue(runOnce(()->{
-            drive.resetOdometry(
-                new Pose2d(
-                    drive.getPose().getTranslation(),
-                    new Rotation2d()
-                )
-            );
-        }));
-
         drive.setDefaultCommand(
             run(()->
                 drive.drive(
@@ -86,41 +87,67 @@ public class RobotContainer {
                 drive
             )
         );
-        controller.rightBumper()
-            .whileTrue(run(()->arm.setShoulderPosRadians(arm.shoulderPid.getGoal().position+Units.degreesToRadians(1.5)), arm));
-        controller.leftBumper()
-            .whileTrue(run(()->arm.setShoulderPosRadians(arm.shoulderPid.getGoal().position-Units.degreesToRadians(1.5)), arm));
 
-        controller.rightTrigger(0.2)
-            .whileTrue(run(()->arm.setWristPosRadians(arm.wristPid.getGoal().position+Units.degreesToRadians(1.5)), arm));
-        controller.leftTrigger(0.2)
-            .whileTrue(run(()->arm.setWristPosRadians(arm.wristPid.getGoal().position-Units.degreesToRadians(1.5)), arm));
+        // push-to-change driving "speed"
+        controller.rightBumper()
+            .onTrue(runOnce(()->controller.setDriveSpeed(OCXboxController.kSpeedMax)))
+            .onFalse(runOnce(()->controller.setDriveSpeed(OCXboxController.kSpeedDefault)));
+
+
+        // toggle between field-relative and robot-relative control
+        controller.back()
+        .onTrue(
+            runOnce(()->drive.setIsFieldRelative(!drive.getIsFieldRelative()))
+        );
+
+        // reset the robot heading to 0
+        controller.start()
+            .onTrue(runOnce(()->
+                drive.resetOdometry(
+                    new Pose2d(
+                        drive.getPose().getTranslation(),
+                        new Rotation2d()
+                    )
+                )
+            )
+        );
+
+        // lock the modules in a "X" alignment
+        controller.x().whileTrue(run(()->{
+            SwerveModuleState[] states = new SwerveModuleState[]{
+                new SwerveModuleState(0, Rotation2d.fromDegrees(-135)),
+                new SwerveModuleState(0, Rotation2d.fromDegrees(135)),
+                new SwerveModuleState(0, Rotation2d.fromDegrees(-45)),
+                new SwerveModuleState(0, Rotation2d.fromDegrees(45))
+            };
+            drive.setModuleStates(states, false, true);
+        }, drive));
+    }
+
+    private void configureOperatorBinds(OCXboxController controller){
+        
+        // controller.rightBumper()
+        //     .whileTrue(run(()->arm.setShoulderPosRadians(arm.shoulderPid.getGoal().position-Units.degreesToRadians(1.5)), arm));
+        // controller.leftBumper()
+        //     .whileTrue(run(()->arm.setShoulderPosRadians(arm.shoulderPid.getGoal().position+Units.degreesToRadians(1.5)), arm));
+
+        // controller.rightTrigger(0.2)
+        //     .whileTrue(run(()->arm.setWristPosRadians(arm.wristPid.getGoal().position-Units.degreesToRadians(1.5)), arm));
+        // controller.leftTrigger(0.2)
+        //     .whileTrue(run(()->arm.setWristPosRadians(arm.wristPid.getGoal().position+Units.degreesToRadians(1.5)), arm));
 
         controller.a()
-            .whileTrue(arm.setShoulderPosRadiansC(Units.degreesToRadians(-25)));
+            .onTrue(arm.pickUpGroundC());
         controller.b()
-            .onTrue(arm.toggleExstensionExtendedC());
+            .onTrue(arm.pickUpDoubleSubC());
         controller.x()
-            .whileTrue(arm.setShoulderPosRadiansC(Units.degreesToRadians(0)));
+            .onTrue(arm.scoreMidC());
         controller.y()
-            .whileTrue(arm.setShoulderPosRadiansC(Units.degreesToRadians(25)));
+            .onTrue(arm.scoreUpperC());
         
 
-        controller.povUp()
-            .whileTrue(arm.setWristPosRadiansC(Units.degreesToRadians(25)));
-        controller.povLeft()
-            .whileTrue(arm.setWristPosRadiansC(Units.degreesToRadians(0)));
         controller.povDown()
-            .whileTrue(arm.setWristPosRadiansC(Units.degreesToRadians(-25)));
-        controller.povRight()
-            .whileTrue(
-                sequence(
-                    arm.setShoulderPosRadiansC(Units.degreesToRadians(-600)),
-                    arm.setWristPosRadiansC(Units.degreesToRadians(-450))
-                )
-            );
-
-
+            .onTrue(arm.inC());
     }
 
     public void periodic() {
@@ -134,6 +161,10 @@ public class RobotContainer {
     }
     public CommandBase getAutoCommand(){
         return autoOptions.getAutoCommand();
+    }
+
+    public void simulationPeriodic(){
+        visionSim.processFrame(drive.getPose());
     }
     
 }

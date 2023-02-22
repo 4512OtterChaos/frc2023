@@ -110,7 +110,7 @@ public class Arm extends SubsystemBase implements Loggable{
     public double shoulderMinimumAngleExtension = kShoulderMinimumAngleExtension;
     public double shoulderMinimumAngleExtensionWrist = kShoulderMinimumAngleExtensionWrist;
     public double shoulderMaximumAngle = kShoulderMaximumAngle;
-	public static final double kWristMinimumAngle = 0;
+	
 	@Config(defaultValueNumeric = kWristMinimumAngle)
 	void configWristMinimumAngle(double wristMinimumAngle) {
 		this.wristMinimumAngle = (wristMinimumAngle);
@@ -209,19 +209,18 @@ public class Arm extends SubsystemBase implements Loggable{
 
 		// Calculate wrist volts using feedforward and PID
 		var wristSetpoint = wristPid.getSetpoint();
-		double wristVolts = wristPid.calculate(getWristPosRadians()) + kWristFF.calculate(wristSetpoint.position, wristSetpoint.velocity);
-
-		double standardWristVolts = Math.cos(wristPosRadians)*kWristFF.kg;
+		double wristGravityVolts = Math.cos(getWristPosFrameRelativeRadians())*wristkg;
+		double wristVolts = wristPid.calculate(wristPosRadians) + kWristFF.calculate(wristSetpoint.position, wristSetpoint.velocity) + wristGravityVolts;
 
 		// Clamp wrist position to an appropriate angle.
 		double clampedWristPos = wristSafety(wristPosRadians, shoulderPosRadians, getExtensionState());
 		// System.out.println("clampedWristPos: " + Units.radiansToDegrees(clampedWristPos));
 		// Clamp wrist volts to have the wrist stay inside/go into appropriate angle range.
 		if (clampedWristPos > wristPosRadians){
-			wristVolts = Math.max(standardWristVolts, wristVolts);
+			wristVolts = Math.max(wristGravityVolts + 1, wristVolts);
 		}
 		if (clampedWristPos < wristPosRadians){
-			wristVolts = Math.min(standardWristVolts, wristVolts);
+			wristVolts = Math.min(wristGravityVolts + 1, wristVolts);
 		}
 		//Set wrist motors to the clamped voltage.
 		setWristVoltage(wristVolts);
@@ -246,6 +245,16 @@ public class Arm extends SubsystemBase implements Loggable{
 		// if exstension in and wrist is less than level
 		if (extensionState == false && wristPosRadians<-getShoulderPosRadians()-Units.degreesToRadians(5)){
 			minimumPosRadians = shoulderMinimumAngleWrist;
+			
+		}
+		return MathUtil.clamp(shoulderPosRadians, minimumPosRadians, shoulderMaximumAngle);
+	}
+
+	private double shoulderSetpointSafety(double shoulderPosRadians, boolean extensionState){
+		double minimumPosRadians = shoulderMinimumAngle;
+		// exstension out
+		if (extensionState == true){
+			minimumPosRadians = shoulderMinimumAngleExtension;
 			
 		}
 		return MathUtil.clamp(shoulderPosRadians, minimumPosRadians, shoulderMaximumAngle);
@@ -279,8 +288,8 @@ public class Arm extends SubsystemBase implements Loggable{
 	 * @param posRadians The radian value to set the shoulder angle to (between -90 and 30).
 	 */
 	public void setShoulderPosRadians(double posRadians) {
-		// double clampedPosRadians = shoulderSafety(posRadians, getWristPosRadians() , getExtensionState());
-		shoulderPid.setGoal(posRadians);
+		double clampedPosRadians = shoulderSetpointSafety(posRadians, getExtensionState());
+		shoulderPid.setGoal(clampedPosRadians);
 		setWristPosRadians(wristPid.getGoal().position);
 	}
 
@@ -290,7 +299,7 @@ public class Arm extends SubsystemBase implements Loggable{
 	 * @return The command to set the position of the shoulder.
 	 */
 	public CommandBase setShoulderPosRadiansC(double posRadians) {
-		return run(() -> setShoulderPosRadians(posRadians)).until(() -> shoulderPid.atGoal());
+		return run(() -> setShoulderPosRadians(posRadians)).until(() -> shoulderPid.atGoal()).withTimeout(0.1);
 	}
 
 	/**
@@ -315,8 +324,8 @@ public class Arm extends SubsystemBase implements Loggable{
 	 * @param posRadians The radian value to set the wrist angle to (between -45 and 45).
 	 */
 	public void setWristPosRadians(double posRadians) {
-		// double clampedPosRadians = wristSafety(posRadians, shoulderPid.getGoal().position, getExtensionState());
-		wristPid.setGoal(posRadians);
+		double clampedPosRadians = wristSafety(posRadians, shoulderPid.getGoal().position, getExtensionState());
+		wristPid.setGoal(clampedPosRadians);
 	}
 
 	/**
@@ -325,7 +334,7 @@ public class Arm extends SubsystemBase implements Loggable{
 	 * @return The command to set the position of the wrist.
 	 */
 	public CommandBase setWristPosRadiansC(double posRadians) {
-		return run(() -> setWristPosRadians(posRadians)).until(() -> wristPid.atGoal());
+		return run(() -> setWristPosRadians(posRadians)).until(() -> wristPid.atGoal()).withTimeout(0.1);
 	}
 
 	/**
@@ -336,11 +345,15 @@ public class Arm extends SubsystemBase implements Loggable{
 		return wristEncoder.getDistance();
 	}
 
+	public double getWristPosFrameRelativeRadians() {
+		return wristEncoder.getDistance()+getShoulderPosRadians();
+	}
+
 	/**
 	 * Toggles the extension piston between forward (out) and reverse (in).
 	 */
 	public void toggleExstensionExtended(){
-		if (getExtensionState() == true || getShoulderPosRadians() > Units.degreesToRadians(-40)){
+		if (getExtensionState() == true || getShoulderPosRadians() >= Units.degreesToRadians(-52)){
 			 exstensionPiston.toggle();
 		}
 		setShoulderPosRadians(shoulderPid.getGoal().position);
@@ -360,7 +373,7 @@ public class Arm extends SubsystemBase implements Loggable{
 	 * @param exstensionState The value to set the exstension pistion to (forward, off or reverse).
 	 */
 	public void setExstensionExtended(boolean exstended){
-		if (exstended==true && getShoulderPosRadians() > Units.degreesToRadians(-40)){
+		if (exstended==true && getShoulderPosRadians() >= Units.degreesToRadians(-52)){
 			exstensionPiston.set(Value.kForward);
 		}
 		else{
@@ -376,7 +389,7 @@ public class Arm extends SubsystemBase implements Loggable{
 	 * @return The command to set the exstension pistion.
 	 */
 	public CommandBase setExstensionExtendedC(boolean exstended){
-		return run(()-> setExstensionExtended(exstended));
+		return run(()-> setExstensionExtended(exstended)).withTimeout(0.5);
 	}
 	
 	/**
@@ -417,25 +430,9 @@ public class Arm extends SubsystemBase implements Loggable{
 
 	public CommandBase inC(){
 		return sequence(
+			setExstensionExtendedC(false),
             setShoulderPosRadiansC(Units.degreesToRadians(-90)),
-            setWristPosRadiansC(Units.degreesToRadians(90)),
-			setExstensionExtendedC(false)
-        );
-	}
-
-	public CommandBase scoreMidC(){
-		return sequence(
-            setShoulderPosRadiansC(Units.degreesToRadians(-7)),
-            setWristPosRadiansC(Units.degreesToRadians(7)),
-			setExstensionExtendedC(false)
-        );
-	}
-
-	public CommandBase scoreUpperC(){
-		return sequence(
-            setShoulderPosRadiansC(Units.degreesToRadians(14)),
-            setWristPosRadiansC(Units.degreesToRadians(-14)),
-			setExstensionExtendedC(true)
+            setWristPosRadiansC(Units.degreesToRadians(90))
         );
 	}
 
@@ -443,15 +440,33 @@ public class Arm extends SubsystemBase implements Loggable{
 		return sequence(
             setShoulderPosRadiansC(Units.degreesToRadians(-51)),
             setWristPosRadiansC(Units.degreesToRadians(51)),
+			waitSeconds(3),
+			setExstensionExtendedC(true)
+        );
+	}
+
+	public CommandBase scoreMidC(){
+		return sequence(
+			setExstensionExtendedC(false),
+            setShoulderPosRadiansC(Units.degreesToRadians(-7)),
+            setWristPosRadiansC(Units.degreesToRadians(7))
+        );
+	}
+
+	public CommandBase scoreUpperC(){
+		return sequence(
+            setShoulderPosRadiansC(Units.degreesToRadians(14)),
+            setWristPosRadiansC(Units.degreesToRadians(-14)),
+			waitSeconds(3),
 			setExstensionExtendedC(true)
         );
 	}
 
 	public CommandBase pickUpDoubleSubC(){
 		return sequence(
-            setShoulderPosRadiansC(Units.degreesToRadians(-0.5)),
-            setWristPosRadiansC(Units.degreesToRadians(-0.5)),
-			setExstensionExtendedC(false)
+            setExstensionExtendedC(false),
+			setShoulderPosRadiansC(Units.degreesToRadians(-0.5)),
+            setWristPosRadiansC(Units.degreesToRadians(-0.5))
         );
 	}
 

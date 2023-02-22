@@ -52,6 +52,7 @@
       "/SmartDashboard/Auto Options": "String Chooser",
       "/SmartDashboard/Auto choices": "String Chooser",
       "/SmartDashboard/Mech2d": "Mechanism2d",
+      "/SmartDashboard/camera Sim Field": "Field2d",
       "/SmartDashboard/field": "Field2d"
     },
     "windows": {
@@ -97,6 +98,12 @@
       },
       "SmartDashboard": {
         "field": {
+          "open": true
+        },
+        "open": true
+      },
+      "photonvision": {
+        "camera": {
           "open": true
         },
         "open": true
