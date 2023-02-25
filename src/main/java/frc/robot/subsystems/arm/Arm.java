@@ -73,7 +73,7 @@ public class Arm extends SubsystemBase implements Loggable{
 	EncoderSim shoulderEncoderSim = new EncoderSim(shoulderEncoder);
 	EncoderSim wristEncoderSim = new EncoderSim(wristEncoder);
 
-	DoubleSolenoid exstensionPiston = new DoubleSolenoid(PneumaticsModuleType.CTREPCM, 0, 1);
+	DoubleSolenoid extensionPiston = new DoubleSolenoid(PneumaticsModuleType.REVPH, 0, 1);
 
 	SingleJointedArmSim shoulderSim = new SingleJointedArmSim(
 			LinearSystemId.identifyPositionSystem(
@@ -155,7 +155,7 @@ public class Arm extends SubsystemBase implements Loggable{
 		wristEncoder.setReverseDirection(true);
 		motorD.setInverted(false);
 		motorE.setInverted(false);
-		exstensionPiston.set(Value.kReverse);
+		extensionPiston.set(Value.kReverse);
 		SmartDashboard.putData("Arm Subsystem", this);
 	}
 
@@ -163,11 +163,11 @@ public class Arm extends SubsystemBase implements Loggable{
 	public void periodic() {
 		mechArm.setAngle(-90 + Units.radiansToDegrees(shoulderEncoder.getDistance()));
 		mechWrist.setAngle(Units.radiansToDegrees(wristEncoder.getDistance()));
-		if (exstensionPiston.get()==Value.kForward){
+		if (extensionPiston.get()==Value.kForward){
 			mechExtension.setLength(Units.inchesToMeters(18));
 			setpointExtension.setLength(Units.inchesToMeters(18));
 		}
-		if (exstensionPiston.get()==Value.kReverse){
+		if (extensionPiston.get()==Value.kReverse){
 			mechExtension.setLength(Units.inchesToMeters(0));
 			setpointExtension.setLength(Units.inchesToMeters(0));
 		}
@@ -354,7 +354,7 @@ public class Arm extends SubsystemBase implements Loggable{
 	 */
 	public void toggleExstensionExtended(){
 		if (getExtensionState() == true || getShoulderPosRadians() >= Units.degreesToRadians(-52)){
-			 exstensionPiston.toggle();
+			 extensionPiston.toggle();
 		}
 		setShoulderPosRadians(shoulderPid.getGoal().position);
 		setWristPosRadians(wristPid.getGoal().position);
@@ -374,10 +374,10 @@ public class Arm extends SubsystemBase implements Loggable{
 	 */
 	public void setExstensionExtended(boolean exstended){
 		if (exstended==true && getShoulderPosRadians() >= Units.degreesToRadians(-52)){
-			exstensionPiston.set(Value.kForward);
+			extensionPiston.set(Value.kForward);
 		}
 		else{
-			exstensionPiston.set(Value.kReverse);
+			extensionPiston.set(Value.kReverse);
 		}
 		setShoulderPosRadians(shoulderPid.getGoal().position);
 		setWristPosRadians(wristPid.getGoal().position);
@@ -397,7 +397,7 @@ public class Arm extends SubsystemBase implements Loggable{
 	 * @return Whether the extension is extended.
 	 */
 	public boolean getExtensionState(){
-		if (exstensionPiston.get()==Value.kForward){
+		if (extensionPiston.get()==Value.kForward){
 			return true;
 		}
 		else{
@@ -491,6 +491,5 @@ public class Arm extends SubsystemBase implements Loggable{
 
 		wristEncoderSim.setDistance(wristSim.getAngleRads());
 		wristEncoderSim.setRate(wristSim.getVelocityRadPerSec());
-
 	}
 }
