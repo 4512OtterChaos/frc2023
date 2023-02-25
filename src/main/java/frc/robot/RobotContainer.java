@@ -36,7 +36,7 @@ public class RobotContainer {
     private final OCXboxController operator = new OCXboxController(1);
     private final OCXboxController king = new OCXboxController(0);
     private final Field2d field = new Field2d();
-    private final AutoOptions autoOptions = new AutoOptions(drive, intake);
+    private final AutoOptions autoOptions = new AutoOptions(drive, intake, arm);
     private final PhotonCamera camera = new PhotonCamera("camera");
     private final SimPhotonCamera simCamera = new SimPhotonCamera("camera");
     private final SimVisionSystem visionSim = new SimVisionSystem("camera", 90, new Transform3d(), 10, 640, 480, .01);
@@ -50,7 +50,7 @@ public class RobotContainer {
         } catch(Exception e) {
             throw new RuntimeException("AprilTagFieldLayout loading failed!", e);
         }
-        photonEstimator = new PhotonPoseEstimator(tagLayout, PoseStrategy.LOWEST_AMBIGUITY, camera, new Transform3d());
+        photonEstimator = new PhotonPoseEstimator(tagLayout, PoseStrategy.MULTI_TAG_PNP, camera, new Transform3d());
         visionSim.addVisionTargets(tagLayout);
         
         configureEventBinds();
@@ -121,30 +121,25 @@ public class RobotContainer {
                 )
             )
         );
-
+        
         // lock the modules in a "X" alignment
-        controller.x().whileTrue(run(()->{
-            SwerveModuleState[] states = new SwerveModuleState[]{
-                new SwerveModuleState(0, Rotation2d.fromDegrees(-135)),
-                new SwerveModuleState(0, Rotation2d.fromDegrees(135)),
-                new SwerveModuleState(0, Rotation2d.fromDegrees(-45)),
-                new SwerveModuleState(0, Rotation2d.fromDegrees(45))
-            };
-            drive.setModuleStates(states, false, true);
-        }, drive));
+        //controller.x().whileTrue(run(()->{
+        //    SwerveModuleState[] states = new SwerveModuleState[]{
+        //        new SwerveModuleState(0, Rotation2d.fromDegrees(-135)),
+        //        new SwerveModuleState(0, Rotation2d.fromDegrees(135)),
+        //        new SwerveModuleState(0, Rotation2d.fromDegrees(-45)),
+        //        new SwerveModuleState(0, Rotation2d.fromDegrees(45))
+        //    };
+        //    drive.setModuleStates(states, false, true);
+        //}, drive));
     }
 
     private void configureOperatorBinds(OCXboxController controller){
         
-        // controller.rightBumper()
-        //     .whileTrue(run(()->arm.setShoulderPosRadians(arm.shoulderPid.getGoal().position-Units.degreesToRadians(1.5)), arm));
-        // controller.leftBumper()
-        //     .whileTrue(run(()->arm.setShoulderPosRadians(arm.shoulderPid.getGoal().position+Units.degreesToRadians(1.5)), arm));
-
-        // controller.rightTrigger(0.2)
-        //     .whileTrue(run(()->arm.setWristPosRadians(arm.wristPid.getGoal().position-Units.degreesToRadians(1.5)), arm));
-        // controller.leftTrigger(0.2)
-        //     .whileTrue(run(()->arm.setWristPosRadians(arm.wristPid.getGoal().position+Units.degreesToRadians(1.5)), arm));
+        controller.rightTrigger()
+            .onTrue(intake.setVoltageC(0.75));
+        controller.leftTrigger()
+            .onTrue(intake.setVoltageC(-0.75));
 
         controller.a()
             .onTrue(arm.pickUpGroundC());

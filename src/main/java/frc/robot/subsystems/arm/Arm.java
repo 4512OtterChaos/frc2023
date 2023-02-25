@@ -99,17 +99,17 @@ public class Arm extends SubsystemBase implements Loggable{
 			true
 	);
 	
-	public double wristMinimumAngle = kWristMinimumAngle;
-    public double wristMaximumAngle = kWristMaximumAngle;
+	private double wristMinimumAngle = kWristMinimumAngle;
+    private double wristMaximumAngle = kWristMaximumAngle;
 	
-	public double shoulderWristLevel = kShoulderWristLevel;
-	public double shoulderExstensionWristLevel = kShoulderWristLevel;
+	private double shoulderWristLevel = kShoulderWristLevel;
+	private double shoulderExstensionWristLevel = kShoulderWristLevel;
 
-    public double shoulderMinimumAngle = kShoulderMinimumAngle;
-    public double shoulderMinimumAngleWrist = kShoulderMinimumAngleWrist;
-    public double shoulderMinimumAngleExtension = kShoulderMinimumAngleExtension;
-    public double shoulderMinimumAngleExtensionWrist = kShoulderMinimumAngleExtensionWrist;
-    public double shoulderMaximumAngle = kShoulderMaximumAngle;
+    private double shoulderMinimumAngle = kShoulderMinimumAngle;
+    private double shoulderMinimumAngleWrist = kShoulderMinimumAngleWrist;
+    private double shoulderMinimumAngleExtension = kShoulderMinimumAngleExtension;
+    private double shoulderMinimumAngleExtensionWrist = kShoulderMinimumAngleExtensionWrist;
+    private double shoulderMaximumAngle = kShoulderMaximumAngle;
 	
 	@Config(defaultValueNumeric = kWristMinimumAngle)
 	void configWristMinimumAngle(double wristMinimumAngle) {
@@ -429,45 +429,60 @@ public class Arm extends SubsystemBase implements Loggable{
 	}
 
 	public CommandBase inC(){
-		return sequence(
-			setExstensionExtendedC(false),
-            setShoulderPosRadiansC(Units.degreesToRadians(-90)),
-            setWristPosRadiansC(Units.degreesToRadians(90))
-        );
+		return parallel(
+			sequence(
+				setExstensionExtendedC(false),
+				setShoulderPosRadiansC(Units.degreesToRadians(-90)),
+				setWristPosRadiansC(Units.degreesToRadians(90))
+			),
+			waitSeconds(4)
+		);
 	}
 
 	public CommandBase pickUpGroundC(){
-		return sequence(
-            setShoulderPosRadiansC(Units.degreesToRadians(-51)),
-            setWristPosRadiansC(Units.degreesToRadians(51)),
-			waitSeconds(3),
-			setExstensionExtendedC(true)
-        );
+		return parallel(
+			sequence(
+				setShoulderPosRadiansC(Units.degreesToRadians(-51)),
+				setWristPosRadiansC(Units.degreesToRadians(51)),
+				waitSeconds(3),
+				setExstensionExtendedC(true)
+			),
+		waitSeconds(5)
+		);
 	}
 
 	public CommandBase scoreMidC(){
-		return sequence(
-			setExstensionExtendedC(false),
-            setShoulderPosRadiansC(Units.degreesToRadians(-7)),
-            setWristPosRadiansC(Units.degreesToRadians(7))
-        );
+		return parallel(
+			sequence(
+				setExstensionExtendedC(false),
+				setShoulderPosRadiansC(Units.degreesToRadians(-7)),
+				setWristPosRadiansC(Units.degreesToRadians(7))
+			),
+		waitSeconds(4)
+	);
 	}
 
 	public CommandBase scoreUpperC(){
-		return sequence(
-            setShoulderPosRadiansC(Units.degreesToRadians(14)),
-            setWristPosRadiansC(Units.degreesToRadians(-14)),
-			waitSeconds(3),
-			setExstensionExtendedC(true)
-        );
+		return parallel(
+			sequence(
+				setShoulderPosRadiansC(Units.degreesToRadians(14)),
+				setWristPosRadiansC(Units.degreesToRadians(-14)),
+				waitSeconds(3),
+				setExstensionExtendedC(true)
+			),
+		waitSeconds(4)
+	);
 	}
 
 	public CommandBase pickUpDoubleSubC(){
-		return sequence(
-            setExstensionExtendedC(false),
-			setShoulderPosRadiansC(Units.degreesToRadians(-0.5)),
-            setWristPosRadiansC(Units.degreesToRadians(-0.5))
-        );
+		return parallel(
+			sequence(
+				setExstensionExtendedC(false),
+				setShoulderPosRadiansC(Units.degreesToRadians(-0.5)),
+				setWristPosRadiansC(Units.degreesToRadians(-0.5))
+			),
+		waitSeconds(5)
+	);
 	}
 
 	public void simulationPeriodic() {

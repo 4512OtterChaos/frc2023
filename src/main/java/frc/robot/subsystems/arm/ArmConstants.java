@@ -26,16 +26,16 @@ public final class ArmConstants{
     );
     public static final double wristkg = 1.4;
 
-    public static final double kWristMinimumAngle = -0.785398; // equal to Units.degreesToRadians(-60)
+    public static final double kWristMinimumAngle = -0.785398; // equal to Units.degreesToRadians(-45)
     public static final double kWristMaximumAngle = 0.785398; // equal to Units.degreesToRadians(45)
 
-    public static final double kShoulderExstensionWristLevel = -0.3; // equal to Units.degreesToRadians(-47);
-    public static final double kShoulderWristLevel = -0.6; // equal to Units.degreesToRadians(-70);
+    public static final double kShoulderExstensionWristLevel = -0.3; // equal to Units.degreesToRadians(-17.1887);
+    public static final double kShoulderWristLevel = -0.6; // equal to Units.degreesToRadians(-34.3775);
     
 
     public static final double kShoulderMinimumAngle = -1.5708; // equal to Units.degreesToRadians(-90)
-    public static final double kShoulderMinimumAngleWrist = -0.75; // equal to Units.degreesToRadians(-80);
+    public static final double kShoulderMinimumAngleWrist = -0.75; // equal to Units.degreesToRadians(-42.97183);
     public static final double kShoulderMinimumAngleExtension = -0.907571; // equal to Units.degreesToRadians(-52);
-    public static final double kShoulderMinimumAngleExtensionWrist = -0.4; // equal to Units.degreesToRadians(-40);
+    public static final double kShoulderMinimumAngleExtensionWrist = -0.4; // equal to Units.degreesToRadians(-22.9183);
     public static final double kShoulderMaximumAngle = 0.523599; // equal to Units.degreesToRadians(30);
 }

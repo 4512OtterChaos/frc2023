@@ -13,23 +13,24 @@ public class Intake extends SubsystemBase{
         rightMotor.setSafetyEnabled(false);
         leftMotor.setSafetyEnabled(false);
         rightMotor.setInverted(true);
+        
     }
  
     /**
-     * Sets the speed of the intake.
-     * @param speed Speed to set the intake to.
+     * Sets the voltage of the intake.
+     * @param volts Voltage to set the intake to.
      */
-    public void setSpeed(double speed){
-        leftMotor.set(speed);
-        rightMotor.set(speed);
+    public void setVoltage(double volts){
+        leftMotor.setVoltage(volts);
+        rightMotor.setVoltage(volts);
     }
 
     /**
-     * Sets the speed of the intake.
-     * @param speed Speed to set the intake to.
-     * @return The command to set the intake speed.
+     * Sets the voltage of the intake.
+     * @param volts Voltage to set the intake to.
+     * @return The command to set the intake voltage.
      */
-    public CommandBase setSpeedC(double speed) {
-        return runEnd(()->setSpeed(speed), ()->setSpeed(0));
+    public CommandBase setVoltageC(double volts) {
+        return runEnd(()->setVoltage(volts), ()->setVoltage(volts));
     }
 }
