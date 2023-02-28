@@ -186,6 +186,6 @@ public class ArmSimulation {
 
         // update our sensors with the results
         shoulderEncoderSim.setDistance(shoulderSim.getAngleRads());
-        wristEncoderSim.setDistance(wristSim.getAngleRads());
+        wristEncoderSim.setDistance(wristSim.getAngleRads() - shoulderSim.getAngleRads());
     }
 }

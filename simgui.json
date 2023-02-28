@@ -10,9 +10,18 @@
         "header": {
           "open": true
         }
+      }
+    },
+    "Other Devices": {
+      "DutyCycleEncoder[6]": {
+        "header": {
+          "open": true
+        }
       },
-      "window": {
-        "visible": true
+      "DutyCycleEncoder[8]": {
+        "header": {
+          "open": true
+        }
       }
     },
     "PWM Outputs": {
@@ -24,6 +33,8 @@
   "NTProvider": {
     "types": {
       "/FMSInfo": "FMSInfo",
+      "/LiveWindow/Ungrouped/DigitalInput[6]": "Digital Input",
+      "/LiveWindow/Ungrouped/DigitalInput[8]": "Digital Input",
       "/LiveWindow/Ungrouped/PIDController[1]": "PIDController",
       "/LiveWindow/Ungrouped/PIDController[2]": "PIDController",
       "/LiveWindow/Ungrouped/PIDController[3]": "PIDController",
@@ -51,7 +62,10 @@
       "/LiveWindow/Ungrouped/VictorSP[4]": "Motor Controller",
       "/Shuffleboard/SwerveDrive/xController": "PIDController",
       "/Shuffleboard/SwerveDrive/yController": "PIDController",
+      "/Shuffleboard/SwerveDrive: Config/xController": "PIDController",
+      "/Shuffleboard/SwerveDrive: Config/yController": "PIDController",
       "/SmartDashboard/Arm Subsystem": "Subsystem",
+      "/SmartDashboard/Arm/Mech2d": "Mechanism2d",
       "/SmartDashboard/Auto Options": "String Chooser",
       "/SmartDashboard/Auto choices": "String Chooser",
       "/SmartDashboard/Mech2d": "Mechanism2d",
@@ -59,12 +73,12 @@
       "/SmartDashboard/field": "Field2d"
     },
     "windows": {
-      "/SmartDashboard/Auto Options": {
+      "/SmartDashboard/Arm/Mech2d": {
         "window": {
           "visible": true
         }
       },
-      "/SmartDashboard/Mech2d": {
+      "/SmartDashboard/Auto Options": {
         "window": {
           "visible": true
         }
@@ -72,10 +86,14 @@
       "/SmartDashboard/field": {
         "bottom": 544,
         "height": 8.013679504394531,
-        "image": "C:\\Users\\FRC 4512\\Documents\\GitHub\\frc2023\\2023-field.png",
+        "image": "2023-field.png",
         "left": 46,
         "right": 1088,
         "top": 36,
+        "trajectory": {
+          "arrows": false,
+          "style": "Track"
+        },
         "width": 16.541748046875,
         "window": {
           "visible": true

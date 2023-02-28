@@ -24,7 +24,6 @@ public class PistonSim {
     
     public void setExtended(boolean extended) {
         this.extended = extended;
-        lastTime = Timer.getFPGATimestamp();
     }
     /**
      * Manually set the extension length (0 - 1).

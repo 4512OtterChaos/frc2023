@@ -6,98 +6,38 @@ package frc.robot.subsystems.arm;
 
 import edu.wpi.first.math.MathUtil;
 import edu.wpi.first.math.controller.ProfiledPIDController;
-import edu.wpi.first.math.system.plant.DCMotor;
-import edu.wpi.first.math.system.plant.LinearSystemId;
 import edu.wpi.first.math.trajectory.TrapezoidProfile;
 import edu.wpi.first.math.util.Units;
 import edu.wpi.first.wpilibj.DoubleSolenoid;
+import edu.wpi.first.wpilibj.DutyCycleEncoder;
 import edu.wpi.first.wpilibj.Encoder;
 import edu.wpi.first.wpilibj.PneumaticsModuleType;
 import edu.wpi.first.wpilibj.DoubleSolenoid.Value;
-import edu.wpi.first.wpilibj.motorcontrol.VictorSP;
-import edu.wpi.first.wpilibj.simulation.EncoderSim;
-import edu.wpi.first.wpilibj.simulation.PWMSim;
-import edu.wpi.first.wpilibj.simulation.SingleJointedArmSim;
-import edu.wpi.first.wpilibj.smartdashboard.Mechanism2d;
-import edu.wpi.first.wpilibj.smartdashboard.MechanismLigament2d;
-import edu.wpi.first.wpilibj.smartdashboard.MechanismRoot2d;
 import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
-import edu.wpi.first.wpilibj.util.Color8Bit;
 import edu.wpi.first.wpilibj2.command.CommandBase;
 import static edu.wpi.first.wpilibj2.command.Commands.*;
 import edu.wpi.first.wpilibj2.command.SubsystemBase;
+import frc.robot.util.OCSparkMax;
 import io.github.oblarg.oblog.Loggable;
 import io.github.oblarg.oblog.annotations.Config;
 import io.github.oblarg.oblog.annotations.*;
 
 import static frc.robot.subsystems.arm.ArmConstants.*;
 
+import com.revrobotics.CANSparkMaxLowLevel.MotorType;
+
 @Log.Exclude
 public class Arm extends SubsystemBase implements Loggable{
-	VictorSP motorA = new VictorSP(0);
-	VictorSP motorB = new VictorSP(1);
-	VictorSP motorC = new VictorSP(2);
-	VictorSP motorD = new VictorSP(3);
-	VictorSP motorE = new VictorSP(4);
+	OCSparkMax shoulderMotor = new OCSparkMax(0, MotorType.kBrushless);
+	OCSparkMax wristMotor = new OCSparkMax(3, MotorType.kBrushless);
 
-	private Encoder shoulderEncoder = new Encoder(6, 7);
-	private Encoder wristEncoder = new Encoder(8, 9);
+	private DutyCycleEncoder shoulderEncoder = new DutyCycleEncoder(6);
+	private DutyCycleEncoder wristEncoder = new DutyCycleEncoder(8);
 	
 	public ProfiledPIDController shoulderPid = new ProfiledPIDController(6, 0, 0, new TrapezoidProfile.Constraints(0.7, 0.7));
 	public ProfiledPIDController wristPid = new ProfiledPIDController(6, 0, 0, new TrapezoidProfile.Constraints(0.8, 0.8));
 
-	// Ligaments of arm simulation, rooted to different each and every ligament.
-	Mechanism2d mech = new Mechanism2d(2.5, 2.5, new Color8Bit(0, 100, 150));
-	MechanismRoot2d mechRoot = mech.getRoot("arm", 1.25, 0.1);
-
-	MechanismLigament2d setpointArmBase = mechRoot.append(
-			new MechanismLigament2d("setpointArmBase", Units.inchesToMeters(40), 90, 6, new Color8Bit(150, 0, 0)));
-	MechanismLigament2d setpointArm = setpointArmBase
-			.append(new MechanismLigament2d("setpointArm", Units.inchesToMeters(30), -90, 6, new Color8Bit(150, 0, 0)));
-	MechanismLigament2d setpointExtension = setpointArm.append(
-			new MechanismLigament2d("setpointExtension", Units.inchesToMeters(18), 0, 4, new Color8Bit(180, 0, 0)));
-	MechanismLigament2d setpointWrist = setpointExtension
-			.append(new MechanismLigament2d("setpointWrist", Units.inchesToMeters(18), 0, 5, new Color8Bit(180, 0, 0)));
-
-	MechanismLigament2d mechArmBase = mechRoot
-			.append(new MechanismLigament2d("base", Units.inchesToMeters(40), 90, 10, new Color8Bit(0, 0, 150)));
-	MechanismLigament2d mechArm = mechArmBase
-			.append(new MechanismLigament2d("arm", Units.inchesToMeters(30), -90, 10, new Color8Bit(0, 0, 150)));
-	MechanismLigament2d mechExtension = mechArm
-			.append(new MechanismLigament2d("armExtension", Units.inchesToMeters(18), 0, 7, new Color8Bit(0, 0, 180)));
-	MechanismLigament2d mechWrist = mechExtension
-			.append(new MechanismLigament2d("armWrist", Units.inchesToMeters(16), 0, 8, new Color8Bit(0, 0, 180)));
-
-	PWMSim shoulderMotorSim = new PWMSim(motorA);
-	PWMSim wristMotorSim = new PWMSim(motorD);
-	EncoderSim shoulderEncoderSim = new EncoderSim(shoulderEncoder);
-	EncoderSim wristEncoderSim = new EncoderSim(wristEncoder);
-
 	DoubleSolenoid extensionPiston = new DoubleSolenoid(PneumaticsModuleType.REVPH, 0, 1);
-
-	SingleJointedArmSim shoulderSim = new SingleJointedArmSim(
-			LinearSystemId.identifyPositionSystem(
-					kShoulderFF.kv,
-					kShoulderFF.ka),
-			DCMotor.getCIM(2),
-			100,
-			1,
-			Units.degreesToRadians(-90),
-			Units.degreesToRadians(30),
-			true
-	);
-
-	SingleJointedArmSim wristSim = new SingleJointedArmSim(
-			LinearSystemId.identifyPositionSystem(
-					kWristFF.kv,
-					kWristFF.ka),
-			DCMotor.getCIM(2),
-			100,
-			1,
-			Units.degreesToRadians(-45),
-			Units.degreesToRadians(90),
-			true
-	);
 	
 	private double wristMinimumAngle = kWristMinimumAngle;
     private double wristMaximumAngle = kWristMaximumAngle;
@@ -110,6 +50,8 @@ public class Arm extends SubsystemBase implements Loggable{
     private double shoulderMinimumAngleExtension = kShoulderMinimumAngleExtension;
     private double shoulderMinimumAngleExtensionWrist = kShoulderMinimumAngleExtensionWrist;
     private double shoulderMaximumAngle = kShoulderMaximumAngle;
+
+	ArmSimulation armSim = new ArmSimulation(shoulderMotor, wristMotor, extensionPiston, shoulderEncoder, wristEncoder);
 	
 	@Config(defaultValueNumeric = kWristMinimumAngle)
 	void configWristMinimumAngle(double wristMinimumAngle) {
@@ -149,32 +91,16 @@ public class Arm extends SubsystemBase implements Loggable{
 	}
 
 	public Arm() {
-		SmartDashboard.putData("Mech2d", mech);
-		shoulderEncoder.setDistancePerPulse(2 * (Math.PI) / kEncoderPPR);
-		wristEncoder.setDistancePerPulse(2 * (Math.PI) / kEncoderPPR);
-		wristEncoder.setReverseDirection(true);
-		motorD.setInverted(false);
-		motorE.setInverted(false);
+		shoulderEncoder.setDistancePerRotation(2 * (Math.PI));
+		wristEncoder.setDistancePerRotation(2 * (Math.PI));
+		wristMotor.setInverted(false);
 		extensionPiston.set(Value.kReverse);
 		SmartDashboard.putData("Arm Subsystem", this);
 	}
 
 	@Override
 	public void periodic() {
-		mechArm.setAngle(-90 + Units.radiansToDegrees(shoulderEncoder.getDistance()));
-		mechWrist.setAngle(Units.radiansToDegrees(wristEncoder.getDistance()));
-		if (extensionPiston.get()==Value.kForward){
-			mechExtension.setLength(Units.inchesToMeters(18));
-			setpointExtension.setLength(Units.inchesToMeters(18));
-		}
-		if (extensionPiston.get()==Value.kReverse){
-			mechExtension.setLength(Units.inchesToMeters(0));
-			setpointExtension.setLength(Units.inchesToMeters(0));
-		}
-		
-		setpointArm.setAngle(-90 + Units.radiansToDegrees(shoulderPid.getGoal().position));
-		setpointWrist.setAngle(Units.radiansToDegrees(wristPid.getGoal().position));
-
+		armSim.periodic();
 		SmartDashboard.putNumber("Shoulder Angle: Degrees", Units.radiansToDegrees(getShoulderPosRadians()));
 		SmartDashboard.putNumber("Shoulder Goal: Degrees", Units.radiansToDegrees(shoulderPid.getGoal().position));
 		SmartDashboard.putNumber("Wrist Angle: Degrees", Units.radiansToDegrees(getWristPosRadians()));
@@ -188,6 +114,7 @@ public class Arm extends SubsystemBase implements Loggable{
 
 		// Calculate shoulder volts using feedforward and PID
 		var shoulderSetpoint = shoulderPid.getSetpoint();
+		armSim.setShoulderSetpoint(shoulderSetpoint.position);
 		double shoulderVolts = shoulderPid.calculate(shoulderPosRadians) + kShoulderFF.calculate(shoulderSetpoint.position, shoulderSetpoint.velocity);
 		
 		double standardShoulderVolts = Math.cos(shoulderPosRadians)*kWristFF.kg;
@@ -209,6 +136,7 @@ public class Arm extends SubsystemBase implements Loggable{
 
 		// Calculate wrist volts using feedforward and PID
 		var wristSetpoint = wristPid.getSetpoint();
+		armSim.setWristSetpoint(wristSetpoint.position+shoulderSetpoint.position);
 		double wristGravityVolts = Math.cos(getWristPosFrameRelativeRadians())*wristkg;
 		double wristVolts = wristPid.calculate(wristPosRadians) + kWristFF.calculate(wristSetpoint.position, wristSetpoint.velocity) + wristGravityVolts;
 
@@ -279,8 +207,7 @@ public class Arm extends SubsystemBase implements Loggable{
 	 * @param volts The voltage to set the shoulder motors to (between -12 and 12).
 	 */
 	public void setShoulderVoltage(double volts) {
-		motorA.setVoltage(volts);
-		motorB.setVoltage(volts);
+		shoulderMotor.setVoltage(volts);
 	}
 
 	/**
@@ -315,8 +242,7 @@ public class Arm extends SubsystemBase implements Loggable{
 	 * @param volts The voltage to set the wrist motors to (between -12 and 12).
 	 */
 	public void setWristVoltage(double volts) {
-		motorD.setVoltage(volts);
-		motorE.setVoltage(volts);
+		wristMotor.setVoltage(volts);
 	}
 
 	/**
@@ -428,6 +354,11 @@ public class Arm extends SubsystemBase implements Loggable{
 		return run(()->setArmState(shoulderPosRadians, wristPosRadians, extended));
 	}
 
+	@Override
+	public void simulationPeriodic() {
+		armSim.simulationPeriodic();
+	}
+
 	public CommandBase inC(){
 		return parallel(
 			sequence(
@@ -483,28 +414,5 @@ public class Arm extends SubsystemBase implements Loggable{
 			),
 		waitSeconds(5)
 	);
-	}
-
-	public void simulationPeriodic() {
-		// get "voltage" after static friction
-		double shoulderVoltage = shoulderMotorSim.getSpeed() * 12;
-		double wristVoltage = wristMotorSim.getSpeed() * 12;
-		
-
-		// if(voltage >= 0) voltage = Math.max(0, voltage-kFF.ks);
-		// else voltage = Math.min(0, voltage+kFF.ks);
-
-		// apply this voltage to the simulated physics model
-		shoulderSim.setInput(shoulderVoltage);
-		shoulderSim.update(0.02);
-
-		wristSim.setInput(wristVoltage);
-		wristSim.update(0.02);
-		// update our sensors with the results
-		shoulderEncoderSim.setDistance(shoulderSim.getAngleRads());
-		shoulderEncoderSim.setRate(shoulderSim.getVelocityRadPerSec());
-
-		wristEncoderSim.setDistance(wristSim.getAngleRads());
-		wristEncoderSim.setRate(wristSim.getVelocityRadPerSec());
 	}
 }

@@ -325,7 +325,7 @@ public class SwerveDrive extends SubsystemBase implements Loggable {
         }
     }
     public void logTrajectory(Trajectory trajectory) {logTrajectory = trajectory;}
-    public Trajectory getLogTrajectory() {return logTrajectory;}
+    public Trajectory getLogTrajectory() {return logTrajectory == null ? new Trajectory() : logTrajectory;}
 
 
 

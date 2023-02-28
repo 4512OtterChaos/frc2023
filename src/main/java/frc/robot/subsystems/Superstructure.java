@@ -4,6 +4,12 @@
 
 package frc.robot.subsystems;
 
+import com.pathplanner.lib.PathPlanner;
+import com.pathplanner.lib.PathPoint;
+
+import edu.wpi.first.wpilibj2.command.CommandBase;
+import static edu.wpi.first.wpilibj2.command.Commands.*;
+import frc.robot.auto.AutoConstants;
 import frc.robot.subsystems.arm.Arm;
 import frc.robot.subsystems.drive.SwerveDrive;
 import frc.robot.subsystems.intake.Intake;
@@ -21,8 +27,14 @@ public class Superstructure {
     }
 
 
-    public void periodic() {}
+    public void periodic() {
+
+    }
     
+    public CommandBase p1() {
+        // PathPlanner.generatePath(AutoConstants.kMediumSpeedConfig, new PathPoint(drive.getPose(), heading, drive.getHeading(), velocityOverride) point2, points);
+        return none();
+    }
     
 
 }

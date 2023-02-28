@@ -33,4 +33,8 @@ public class Intake extends SubsystemBase{
     public CommandBase setVoltageC(double volts) {
         return runEnd(()->setVoltage(volts), ()->setVoltage(volts));
     }
+
+    public boolean stallDetection(double volts){
+        return false;
+    }
 }

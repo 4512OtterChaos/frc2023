@@ -2,6 +2,7 @@ package frc.robot.auto;
 
 import com.pathplanner.lib.PathPlanner;
 import com.pathplanner.lib.PathPlannerTrajectory;
+import com.pathplanner.lib.PathPoint;
 
 import edu.wpi.first.math.geometry.Pose2d;
 import edu.wpi.first.wpilibj.smartdashboard.SendableChooser;
@@ -26,29 +27,12 @@ public class AutoOptions {
         autoOptions.setDefaultOption("Nothing",
             new InstantCommand(()->drive.stop(), drive)
         );
-
-        autoOptions.addOption("NolanExample",
-            sequence(
-                new OCSwerveFollower(
-                    drive, 
-                    "NolanExample1", 
-                    AutoConstants.kMediumSpeedConfig,
-                    true
-                ),
-                intake.setVoltageC(0.75).withTimeout(2),
-                new OCSwerveFollower(
-                    drive, 
-                    "NolanExample2", 
-                    AutoConstants.kMediumSpeedConfig,
-                    false
-                )
-            )
-        );
+        
         autoOptions.addOption("T1Cone1CubeEngaged",
             sequence(
-                arm.scoreUpperC().withTimeout(4),
-                intake.setVoltageC(-0.25).withTimeout(2),
-                arm.inC().withTimeout(4),
+                arm.scoreUpperC().withTimeout(3),
+                intake.setVoltageC(-0.25).withTimeout(1),
+                arm.inC().withTimeout(2),
                 new OCSwerveFollower(
                     drive, 
                     "T1Cone1CubeEngaged1", 
@@ -77,27 +61,27 @@ public class AutoOptions {
                 )
             )
         );
-        autoOptions.addOption("1CubeEngaged",
+        autoOptions.addOption("M1CubeEngaged",
             sequence(
                 arm.scoreUpperC().withTimeout(4),
                 intake.setVoltageC(-0.25).withTimeout(2),
                 arm.inC().withTimeout(4),
                 new OCSwerveFollower(
                     drive, 
-                    "1CubeEngaged", 
+                    "M1CubeEngaged", 
                     AutoConstants.kMediumSpeedConfig,
                     true
                 )
             )
         );
-        autoOptions.addOption("1CubeTaxiEngaged",
+        autoOptions.addOption("M1CubeTaxiEngaged",
             sequence(
                 arm.scoreUpperC().withTimeout(4),
                 intake.setVoltageC(-0.25).withTimeout(2),
                 arm.inC().withTimeout(4),
                 new OCSwerveFollower(
                     drive, 
-                    "1CubeTaxiEngaged", 
+                    "M1CubeTaxiEngaged", 
                     AutoConstants.kMediumSpeedConfig,
                     true
                 )
@@ -116,7 +100,119 @@ public class AutoOptions {
         //         )
         //     )
         // );
+        autoOptions.addOption("Ttaxi",
+            sequence(
+
+                new OCSwerveFollower(
+                    drive, 
+                    "Ttaxi", 
+                    AutoConstants.kMediumSpeedConfig,
+                    true
+                )
+            )
+        );
+        autoOptions.addOption("Btaxi",
+            sequence(
+
+                new OCSwerveFollower(
+                    drive, 
+                    "Btaxi", 
+                    AutoConstants.kMediumSpeedConfig,
+                    true
+                )
+            )
+        );
+        autoOptions.addOption("Mtaxi",
+            sequence(
+
+                new OCSwerveFollower(
+                    drive, 
+                    "Mtaxi", 
+                    AutoConstants.kMediumSpeedConfig,
+                    true
+                )
+            )
+        );
+        autoOptions.addOption("T1Cubetaxi",
+            sequence(
+                arm.scoreUpperC().withTimeout(4),
+                intake.setVoltageC(-0.25).withTimeout(2),
+                arm.inC().withTimeout(4),
+                new OCSwerveFollower(
+                    drive, 
+                    "T1Cubetaxi", 
+                    AutoConstants.kMediumSpeedConfig,
+                    true
+                )
+            )
+        );
+        autoOptions.addOption("M1Cubetaxi",
+            sequence(
+                arm.scoreUpperC().withTimeout(4),
+                intake.setVoltageC(-0.25).withTimeout(2),
+                arm.inC().withTimeout(4),
+                new OCSwerveFollower(
+                    drive, 
+                    "M1Cubetaxi", 
+                    AutoConstants.kMediumSpeedConfig,
+                    true
+                )
+            )
+        );
+        autoOptions.addOption("B1Cubetaxi",
+            sequence(
+                arm.scoreUpperC().withTimeout(4),
+                intake.setVoltageC(-0.25).withTimeout(2),
+                arm.inC().withTimeout(4),
+                new OCSwerveFollower(
+                    drive, 
+                    "B1Cubetaxi", 
+                    AutoConstants.kMediumSpeedConfig,
+                    true
+                )
+            )
+        );
+        autoOptions.addOption("T1Conetaxi",
+            sequence(
+                arm.scoreUpperC().withTimeout(4),
+                intake.setVoltageC(-0.25).withTimeout(2),
+                arm.inC().withTimeout(4),
+                new OCSwerveFollower(
+                    drive, 
+                    "T1Conetaxi", 
+                    AutoConstants.kMediumSpeedConfig,
+                    true
+                )
+            )
+        );
+        autoOptions.addOption("M1Conetaxi",
+            sequence(
+                arm.scoreUpperC().withTimeout(4),
+                intake.setVoltageC(-0.25).withTimeout(2),
+                arm.inC().withTimeout(4),
+                new OCSwerveFollower(
+                    drive, 
+                    "M1Conetaxi", 
+                    AutoConstants.kMediumSpeedConfig,
+                    true
+                )
+            )
+        );
+        autoOptions.addOption("B1Conetaxi",
+            sequence(
+                arm.scoreUpperC().withTimeout(4),
+                intake.setVoltageC(-0.25).withTimeout(2),
+                arm.inC().withTimeout(4),
+                new OCSwerveFollower(
+                    drive, 
+                    "B1Conetaxi", 
+                    AutoConstants.kMediumSpeedConfig,
+                    true
+                )
+            )
+        );
     }
+    
     
     public CommandBase getAutoCommand(){
         var cmd = autoOptions.getSelected();

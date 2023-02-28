@@ -17,6 +17,7 @@ import frc.robot.subsystems.drive.SwerveDrive;
 public class OCSwerveFollower extends CommandBase {
     
     private final SwerveDrive drivetrain;
+    private PathPlannerTrajectory path;
     private final String pathName;
     private final PathConstraints constraints;
     private final boolean resetOdom;
@@ -28,6 +29,18 @@ public class OCSwerveFollower extends CommandBase {
             PathConstraints constraints, boolean resetOdom) {
         this.drivetrain = drivetrain;
         this.pathName = pathName;
+        path = PathPlanner.loadPath(pathName, constraints);;
+        this.constraints = constraints;
+        this.resetOdom = resetOdom;
+
+        addRequirements(drivetrain);
+    }
+    public OCSwerveFollower(
+            SwerveDrive drivetrain, PathPlannerTrajectory path,
+            PathConstraints constraints, boolean resetOdom) {
+        this.drivetrain = drivetrain;
+        this.path = path;
+        pathName = null;
         this.constraints = constraints;
         this.resetOdom = resetOdom;
 
@@ -36,21 +49,21 @@ public class OCSwerveFollower extends CommandBase {
     
     @Override
     public void initialize() {
-        var path = PathPlanner.loadPath(pathName, constraints);
         if(path == null) {
             end(false);
             return;
         }
-        var alliancePath = PathPlannerTrajectory.transformTrajectoryForAlliance(
-            path,
-            DriverStation.getAlliance()
-        );
+        if(pathName != null) {
+            path = PathPlannerTrajectory.transformTrajectoryForAlliance(
+                path,
+                DriverStation.getAlliance());
+        }
 
-        if(resetOdom) drivetrain.resetOdometry(alliancePath.getInitialHolonomicPose());
-        drivetrain.logTrajectory(alliancePath);
+        if(resetOdom) drivetrain.resetOdometry(path.getInitialHolonomicPose());
+        drivetrain.logTrajectory(path);
 
         controllerCommand = new PPSwerveControllerCommand(
-            alliancePath,
+            path,
             drivetrain::getPose,
             drivetrain.getXController(),
             drivetrain.getYController(),

@@ -1,6 +1,8 @@
 package frc.robot;
 
+import frc.robot.auto.AutoConstants;
 import frc.robot.auto.AutoOptions;
+import frc.robot.auto.OCSwerveFollower;
 import frc.robot.subsystems.arm.Arm;
 import frc.robot.subsystems.drive.SwerveDrive;
 import frc.robot.subsystems.intake.Intake;
@@ -16,11 +18,16 @@ import org.photonvision.SimPhotonCamera;
 import org.photonvision.SimVisionSystem;
 import org.photonvision.PhotonPoseEstimator.PoseStrategy;
 
+import com.pathplanner.lib.PathPlanner;
+import com.pathplanner.lib.PathPlannerTrajectory;
+import com.pathplanner.lib.PathPoint;
+
 import edu.wpi.first.apriltag.AprilTagFieldLayout;
 import edu.wpi.first.apriltag.AprilTagFields;
 import edu.wpi.first.math.geometry.Pose2d;
 import edu.wpi.first.math.geometry.Rotation2d;
 import edu.wpi.first.math.geometry.Transform3d;
+import edu.wpi.first.math.geometry.Translation2d;
 import edu.wpi.first.math.kinematics.SwerveModuleState;
 import edu.wpi.first.math.util.Units;
 import edu.wpi.first.wpilibj.Timer;
@@ -64,10 +71,11 @@ public class RobotContainer {
         }
         
         SmartDashboard.putData("field", field);
+        // field.getObject("test").setPose(new Pose2d());
 
         autoOptions.submit();
 
-        Logger.configureLoggingAndConfig(this, false);
+        Logger.configureLoggingAndConfig(this, true);
     }
     
     private void configureEventBinds() {
@@ -107,7 +115,10 @@ public class RobotContainer {
         // toggle between field-relative and robot-relative control
         controller.back()
         .onTrue(
-            runOnce(()->drive.setIsFieldRelative(!drive.getIsFieldRelative()))
+            runOnce(()->{
+                var path = (PathPlannerTrajectory)drive.getLogTrajectory();
+                new OCSwerveFollower(drive, path, AutoConstants.kMediumSpeedConfig, false).schedule();;
+            })
         );
 
         // reset the robot heading to 0
@@ -157,6 +168,14 @@ public class RobotContainer {
 
     public void periodic() {
         field.setRobotPose(drive.getPose());
+        // drive.logTrajectory(
+        //     PathPlanner.generatePath(
+        //         AutoConstants.kMediumSpeedConfig,
+        //         new PathPoint(drive.getPose().getTranslation(), new Rotation2d(), drive.getPose().getRotation()),
+        //         new PathPoint(new Translation2d(8, 4), new Rotation2d())
+        //     )
+        // );
+        field.getObject("trajectory").setTrajectory(drive.getLogTrajectory());
         LogUtil.logPose("drivePose2d", drive.getPose());
         camera.getLatestResult().getTargets();
         photonEstimator.update().ifPresent(est -> {
