@@ -58,4 +58,10 @@ public class DutyCycleEncoderSim {
             setAbsolutePosition(position);
         }
     }
+
+    public void setDistancePerRotation(double distancePerRotation) {
+        if(RobotBase.isSimulation()) {
+            m_simDistancePerRotation.set(distancePerRotation);
+        }
+    }
 }

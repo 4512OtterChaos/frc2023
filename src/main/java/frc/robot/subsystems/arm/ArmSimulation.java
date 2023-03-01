@@ -76,7 +76,9 @@ public class ArmSimulation {
         this.shoulderEncoder = shoulderEncoder;
         this.wristEncoder = wristEncoder;
         shoulderEncoderSim = new DutyCycleEncoderSim(shoulderEncoder);
+        shoulderEncoderSim.setDistancePerRotation(2*Math.PI);
         wristEncoderSim = new DutyCycleEncoderSim(wristEncoder);
+        wristEncoderSim.setDistancePerRotation(2*Math.PI);
 
         SmartDashboard.putData("Arm/Mech2d", mech);
     }
