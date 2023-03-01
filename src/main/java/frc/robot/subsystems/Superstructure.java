@@ -5,7 +5,6 @@
 package frc.robot.subsystems;
 
 import com.pathplanner.lib.PathPlanner;
-import com.pathplanner.lib.PathPlannerTrajectory;
 import com.pathplanner.lib.PathPoint;
 
 import edu.wpi.first.math.geometry.Pose2d;
@@ -18,6 +17,7 @@ import frc.robot.auto.OCSwerveFollower;
 import frc.robot.subsystems.arm.Arm;
 import frc.robot.subsystems.drive.SwerveDrive;
 import frc.robot.subsystems.intake.Intake;
+import frc.robot.util.FieldUtil;
 
 public class Superstructure {
 
@@ -25,36 +25,22 @@ public class Superstructure {
     private final SwerveDrive drive;
     private final Intake intake;
 
-    private PathPoint currentPoint;
-    private PathPoint endPoint;
-
-    public Superstructure(Arm arm, SwerveDrive drive, Intake intake){
+    public Superstructure(Arm arm, SwerveDrive drive, Intake intake) {
         this.arm = arm;
         this.drive = drive;
         this.intake = intake;
-
-        currentPoint = new PathPoint(drive.getPose().getTranslation(), new Rotation2d(), drive.getPose().getRotation());
-        endPoint = new PathPoint(new Translation2d(), new Rotation2d(), new Rotation2d());
     }
-
 
     public void periodic() {
-        currentPoint = new PathPoint(drive.getPose().getTranslation(), new Rotation2d(), drive.getPose().getRotation());
-        drive.logTrajectory(
-            PathPlanner.generatePath(
-                AutoConstants.kMediumSpeedConfig,
-                currentPoint,
-                new PathPoint(new Translation2d(8, 4), new Rotation2d())
-            )
-        );
     }
-    
+
     public CommandBase p1() {
-        return runOnce(()->{
-            var path = (PathPlannerTrajectory)drive.getLogTrajectory();
-            new OCSwerveFollower(drive, path, AutoConstants.kMediumSpeedConfig, false).schedule();;
-        });
+        return new OCSwerveFollower(
+                drive,
+                () -> PathPlanner.generatePath(AutoConstants.kMediumSpeedConfig,
+                        PathPoint.fromCurrentHolonomicState(drive.getPose(), drive.getChassisSpeeds()),
+                        FieldUtil.allianceMirror(FieldUtil.kGrid1)),
+                false);
     }
-    
 
 }

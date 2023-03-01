@@ -32,7 +32,7 @@ public class Robot extends TimedRobot {
     
     @Override
     public void autonomousInit() {
-        // container.getAutoCommand().schedule();
+        container.getAutoCommand().schedule();
     }
     
     /** This function is called periodically during autonomous. */

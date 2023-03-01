@@ -4,6 +4,8 @@
 
 package frc.robot.auto;
 
+import java.util.function.Supplier;
+
 import com.pathplanner.lib.PathConstraints;
 import com.pathplanner.lib.PathPlanner;
 import com.pathplanner.lib.PathPlannerTrajectory;
@@ -18,30 +20,28 @@ public class OCSwerveFollower extends CommandBase {
     
     private final SwerveDrive drivetrain;
     private PathPlannerTrajectory path;
-    private final String pathName;
-    private final PathConstraints constraints;
+    private Supplier<PathPlannerTrajectory> pathSupplier;
     private final boolean resetOdom;
 
     private CommandBase controllerCommand = Commands.none();
+    private boolean initialized = false;
 
     public OCSwerveFollower(
             SwerveDrive drivetrain, String pathName,
             PathConstraints constraints, boolean resetOdom) {
         this.drivetrain = drivetrain;
-        this.pathName = pathName;
-        path = PathPlanner.loadPath(pathName, constraints);;
-        this.constraints = constraints;
+        path = PathPlanner.loadPath(pathName, constraints);
+        pathSupplier = null;
         this.resetOdom = resetOdom;
 
         addRequirements(drivetrain);
     }
     public OCSwerveFollower(
-            SwerveDrive drivetrain, PathPlannerTrajectory path,
-            PathConstraints constraints, boolean resetOdom) {
+            SwerveDrive drivetrain, Supplier<PathPlannerTrajectory> pathSupplier,
+            boolean resetOdom) {
         this.drivetrain = drivetrain;
-        this.path = path;
-        pathName = null;
-        this.constraints = constraints;
+        this.path = null;
+        this.pathSupplier = pathSupplier;
         this.resetOdom = resetOdom;
 
         addRequirements(drivetrain);
@@ -49,11 +49,15 @@ public class OCSwerveFollower extends CommandBase {
     
     @Override
     public void initialize() {
+        if(pathSupplier != null) {
+            path = pathSupplier.get();
+        }
         if(path == null) {
             end(false);
+            DriverStation.reportError("Attempted to follow null path!", true);
             return;
         }
-        if(pathName != null) {
+        if(pathSupplier == null && !initialized) {
             path = PathPlannerTrajectory.transformTrajectoryForAlliance(
                 path,
                 DriverStation.getAlliance());
@@ -73,6 +77,7 @@ public class OCSwerveFollower extends CommandBase {
             drivetrain
         );
         controllerCommand.initialize();
+        initialized = true;
     }
     
     @Override

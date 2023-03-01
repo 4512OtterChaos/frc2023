@@ -11,10 +11,10 @@ import edu.wpi.first.wpilibj.smartdashboard.MechanismLigament2d;
 import edu.wpi.first.wpilibj.smartdashboard.MechanismRoot2d;
 import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
 import edu.wpi.first.wpilibj.util.Color8Bit;
-import frc.robot.util.DutyCycleEncoderSim;
 import frc.robot.util.OCSparkMax;
-import frc.robot.util.PistonSim;
-import frc.robot.util.VariableLengthArmSim;
+import frc.robot.util.sim.DutyCycleEncoderSim;
+import frc.robot.util.sim.PistonSim;
+import frc.robot.util.sim.VariableLengthArmSim;
 
 import static frc.robot.subsystems.arm.ArmConstants.*;
 
