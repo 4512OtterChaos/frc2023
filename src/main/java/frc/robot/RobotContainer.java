@@ -3,6 +3,7 @@ package frc.robot;
 import frc.robot.auto.AutoConstants;
 import frc.robot.auto.AutoOptions;
 import frc.robot.auto.OCSwerveFollower;
+import frc.robot.subsystems.Superstructure;
 import frc.robot.subsystems.arm.Arm;
 import frc.robot.subsystems.drive.SwerveDrive;
 import frc.robot.subsystems.intake.Intake;
@@ -39,6 +40,7 @@ public class RobotContainer {
     private final Arm arm = new Arm();
     private final Intake intake = new Intake();
     private final SwerveDrive drive = new SwerveDrive(); 
+    private final Superstructure superstructure = new Superstructure(arm, drive, intake);
     private final OCXboxController driver = new OCXboxController(0);
     private final OCXboxController operator = new OCXboxController(1);
     private final OCXboxController king = new OCXboxController(0);
@@ -115,10 +117,7 @@ public class RobotContainer {
         // toggle between field-relative and robot-relative control
         controller.back()
         .onTrue(
-            runOnce(()->{
-                var path = (PathPlannerTrajectory)drive.getLogTrajectory();
-                new OCSwerveFollower(drive, path, AutoConstants.kMediumSpeedConfig, false).schedule();;
-            })
+            superstructure.p1()
         );
 
         // reset the robot heading to 0
@@ -167,14 +166,8 @@ public class RobotContainer {
     }
 
     public void periodic() {
+        superstructure.periodic();
         field.setRobotPose(drive.getPose());
-        // drive.logTrajectory(
-        //     PathPlanner.generatePath(
-        //         AutoConstants.kMediumSpeedConfig,
-        //         new PathPoint(drive.getPose().getTranslation(), new Rotation2d(), drive.getPose().getRotation()),
-        //         new PathPoint(new Translation2d(8, 4), new Rotation2d())
-        //     )
-        // );
         field.getObject("trajectory").setTrajectory(drive.getLogTrajectory());
         LogUtil.logPose("drivePose2d", drive.getPose());
         camera.getLatestResult().getTargets();

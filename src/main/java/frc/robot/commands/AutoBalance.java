@@ -29,16 +29,21 @@ public class AutoBalance extends CommandBase {
     public void execute() {
         double pitch = drive.getGyroPitch().getDegrees();
         double roll = drive.getGyroRoll().getDegrees();
+        double yaw = drive.getGyroYaw().getDegrees();
         double vx = 0;
         double vy = 0;
+        double omegaRadians = 0;
         if(Math.abs(pitch) > kAngleToleranceDeg){
             vx = kBalanceSpeed * -Math.signum(pitch);
         }
         if(Math.abs(roll) > kAngleToleranceDeg){
             vy = kBalanceSpeed * -Math.signum(roll);
         }
+        if((vx != 0 || vy != 0) && (Math.abs(yaw) > kAngleToleranceDeg)){
+            omegaRadians = kBalanceSpeed * -Math.signum(yaw);
+        }
 
-        drive.drive(vx, vy, 0, true);
+        drive.drive(vx, vy, omegaRadians, true);
         
     }
     
