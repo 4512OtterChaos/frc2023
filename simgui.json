@@ -65,6 +65,7 @@
       "/Shuffleboard/SwerveDrive: Config/xController": "PIDController",
       "/Shuffleboard/SwerveDrive: Config/yController": "PIDController",
       "/SmartDashboard/Arm Subsystem": "Subsystem",
+      "/SmartDashboard/Arm/Arm Subsystem": "Subsystem",
       "/SmartDashboard/Arm/Mech2d": "Mechanism2d",
       "/SmartDashboard/Auto Options": "String Chooser",
       "/SmartDashboard/Auto choices": "String Chooser",

@@ -81,7 +81,7 @@ public class RobotContainer {
     }
     
     private void configureEventBinds() {
-        
+        intake.setDefaultCommand(intake.setVoltageC(0.75));
     }
 
     private void configureDriverBinds(OCXboxController controller) {
@@ -147,9 +147,9 @@ public class RobotContainer {
     private void configureOperatorBinds(OCXboxController controller){
         
         controller.rightTrigger()
-            .onTrue(intake.setVoltageC(0.75));
+            .whileTrue(intake.setVoltageC(5));
         controller.leftTrigger()
-            .onTrue(intake.setVoltageC(-0.75));
+            .whileTrue(intake.setVoltageC(-3));
 
         controller.a()
             .onTrue(arm.pickUpGroundC());

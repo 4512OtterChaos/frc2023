@@ -137,6 +137,7 @@ public class FieldUtil {
      * @param gridPoint  The target grid alignment as a PathPoint
      */
     public static List<PathPoint> avoidChargingStation(PathPoint robotPoint, PathPoint gridPoint) {
+        
         return null;
     }
 }
