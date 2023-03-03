@@ -39,9 +39,9 @@ public class AutoBalance extends CommandBase {
         if(Math.abs(roll) > kAngleToleranceDeg){
             vy = kBalanceSpeed * -Math.signum(roll);
         }
-        if((vx != 0 || vy != 0) && (Math.abs(yaw) > kAngleToleranceDeg)){
-            omegaRadians = kBalanceSpeed * -Math.signum(yaw);
-        }
+        // if((vx != 0 || vy != 0) && (Math.abs(yaw) > kAngleToleranceDeg)){
+        //     omegaRadians = kBalanceSpeed * -Math.signum(yaw);
+        // }
 
         drive.drive(vx, vy, omegaRadians, true);
         

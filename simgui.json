@@ -67,6 +67,7 @@
       "/SmartDashboard/Arm Subsystem": "Subsystem",
       "/SmartDashboard/Arm/Arm Subsystem": "Subsystem",
       "/SmartDashboard/Arm/Mech2d": "Mechanism2d",
+      "/SmartDashboard/Arm/Subsystem": "Subsystem",
       "/SmartDashboard/Auto Options": "String Chooser",
       "/SmartDashboard/Auto choices": "String Chooser",
       "/SmartDashboard/Mech2d": "Mechanism2d",
@@ -112,6 +113,9 @@
       },
       "Shuffleboard": {
         "Arm": {
+          "open": true
+        },
+        "Arm: Config": {
           "open": true
         },
         "SwerveDrive": {

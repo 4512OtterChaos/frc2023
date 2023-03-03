@@ -4,6 +4,7 @@
 
 package frc.robot.util;
 
+import java.util.ArrayList;
 import java.util.List;
 
 import com.pathplanner.lib.PathPoint;
@@ -141,7 +142,66 @@ public class FieldUtil {
      * @param gridPoint  The target grid alignment as a PathPoint
      */
     public static List<PathPoint> avoidChargingStation(PathPoint robotPoint, PathPoint gridPoint) {
-        
-        return null;
+        List<PathPoint> path = new ArrayList<>();
+        try{
+            boolean opposingLoadingStation = false;
+            boolean ourLoadingStation = false;
+            boolean chargingStationTop = false;
+            boolean chargingStationBottom = false;
+            var trlField = PathPoint.class.getDeclaredField("position");
+            trlField.setAccessible(true);
+            var trl = (Translation2d) trlField.get(robotPoint);
+            var targetTrl = (Translation2d) trlField.get(gridPoint);
+            double robotX = trl.getX();
+            double robotY = trl.getY();
+            if (robotY > 5.5 && robotX < 4.25){
+                opposingLoadingStation = true;
+                // .add(robotPoint);
+                // .add(new PathPoint(
+                //         new Translation2d(4.64, 5.97), new Rotation2d(Math.PI), new Rotation2d(Math.PI)));
+                // .add(new PathPoint(
+                //         new Translation2d(4, 4.65), new Rotation2d(Math.PI), new Rotation2d(Math.PI)));
+                // .add(new PathPoint(
+                //         new Translation2d(2.3, 4.6), new Rotation2d(Math.PI), new Rotation2d(Math.PI)));
+                // .add(gridPoint);
+            }
+            else if (robotY > 5.5 && robotX > 12.7){
+                ourLoadingStation = true;
+                // .add(robotPoint);
+                // .add(new PathPoint(
+                //         new Translation2d(10.7, 6.35), new Rotation2d(Math.PI), new Rotation2d(Math.PI)));
+                // .add(new PathPoint(
+                //         new Translation2d(4, 4.65), new Rotation2d(Math.PI), new Rotation2d(Math.PI)));
+                // .add(new PathPoint(
+                //         new Translation2d(2.3, 4.6), new Rotation2d(Math.PI), new Rotation2d(Math.PI)));
+                // .add(gridPoint);
+            }
+            else if (robotX > 2.35 && robotY > 2.7){
+                chargingStationTop = true;
+                // .add(robotPoint);
+                // .add(new PathPoint(
+                //         new Translation2d(5.55, 4.65), new Rotation2d(Math.PI), new Rotation2d(Math.PI)));
+                // .add(new PathPoint(
+                //         new Translation2d(2.3, 4.6), new Rotation2d(Math.PI), new Rotation2d(Math.PI)));
+                // .add(gridPoint);
+            }
+            else if (robotX > 2.35 && robotY > 2.7){
+                chargingStationBottom = true;
+                // .add(robotPoint);
+                // .add(new PathPoint(
+                //         new Translation2d(5.55, 0.85), new Rotation2d(Math.PI), new Rotation2d(Math.PI)));
+                // .add(new PathPoint(
+                //         new Translation2d(2.3, 0.75), new Rotation2d(Math.PI), new Rotation2d(Math.PI)));
+                // .add(gridPoint);
+            }
+            else {
+                // .add(robotPoint);
+                // .add(gridPoint);
+            }
+            return path;
+        } catch (Exception e) {
+                e.printStackTrace();
+                throw new RuntimeException("e");
+        }
     }
 }

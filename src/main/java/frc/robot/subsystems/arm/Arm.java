@@ -5,6 +5,7 @@
 package frc.robot.subsystems.arm;
 
 import edu.wpi.first.math.MathUtil;
+import edu.wpi.first.math.controller.ArmFeedforward;
 import edu.wpi.first.math.controller.ProfiledPIDController;
 import edu.wpi.first.math.geometry.Translation2d;
 import edu.wpi.first.math.trajectory.TrapezoidProfile;
@@ -518,9 +519,76 @@ public class Arm extends SubsystemBase implements Loggable {
 	void configShoulderMinimumAngleExtensionWrist(double shoulderMinimumAngleExtensionWrist) {
 		this.shoulderMinimumAngleExtensionWrist = shoulderMinimumAngleExtensionWrist;
 	}
-	
-	// @Config(defaultValueNumeric = kWristkg)
-	// void configShoulderFF(double ka) {
-	// 	kShoulderFF.ka = ka;
-	// }
+	double shoulderks = kShoulderks;
+	double shoulderkg = kShoulderkg;
+	double shoulderkv = kShoulderkv;
+	double shoulderka = kShoulderka;
+	@Config(defaultValueNumeric = kShoulderks)
+	void configShoulderks(double ks) {
+		shoulderks = ks;
+		kShoulderFF = new ArmFeedforward(ks, shoulderkg, shoulderkv, shoulderka);
+	}
+	@Config(defaultValueNumeric = kShoulderkg)
+	void configShoulderkg(double kg) {
+		shoulderkg = kg;
+		kShoulderFF = new ArmFeedforward(shoulderks, kg, shoulderkv, shoulderka);
+	}
+	@Config(defaultValueNumeric = kShoulderkv)
+	void configShoulderkv(double kv) {
+		shoulderkv = kv;
+		kShoulderFF = new ArmFeedforward(shoulderks, shoulderkg, kv, shoulderka);
+	}
+	@Config(defaultValueNumeric = kShoulderka)
+	void configShoulderka(double ka) {
+		shoulderka = ka;
+		kShoulderFF = new ArmFeedforward(shoulderks, shoulderkg, shoulderkv, ka);
+	}
+	double wristks = kWristks;
+	double wristkg = kWristkg;
+	double wristkv = kWristkv;
+	double wristka = kWristka;
+	@Config(defaultValueNumeric = kWristks)
+	void configWristks(double ks) {
+		wristks = ks;
+		kWristFF = new ArmFeedforward(ks, wristkg, wristkv, wristka);
+	}
+	@Config(defaultValueNumeric = kWristkg)
+	void configWristkg(double kg) {
+		wristkg = kg;
+		kWristFF = new ArmFeedforward(wristks, kg, wristkv, wristka);
+	}
+	@Config(defaultValueNumeric = kWristkv)
+	void configWristkv(double kv) {
+		wristkv = kv;
+		kWristFF = new ArmFeedforward(wristks, wristkg, kv, wristka);
+	}
+	@Config(defaultValueNumeric = kWristka)
+	void configWristka(double ka) {
+		wristka = ka;
+		kWristFF = new ArmFeedforward(wristks, wristkg, wristkv, ka);
+	}
+	double shoulderConfigPIDVelocityConstraint = kShoulderVelocityDeg;
+	double shoulderConfigPIDAccelerationConstraint = kShoulderAccelDeg;
+	@Config(defaultValueNumeric = kShoulderVelocityDeg)
+	void configShoulderPIDVelocityConstraint(double velocity) {
+		shoulderConfigPIDVelocityConstraint = velocity;
+		shoulderPid.setConstraints(new Constraints(Math.toRadians(shoulderConfigPIDVelocityConstraint), Math.toRadians(shoulderConfigPIDAccelerationConstraint)));
+	}
+	@Config(defaultValueNumeric = kShoulderAccelDeg)
+	void configShoulderPIDAccelerationConstraint(double acceleration) {
+		shoulderConfigPIDAccelerationConstraint = acceleration;
+		shoulderPid.setConstraints(new Constraints(Math.toRadians(shoulderConfigPIDVelocityConstraint), Math.toRadians(shoulderConfigPIDAccelerationConstraint)));
+	}
+	double wristConfigPIDVelocityConstraint = kWristVelocityDeg;
+	double wristConfigPIDAccelerationConstraint = kWristAccelDeg;
+	@Config(defaultValueNumeric = kWristVelocityDeg)
+	void configWristPIDVelocityConstraint(double velocity) {
+		wristConfigPIDVelocityConstraint = velocity;
+		wristPid.setConstraints(new Constraints(Math.toRadians(velocity), Math.toRadians(shoulderConfigPIDAccelerationConstraint)));
+	}
+	@Config(defaultValueNumeric = kWristAccelDeg)
+	void configWristPIDAccelerationConstraint(double acceleration) {
+		wristConfigPIDAccelerationConstraint = acceleration;
+		wristPid.setConstraints(new Constraints(Math.toRadians(shoulderConfigPIDVelocityConstraint), Math.toRadians(acceleration)));
+	}
 }

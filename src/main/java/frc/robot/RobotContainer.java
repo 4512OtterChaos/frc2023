@@ -1,13 +1,10 @@
 package frc.robot;
 
-import frc.robot.auto.AutoConstants;
 import frc.robot.auto.AutoOptions;
-import frc.robot.auto.OCSwerveFollower;
 import frc.robot.subsystems.Superstructure;
 import frc.robot.subsystems.arm.Arm;
 import frc.robot.subsystems.drive.SwerveDrive;
 import frc.robot.subsystems.intake.Intake;
-import frc.robot.util.LogUtil;
 import frc.robot.util.OCXboxController;
 import io.github.oblarg.oblog.Logger;
 
@@ -19,18 +16,11 @@ import org.photonvision.SimPhotonCamera;
 import org.photonvision.SimVisionSystem;
 import org.photonvision.PhotonPoseEstimator.PoseStrategy;
 
-import com.pathplanner.lib.PathPlanner;
-import com.pathplanner.lib.PathPlannerTrajectory;
-import com.pathplanner.lib.PathPoint;
-
 import edu.wpi.first.apriltag.AprilTagFieldLayout;
 import edu.wpi.first.apriltag.AprilTagFields;
 import edu.wpi.first.math.geometry.Pose2d;
 import edu.wpi.first.math.geometry.Rotation2d;
 import edu.wpi.first.math.geometry.Transform3d;
-import edu.wpi.first.math.geometry.Translation2d;
-import edu.wpi.first.math.kinematics.SwerveModuleState;
-import edu.wpi.first.math.util.Units;
 import edu.wpi.first.wpilibj.Compressor;
 import edu.wpi.first.wpilibj.PneumaticsModuleType;
 import edu.wpi.first.wpilibj.Timer;
@@ -186,10 +176,10 @@ public class RobotContainer {
             .onTrue(arm.inC());
 
 
-        // controller.leftBumper()
-        //     .whileTrue(run(()->arm.setShoulderPosRadians(arm.shoulderPid.getSetpoint().position-0.05)));
-        // controller.rightBumper()
-        //     .whileTrue(run(()->arm.setShoulderPosRadians(arm.shoulderPid.getSetpoint().position+0.05)));
+        controller.leftBumper()
+            .whileTrue(run(()->arm.setShoulderPosRadians(arm.shoulderPid.getSetpoint().position-0.05)));
+        controller.rightBumper()
+            .whileTrue(run(()->arm.setShoulderPosRadians(arm.shoulderPid.getSetpoint().position+0.05)));
     }
 
     public CommandBase getAutoCommand(){

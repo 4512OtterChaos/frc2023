@@ -13,17 +13,17 @@ public final class ArmConstants{
     public static final double kShoulderGearing = ((58.0 / 18.0) * (48.0 / 24.0) * 3 * 5);
     public static final Rotation2d kShoulderAngleOffset = new Rotation2d();
 
+    public static final double kShoulderks = 0;
+    public static final double kShoulderkg = 0.75;
+    public static final double kShoulderkv = 2;
+    public static final double kShoulderka = 3;
     public static final int kShoulderStallLimit = 40;
     public static ArmFeedforward kShoulderFF = new ArmFeedforward(
-        0, // Voltage to break static friction
-        0.75, // Voltage to counteract gravity
-        2, // Volts per radian per second
-        3 // Volts per radian per second squared
+        kShoulderks, // Voltage to break static friction
+        kShoulderkg, // Voltage to counteract gravity
+        kShoulderkv, // Volts per radian per second
+        kShoulderka // Volts per radian per second squared
     );
-    public static final double kShoulderka = kShoulderFF.ka;
-    public static final double kShoulderkg = kShoulderFF.kg;
-    public static final double kShoulderks = kShoulderFF.ks;
-    public static final double kShoulderkv = kShoulderFF.kv;
 
     public static final double kShoulderKP = 6;
     public static final double kShoulderKI = 0;
@@ -39,17 +39,17 @@ public final class ArmConstants{
     public static final double kWristGearing = ((22.0 / 16.0) * 4 * 4 * 5);
 
     public static final int kWristStallLimit = 30;
+
+    public static final double kWristka = 0;
+    public static final double kWristkg = 1.4;
+    public static final double kWristks = 5;
+    public static final double kWristkv = 0.1;
     public static ArmFeedforward kWristFF = new ArmFeedforward(
         0, // Voltage to break static friction
         1.4, // Voltage to counteract gravity
         5, // Volts per radian per second
         0.1 // Volts per radian per second squared
     );
-
-    public static final double kWristka = kWristFF.ka;
-    public static final double kWristkg = kWristFF.kg;
-    public static final double kWristks = kWristFF.ks;
-    public static final double kWristkv = kWristFF.kv;
 
     public static final double kWristKP = 6;
     public static final double kWristKI = 0;
