@@ -22,6 +22,10 @@ public class FieldUtil {
 
     public static final double kFieldWidth = 8.02;
 
+    public static final double kRobotWidth = Units.inchesToMeters(25 + 3.25*2);
+    public static final double kRobotLength = Units.inchesToMeters(28 + 3.25*2);
+    public static final double kRobotBumperHeight = Units.inchesToMeters(7);
+
     // ----- Static field poses
     public static final double kGridAlignX = 1.85;
     public static final double kGrid1AlignY = Units.inchesToMeters(20.19);

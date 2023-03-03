@@ -31,6 +31,8 @@ import edu.wpi.first.math.geometry.Transform3d;
 import edu.wpi.first.math.geometry.Translation2d;
 import edu.wpi.first.math.kinematics.SwerveModuleState;
 import edu.wpi.first.math.util.Units;
+import edu.wpi.first.wpilibj.Compressor;
+import edu.wpi.first.wpilibj.PneumaticsModuleType;
 import edu.wpi.first.wpilibj.Timer;
 import edu.wpi.first.wpilibj.smartdashboard.Field2d;
 import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
@@ -41,11 +43,16 @@ public class RobotContainer {
     private final Intake intake = new Intake();
     private final SwerveDrive drive = new SwerveDrive(); 
     private final Superstructure superstructure = new Superstructure(arm, drive, intake);
+    private final Compressor compressor = new Compressor(PneumaticsModuleType.REVPH);
+
     private final OCXboxController driver = new OCXboxController(0);
     private final OCXboxController operator = new OCXboxController(1);
     private final OCXboxController king = new OCXboxController(0);
-    private final Field2d field = new Field2d();
+
     private final AutoOptions autoOptions = new AutoOptions(drive, intake, arm);
+
+    private final Field2d field = new Field2d();
+    
     private final PhotonCamera camera = new PhotonCamera("camera");
     private final SimPhotonCamera simCamera = new SimPhotonCamera("camera");
     private final SimVisionSystem visionSim = new SimVisionSystem("camera", 90, new Transform3d(), 10, 640, 480, .01);
@@ -73,11 +80,25 @@ public class RobotContainer {
         }
         
         SmartDashboard.putData("field", field);
-        // field.getObject("test").setPose(new Pose2d());
 
         autoOptions.submit();
 
-        Logger.configureLoggingAndConfig(this, true);
+        Logger.configureLogging(this);
+
+        // uncomment this line for tuning mode
+        Logger.configureConfig(this);
+    }
+
+    public void periodic() {
+        superstructure.periodic();
+        field.setRobotPose(drive.getPose());
+        field.getObject("trajectory").setTrajectory(drive.getLogTrajectory());
+        
+        camera.getLatestResult().getTargets();
+        photonEstimator.update().ifPresent(est -> {
+            drive.addVisionMeasurement(est.estimatedPose.toPose2d(), Timer.getFPGATimestamp() - est.timestampSeconds);
+        });
+        
     }
     
     private void configureEventBinds() {
@@ -147,9 +168,9 @@ public class RobotContainer {
     private void configureOperatorBinds(OCXboxController controller){
         
         controller.rightTrigger()
-            .whileTrue(intake.setVoltageC(5));
+            .whileTrue(intake.setVoltageInC());
         controller.leftTrigger()
-            .whileTrue(intake.setVoltageC(-3));
+            .whileTrue(intake.setVoltageOutC());
 
         controller.a()
             .onTrue(arm.pickUpGroundC());
@@ -163,25 +184,25 @@ public class RobotContainer {
 
         controller.povDown()
             .onTrue(arm.inC());
+
+
+        // controller.leftBumper()
+        //     .whileTrue(run(()->arm.setShoulderPosRadians(arm.shoulderPid.getSetpoint().position-0.05)));
+        // controller.rightBumper()
+        //     .whileTrue(run(()->arm.setShoulderPosRadians(arm.shoulderPid.getSetpoint().position+0.05)));
     }
 
-    public void periodic() {
-        superstructure.periodic();
-        field.setRobotPose(drive.getPose());
-        field.getObject("trajectory").setTrajectory(drive.getLogTrajectory());
-        LogUtil.logPose("drivePose2d", drive.getPose());
-        camera.getLatestResult().getTargets();
-        photonEstimator.update().ifPresent(est -> {
-            drive.addVisionMeasurement(est.estimatedPose.toPose2d(), Timer.getFPGATimestamp() - est.timestampSeconds);
-        });
-        Logger.updateEntries();
-    }
     public CommandBase getAutoCommand(){
         return autoOptions.getAutoCommand();
+    }
+
+    public void log() {
+        Logger.updateEntries();
+        drive.log();
+        arm.log();
     }
 
     public void simulationPeriodic(){
         visionSim.processFrame(drive.getPose());
     }
-    
 }

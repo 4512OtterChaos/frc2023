@@ -1,5 +1,7 @@
 package frc.robot.subsystems.arm;
 
+import edu.wpi.first.math.geometry.Rotation2d;
+import edu.wpi.first.math.geometry.Translation2d;
 import edu.wpi.first.math.system.plant.DCMotor;
 import edu.wpi.first.math.system.plant.LinearSystemId;
 import edu.wpi.first.math.util.Units;
@@ -18,6 +20,8 @@ import frc.robot.util.sim.VariableLengthArmSim;
 
 import static frc.robot.subsystems.arm.ArmConstants.*;
 
+import java.util.Optional;
+
 public class ArmSimulation {
 
     private final OCSparkMax shoulderMotor;
@@ -30,21 +34,21 @@ public class ArmSimulation {
 
     private final DoubleSolenoid extensionPiston;
 
-    private final double kWristMassKg = Units.lbsToKilograms(8);
-    private final double kArmMassKg = Units.lbsToKilograms(7) + kWristMassKg; // INCLUDING wrist
+    private static final double kWristMassKg = Units.lbsToKilograms(8);
+    private static final double kArmMassKg = Units.lbsToKilograms(7) + kWristMassKg; // INCLUDING wrist
 
-    private final double kShoulderHeight = Units.inchesToMeters(40.75);
-    private final double kBaseStageLength = Units.inchesToMeters(26.25);
-    private final double kRetractedFirstStageLength = Units.inchesToMeters(4);
-    private final double kExtensionLength = Units.inchesToMeters(18);
-    private final double kWristLength = Units.inchesToMeters(16);
+    private static final double kShoulderHeight = Units.inchesToMeters(40.75);
+    private static final double kBaseStageLength = Units.inchesToMeters(26.25);
+    private static final double kRetractedFirstStageLength = Units.inchesToMeters(4);
+    private static final double kExtensionLength = Units.inchesToMeters(18);
+    private static final double kWristLength = Units.inchesToMeters(16);
 
     private final VariableLengthArmSim shoulderSim = new VariableLengthArmSim(
             LinearSystemId.identifyPositionSystem(
                     kShoulderFF.kv,
                     kShoulderFF.ka),
             DCMotor.getNEO(2),
-            ((58.0 / 18.0) * (52.0 / 20.0) * 3 * 5),
+            kShoulderGearing,
             VariableLengthArmSim.estimateMOI(kBaseStageLength, kArmMassKg),
             kBaseStageLength + kWristLength,
             Units.degreesToRadians(-90),
@@ -57,7 +61,7 @@ public class ArmSimulation {
                     kWristFF.kv,
                     kWristFF.ka),
             DCMotor.getNeo550(1),
-            ((22.0 / 16.0) * 4 * 4 * 5),
+            kWristGearing,
             VariableLengthArmSim.estimateMOI(kBaseStageLength, kArmMassKg),
             kWristLength,
             Units.degreesToRadians(-45),
@@ -76,9 +80,9 @@ public class ArmSimulation {
         this.shoulderEncoder = shoulderEncoder;
         this.wristEncoder = wristEncoder;
         shoulderEncoderSim = new DutyCycleEncoderSim(shoulderEncoder);
-        shoulderEncoderSim.setDistancePerRotation(2*Math.PI);
+        shoulderEncoderSim.setDistancePerRotation(2 * Math.PI);
         wristEncoderSim = new DutyCycleEncoderSim(wristEncoder);
-        wristEncoderSim.setDistancePerRotation(2*Math.PI);
+        wristEncoderSim.setDistancePerRotation(2 * Math.PI);
 
         SmartDashboard.putData("Arm/Mech2d", mech);
     }
@@ -123,15 +127,15 @@ public class ArmSimulation {
     private double shoulderSetpointRadians = -Math.PI;
     private double wristSetpointRadians = Math.PI;
 
-    /** 
-     * @param radians Frame-relative shoulder angle in radians
+    /**
+     * @param radians Ground-relative shoulder angle in radians
      */
     public void setShoulderSetpoint(double radians) {
         shoulderSetpointRadians = radians;
     }
 
     /**
-     * @param radians Frame-relative wrist angle in radians
+     * @param radians Ground-relative wrist angle in radians
      */
     public void setWristSetpoint(double radians) {
         wristSetpointRadians = radians;
@@ -188,6 +192,40 @@ public class ArmSimulation {
 
         // update our sensors with the results
         shoulderEncoderSim.setDistance(shoulderSim.getAngleRads());
-        wristEncoderSim.setDistance(wristSim.getAngleRads() - shoulderSim.getAngleRads());
+        wristEncoderSim.setDistance(wristSim.getAngleRads());
+    }
+
+    //----- Kinematics
+    private static final Translation2d kShoulderTrl = new Translation2d(0, kShoulderHeight);
+    public static Translation2d getWristEndXZ(double shoulderPosRadians, double extension, double wristPosRadians) {
+        return getWristPivotXZ(shoulderPosRadians, extension)
+                .plus(getWristEndRelXZ(wristPosRadians).rotateBy(new Rotation2d(shoulderPosRadians)));
+    }
+
+    public static Translation2d getWristPivotXZ(double shoulderPosRadians, double extension) {
+        return new Translation2d(
+                kBaseStageLength + kRetractedFirstStageLength + extension * kExtensionLength,
+                shoulderPosRadians).plus(kShoulderTrl);
+    }
+
+    public static Translation2d getWristEndRelXZ(double wristPosRadians) {
+        return new Translation2d(kWristLength, wristPosRadians);
+    }
+
+    public static Optional<Double> getShoulderRadsMovedY(Translation2d point, double amountY) {
+        double length = point.getDistance(kShoulderTrl);
+        double newPointY = point.minus(kShoulderTrl).getY() + amountY;
+        if(Math.abs(newPointY) > length) return Optional.empty();
+        return Optional.of(Math.asin(newPointY / length));
+    }
+    public static Optional<Double> getShoulderRadsMovedX(Translation2d point, double amountX) {
+        double length = point.getDistance(kShoulderTrl);
+        
+        double newPointX = point.minus(kShoulderTrl).getX() + amountX;
+        if(Math.abs(newPointX) > length) return Optional.empty();
+        double newRads = -Math.acos(newPointX / length);
+        double pointRads = point.getAngle().getRadians();
+        if(pointRads > 0) newRads *= -1;
+        return Optional.of(newRads);
     }
 }

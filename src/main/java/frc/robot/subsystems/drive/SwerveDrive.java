@@ -27,6 +27,7 @@ import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
 import edu.wpi.first.wpilibj2.command.SubsystemBase;
 import frc.robot.auto.AutoConstants;
 import frc.robot.subsystems.drive.SwerveModule.SwerveModulesLog;
+import frc.robot.util.LogUtil;
 import io.github.oblarg.oblog.Loggable;
 import io.github.oblarg.oblog.annotations.*;
 
@@ -308,11 +309,12 @@ public class SwerveDrive extends SubsystemBase implements Loggable {
 
     public void log(){
         Pose2d pose = getPose();
-        SmartDashboard.putNumber("Drive/Heading", pose.getRotation().getDegrees());
+        LogUtil.logPose("Drive/Pose2d", getPose());
+        SmartDashboard.putNumber("Drive/Rotation", pose.getRotation().getDegrees());
         SmartDashboard.putNumber("Drive/X", pose.getX());
         SmartDashboard.putNumber("Drive/Y", pose.getY());
         ChassisSpeeds chassisSpeeds = getChassisSpeeds();
-        SmartDashboard.putNumber("Drive/Target Heading", Math.toDegrees(thetaController.getSetpoint().position));
+        SmartDashboard.putNumber("Drive/Target Rotation", Math.toDegrees(thetaController.getSetpoint().position));
         SmartDashboard.putNumber("Drive/VX", chassisSpeeds.vxMetersPerSecond);
         SmartDashboard.putNumber("Drive/VY", chassisSpeeds.vyMetersPerSecond);
         SmartDashboard.putNumber("Drive/Omega Degrees", Units.radiansToDegrees(chassisSpeeds.omegaRadiansPerSecond));

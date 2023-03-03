@@ -103,6 +103,7 @@ public final class OCConfig {
         setStatusSlow(followers);
     }
 
+    // https://docs.revrobotics.com/sparkmax/operating-modes/control-interfaces#periodic-status-frames
     public static void setStatusFast(CANSparkMax... motors) {
         for (CANSparkMax motor : motors) {
             motor.setPeriodicFramePeriod(PeriodicFrame.kStatus0, 5);
@@ -124,6 +125,18 @@ public final class OCConfig {
             motor.setPeriodicFramePeriod(PeriodicFrame.kStatus0, 100);
             motor.setPeriodicFramePeriod(PeriodicFrame.kStatus1, 500);
             motor.setPeriodicFramePeriod(PeriodicFrame.kStatus2, 500);
+        }
+    }
+
+    public static void setStatusNothing(CANSparkMax... motors) {
+        for (CANSparkMax motor : motors) {
+            motor.setPeriodicFramePeriod(PeriodicFrame.kStatus0, 100);
+            motor.setPeriodicFramePeriod(PeriodicFrame.kStatus1, 65535);
+            motor.setPeriodicFramePeriod(PeriodicFrame.kStatus2, 65535);
+            motor.setPeriodicFramePeriod(PeriodicFrame.kStatus3, 65535);
+            motor.setPeriodicFramePeriod(PeriodicFrame.kStatus4, 65535);
+            motor.setPeriodicFramePeriod(PeriodicFrame.kStatus5, 65535);
+            motor.setPeriodicFramePeriod(PeriodicFrame.kStatus6, 65535);
         }
     }
 

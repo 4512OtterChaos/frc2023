@@ -287,14 +287,15 @@ public class SwerveModule implements Loggable {
     public void log(){
         SwerveModuleState state = getAbsoluteState();
         int num = moduleConstants.moduleNum;
-        //SmartDashboard.putNumber("Module "+num+" Cancoder Degrees", getCancoderHeading().getDegrees());
-        SmartDashboard.putNumber("Module "+num+"/Steer Degrees", state.angle.getDegrees());
-        SmartDashboard.putNumber("Module "+num+"/Steer Target Degrees", lastDesiredState.angle.getDegrees());
-        SmartDashboard.putNumber("Module "+num+"/Steer Native", steerMotor.getSelectedSensorPosition());
-        SmartDashboard.putNumber("Module "+num+"/Steer Target Native", steerMotor.getClosedLoopTarget());
-        SmartDashboard.putNumber("Module "+num+"/Steer Velocity Native", steerMotor.getSelectedSensorVelocity());
-        SmartDashboard.putNumber("Module "+num+"/Drive Velocity Feet", Units.metersToFeet(state.speedMetersPerSecond));
-        SmartDashboard.putNumber("Module "+num+"/Drive Velocity Target Feet", Units.metersToFeet(lastDesiredState.speedMetersPerSecond));
+        String prefix = "Drive/Module "+num+"/";
+        
+        SmartDashboard.putNumber(prefix+"Steer Degrees", state.angle.getDegrees());
+        SmartDashboard.putNumber(prefix+"Steer Target Degrees", lastDesiredState.angle.getDegrees());
+        SmartDashboard.putNumber(prefix+"Steer Native", steerMotor.getSelectedSensorPosition());
+        SmartDashboard.putNumber(prefix+"Steer Target Native", steerMotor.getClosedLoopTarget());
+        SmartDashboard.putNumber(prefix+"Steer Velocity Native", steerMotor.getSelectedSensorVelocity());
+        SmartDashboard.putNumber(prefix+"Drive Velocity Feet", Units.metersToFeet(state.speedMetersPerSecond));
+        SmartDashboard.putNumber(prefix+"Drive Velocity Target Feet", Units.metersToFeet(lastDesiredState.speedMetersPerSecond));
     }
 
 
