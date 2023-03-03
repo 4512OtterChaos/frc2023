@@ -2,8 +2,6 @@ package frc.robot.subsystems.arm;
 
 import edu.wpi.first.math.controller.ArmFeedforward;
 import edu.wpi.first.math.geometry.Rotation2d;
-import edu.wpi.first.math.trajectory.TrapezoidProfile.Constraints;
-import edu.wpi.first.math.util.Units;
 
 public final class ArmConstants{
 
@@ -13,17 +11,17 @@ public final class ArmConstants{
     public static final double kShoulderGearing = ((58.0 / 18.0) * (48.0 / 24.0) * 3 * 5);
     public static final Rotation2d kShoulderAngleOffset = new Rotation2d();
 
-    public static final double kShoulderks = 0;
-    public static final double kShoulderkg = 0.75;
+    public static final double kShoulderks = 0.2;
+    public static final double kShoulderkg = 0.8;
     public static final double kShoulderkv = 2;
-    public static final double kShoulderka = 3;
-    public static final int kShoulderStallLimit = 40;
+    public static final double kShoulderka = 2;
     public static ArmFeedforward kShoulderFF = new ArmFeedforward(
         kShoulderks, // Voltage to break static friction
         kShoulderkg, // Voltage to counteract gravity
         kShoulderkv, // Volts per radian per second
         kShoulderka // Volts per radian per second squared
     );
+    public static final int kShoulderStallLimit = 40;
 
     public static final double kShoulderKP = 6;
     public static final double kShoulderKI = 0;
@@ -38,18 +36,17 @@ public final class ArmConstants{
     public static final Rotation2d kWristAngleOffset = new Rotation2d();
     public static final double kWristGearing = ((22.0 / 16.0) * 4 * 4 * 5);
 
-    public static final int kWristStallLimit = 30;
-
-    public static final double kWristka = 0;
-    public static final double kWristkg = 1.4;
-    public static final double kWristks = 5;
-    public static final double kWristkv = 0.1;
+    public static final double kWristks = 0.2;
+    public static final double kWristkg = 0.7;
+    public static final double kWristkv = 1;
+    public static final double kWristka = 0.25;
     public static ArmFeedforward kWristFF = new ArmFeedforward(
-        0, // Voltage to break static friction
-        1.4, // Voltage to counteract gravity
-        5, // Volts per radian per second
-        0.1 // Volts per radian per second squared
+        kWristks, // Voltage to break static friction
+        kWristkg, // Voltage to counteract gravity
+        kWristkv, // Volts per radian per second
+        kWristka // Volts per radian per second squared
     );
+    public static final int kWristStallLimit = 30;
 
     public static final double kWristKP = 6;
     public static final double kWristKI = 0;
@@ -71,6 +68,5 @@ public final class ArmConstants{
     public static final double kShoulderWristLevel = -0.6; // equal to Units.degreesToRadians(-34.3775);
     public static final double kShoulderMinimumAngleWrist = -0.75; // equal to Units.degreesToRadians(-42.97183);
     public static final double kShoulderMinimumAngleExtension = -0.907571; // equal to Units.degreesToRadians(-52);
-    public static final double kShoulderMinimumAngleExtensionWrist = -0.4; // equal to Units.degreesToRadians(-22.9183);
-    
+    public static final double kShoulderMinimumAngleExtensionWrist = -0.4; // equal to Units.degreesToRadians(-22.9183);   
 }

@@ -41,7 +41,7 @@ public class ArmSimulation {
     private static final double kBaseStageLength = Units.inchesToMeters(26.25);
     private static final double kRetractedFirstStageLength = Units.inchesToMeters(4);
     private static final double kExtensionLength = Units.inchesToMeters(18);
-    private static final double kWristLength = Units.inchesToMeters(16);
+    private static final double kWristLength = Units.inchesToMeters(15);
 
     private final VariableLengthArmSim shoulderSim = new VariableLengthArmSim(
             LinearSystemId.identifyPositionSystem(
@@ -51,8 +51,8 @@ public class ArmSimulation {
             kShoulderGearing,
             VariableLengthArmSim.estimateMOI(kBaseStageLength, kArmMassKg),
             kBaseStageLength + kWristLength,
-            Units.degreesToRadians(-90),
-            Units.degreesToRadians(30),
+            Units.degreesToRadians(kShoulderMinimumDeg),
+            Units.degreesToRadians(kShoulderMaximumDeg),
             kArmMassKg,
             true);
 
@@ -62,10 +62,11 @@ public class ArmSimulation {
                     kWristFF.ka),
             DCMotor.getNeo550(1),
             kWristGearing,
-            VariableLengthArmSim.estimateMOI(kBaseStageLength, kArmMassKg),
+            // VariableLengthArmSim.estimateMOI(kWristLength, kWristMassKg),
+            VariableLengthArmSim.estimateMOI(kBaseStageLength, kArmMassKg), // TODO: figure out why this is broken
             kWristLength,
-            Units.degreesToRadians(-45),
-            Units.degreesToRadians(90),
+            Units.degreesToRadians(kWristMinimumDeg),
+            Units.degreesToRadians(kWristMaximumDeg),
             kWristMassKg,
             true);
 
@@ -187,6 +188,7 @@ public class ArmSimulation {
         shoulderSim.setInput(shoulderVoltage);
         shoulderSim.update(0.02);
 
+        wristSim.setGravityAngle(-Math.PI/2.0 - shoulderSim.getAngleRads());
         wristSim.setInput(wristVoltage);
         wristSim.update(0.02);
 

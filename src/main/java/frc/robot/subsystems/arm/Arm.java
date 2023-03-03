@@ -428,11 +428,6 @@ public class Arm extends SubsystemBase implements Loggable {
 			});
 	}
 
-	@Override
-	public void simulationPeriodic() {
-		armSim.simulationPeriodic();
-	}
-
 	public CommandBase inC(){
 		return sequence(
 			setExtensionC(false),
@@ -474,13 +469,19 @@ public class Arm extends SubsystemBase implements Loggable {
 		SmartDashboard.putNumber("Arm/Shoulder Goal Degrees", Units.radiansToDegrees(shoulderPid.getGoal().position));
 		SmartDashboard.putNumber("Arm/Wrist Ground Relative Deg", Math.toDegrees(getWristPosGroundRelativeRadians()));
         SmartDashboard.putNumber("Arm/Wrist Degrees", Units.radiansToDegrees(getWristPosRadians()));
-        SmartDashboard.putNumber("Arm/Wrist Goal Degrees", Units.radiansToDegrees(wristPid.getSetpoint().position));
+        SmartDashboard.putNumber("Arm/Wrist Setpoint Degrees", Units.radiansToDegrees(wristPid.getSetpoint().position));
 		SmartDashboard.putNumber("Arm/Wrist Goal Degrees", Units.radiansToDegrees(wristPid.getGoal().position));
 		SmartDashboard.putBoolean("Arm/Extension State", getExtensionState());
     }
 
+    @Override
+	public void simulationPeriodic() {
+		armSim.simulationPeriodic();
+	}
+
 
     //----- Dashboard configuration
+    //--- Safety angles
     @Config(defaultValueNumeric = kShoulderMinimumDeg)
 	void configShoulderMinimumDeg(double shoulderMinimumDeg) {
 		this.shoulderMinimumRads = Math.toRadians(shoulderMinimumDeg);
@@ -519,56 +520,59 @@ public class Arm extends SubsystemBase implements Loggable {
 	void configShoulderMinimumAngleExtensionWrist(double shoulderMinimumAngleExtensionWrist) {
 		this.shoulderMinimumAngleExtensionWrist = shoulderMinimumAngleExtensionWrist;
 	}
-	double shoulderks = kShoulderks;
-	double shoulderkg = kShoulderkg;
-	double shoulderkv = kShoulderkv;
-	double shoulderka = kShoulderka;
+    //--- Feedforward
+	private double shoulderks = kShoulderks;
+	private double shoulderkg = kShoulderkg;
+	private double shoulderkv = kShoulderkv;
+	private double shoulderka = kShoulderka;
 	@Config(defaultValueNumeric = kShoulderks)
 	void configShoulderks(double ks) {
 		shoulderks = ks;
-		kShoulderFF = new ArmFeedforward(ks, shoulderkg, shoulderkv, shoulderka);
+		kShoulderFF = new ArmFeedforward(shoulderks, shoulderkg, shoulderkv, shoulderka);
 	}
 	@Config(defaultValueNumeric = kShoulderkg)
 	void configShoulderkg(double kg) {
 		shoulderkg = kg;
-		kShoulderFF = new ArmFeedforward(shoulderks, kg, shoulderkv, shoulderka);
+		kShoulderFF = new ArmFeedforward(shoulderks, shoulderkg, shoulderkv, shoulderka);
 	}
 	@Config(defaultValueNumeric = kShoulderkv)
 	void configShoulderkv(double kv) {
 		shoulderkv = kv;
-		kShoulderFF = new ArmFeedforward(shoulderks, shoulderkg, kv, shoulderka);
+		kShoulderFF = new ArmFeedforward(shoulderks, shoulderkg, shoulderkv, shoulderka);
 	}
 	@Config(defaultValueNumeric = kShoulderka)
 	void configShoulderka(double ka) {
 		shoulderka = ka;
-		kShoulderFF = new ArmFeedforward(shoulderks, shoulderkg, shoulderkv, ka);
+		kShoulderFF = new ArmFeedforward(shoulderks, shoulderkg, shoulderkv, shoulderka);
 	}
-	double wristks = kWristks;
-	double wristkg = kWristkg;
-	double wristkv = kWristkv;
-	double wristka = kWristka;
+
+	private double wristks = kWristks;
+	private double wristkg = kWristkg;
+	private double wristkv = kWristkv;
+	private double wristka = kWristka;
 	@Config(defaultValueNumeric = kWristks)
 	void configWristks(double ks) {
 		wristks = ks;
-		kWristFF = new ArmFeedforward(ks, wristkg, wristkv, wristka);
+		kWristFF = new ArmFeedforward(wristks, wristkg, wristkv, wristka);
 	}
 	@Config(defaultValueNumeric = kWristkg)
 	void configWristkg(double kg) {
 		wristkg = kg;
-		kWristFF = new ArmFeedforward(wristks, kg, wristkv, wristka);
+		kWristFF = new ArmFeedforward(wristks, wristkg, wristkv, wristka);
 	}
 	@Config(defaultValueNumeric = kWristkv)
 	void configWristkv(double kv) {
 		wristkv = kv;
-		kWristFF = new ArmFeedforward(wristks, wristkg, kv, wristka);
+		kWristFF = new ArmFeedforward(wristks, wristkg, wristkv, wristka);
 	}
 	@Config(defaultValueNumeric = kWristka)
 	void configWristka(double ka) {
 		wristka = ka;
-		kWristFF = new ArmFeedforward(wristks, wristkg, wristkv, ka);
+		kWristFF = new ArmFeedforward(wristks, wristkg, wristkv, wristka);
 	}
-	double shoulderConfigPIDVelocityConstraint = kShoulderVelocityDeg;
-	double shoulderConfigPIDAccelerationConstraint = kShoulderAccelDeg;
+    //--- Profile constraints
+	private double shoulderConfigPIDVelocityConstraint = kShoulderVelocityDeg;
+	private double shoulderConfigPIDAccelerationConstraint = kShoulderAccelDeg;
 	@Config(defaultValueNumeric = kShoulderVelocityDeg)
 	void configShoulderPIDVelocityConstraint(double velocity) {
 		shoulderConfigPIDVelocityConstraint = velocity;
@@ -579,16 +583,17 @@ public class Arm extends SubsystemBase implements Loggable {
 		shoulderConfigPIDAccelerationConstraint = acceleration;
 		shoulderPid.setConstraints(new Constraints(Math.toRadians(shoulderConfigPIDVelocityConstraint), Math.toRadians(shoulderConfigPIDAccelerationConstraint)));
 	}
-	double wristConfigPIDVelocityConstraint = kWristVelocityDeg;
-	double wristConfigPIDAccelerationConstraint = kWristAccelDeg;
+
+	private double wristConfigPIDVelocityConstraint = kWristVelocityDeg;
+	private double wristConfigPIDAccelerationConstraint = kWristAccelDeg;
 	@Config(defaultValueNumeric = kWristVelocityDeg)
 	void configWristPIDVelocityConstraint(double velocity) {
 		wristConfigPIDVelocityConstraint = velocity;
-		wristPid.setConstraints(new Constraints(Math.toRadians(velocity), Math.toRadians(shoulderConfigPIDAccelerationConstraint)));
+		wristPid.setConstraints(new Constraints(Math.toRadians(wristConfigPIDVelocityConstraint), Math.toRadians(wristConfigPIDAccelerationConstraint)));
 	}
 	@Config(defaultValueNumeric = kWristAccelDeg)
 	void configWristPIDAccelerationConstraint(double acceleration) {
 		wristConfigPIDAccelerationConstraint = acceleration;
-		wristPid.setConstraints(new Constraints(Math.toRadians(shoulderConfigPIDVelocityConstraint), Math.toRadians(acceleration)));
+		wristPid.setConstraints(new Constraints(Math.toRadians(wristConfigPIDVelocityConstraint), Math.toRadians(wristConfigPIDAccelerationConstraint)));
 	}
 }
