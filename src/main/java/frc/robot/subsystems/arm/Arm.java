@@ -437,7 +437,7 @@ public class Arm extends SubsystemBase implements Loggable {
 
 	public CommandBase pickUpGroundC(){
 		return sequence(
-			setArmStateC(Units.degreesToRadians(-51), Units.degreesToRadians(0), getExtensionState()),
+			setArmStateC(Units.degreesToRadians(-46), Units.degreesToRadians(0), getExtensionState()),
 			setExtensionC(true)
 		);
 	}
@@ -459,7 +459,7 @@ public class Arm extends SubsystemBase implements Loggable {
 	public CommandBase pickUpDoubleSubC(){
 		return sequence(
 			setExtensionC(false),
-			setArmStateC(Units.degreesToRadians(-0.5), Units.degreesToRadians(-1), false)
+			setArmStateC(Units.degreesToRadians(4.5), Units.degreesToRadians(-1), false)
 		);
 	}
 

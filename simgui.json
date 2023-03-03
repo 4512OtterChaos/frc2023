@@ -116,7 +116,10 @@
           "open": true
         },
         "Arm: Config": {
-          "open": true
+          "open": true,
+          "shoulderPid": {
+            "open": true
+          }
         },
         "SwerveDrive": {
           "SwerveModule": {
