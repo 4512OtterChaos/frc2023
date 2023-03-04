@@ -13,6 +13,7 @@ import static edu.wpi.first.wpilibj2.command.Commands.*;
 import edu.wpi.first.wpilibj2.command.InstantCommand;
 import edu.wpi.first.wpilibj2.command.RunCommand;
 import edu.wpi.first.wpilibj2.command.WaitCommand;
+import frc.robot.commands.AutoBalance;
 import frc.robot.subsystems.arm.Arm;
 import frc.robot.subsystems.drive.SwerveDrive;
 import frc.robot.subsystems.intake.Intake;
@@ -21,6 +22,76 @@ public class AutoOptions {
     
     // list of choosable commands that decides what is run in auto
     private SendableChooser<CommandBase> autoOptions = new SendableChooser<>();
+
+    public AutoOptions(SwerveDrive drive){
+        autoOptions.setDefaultOption("Nothing",
+            new InstantCommand(()->drive.stop(), drive)
+        );
+        autoOptions.addOption("Btaxi",
+        new OCSwerveFollower(
+                    drive, 
+                    "Btaxi", 
+                    AutoConstants.kMediumSpeedConfig,
+                    true
+                )
+        
+        );
+        autoOptions.addOption("Mtaxi",
+        new OCSwerveFollower(
+                    drive, 
+                    "Mtaxi", 
+                    AutoConstants.kMediumSpeedConfig,
+                    true
+                )
+        );
+        autoOptions.addOption("Ttaxi",
+        new OCSwerveFollower(
+                    drive, 
+                    "Ttaxi", 
+                    AutoConstants.kMediumSpeedConfig,
+                    true
+                )
+        );
+        autoOptions.addOption("TPushScore1",
+        sequence(
+        new OCSwerveFollower(
+            drive, 
+            "TPushScore1", 
+            AutoConstants.kMediumSpeedConfig,
+            true
+            ),
+            new OCSwerveFollower(
+                    drive, 
+                    "TPushScore2", 
+                    AutoConstants.kMediumSpeedConfig,
+                    false
+                )
+        )
+        );
+        autoOptions.addOption("MPushScore1",
+        sequence(
+        new OCSwerveFollower(
+            drive, 
+            "MPushScore1", 
+            AutoConstants.kMediumSpeedConfig,
+            true
+            ),
+            new OCSwerveFollower(
+                    drive, 
+                    "MPushScore2", 
+                    AutoConstants.kMediumSpeedConfig,
+                    false
+                ),
+                new OCSwerveFollower(
+                        drive, 
+                        "MPushScore3", 
+                        AutoConstants.kMediumSpeedConfig,
+                        false
+                    )
+                            
+        )
+        );
+    }
 
     public AutoOptions(SwerveDrive drive, Intake intake, Arm arm){
 

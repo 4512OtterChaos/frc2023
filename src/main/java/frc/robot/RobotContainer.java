@@ -29,24 +29,26 @@ import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
 import edu.wpi.first.wpilibj2.command.CommandBase;
 
 public class RobotContainer {
-    private final Arm arm = new Arm();
-    private final Intake intake = new Intake();
+    //private final Arm arm = new Arm();
+    //private final Intake intake = new Intake();
     private final SwerveDrive drive = new SwerveDrive(); 
-    private final Superstructure superstructure = new Superstructure(arm, drive, intake);
+    // private final Superstructure superstructure = new Superstructure(arm, drive, intake);
     private final Compressor compressor = new Compressor(PneumaticsModuleType.REVPH);
 
     private final OCXboxController driver = new OCXboxController(0);
     private final OCXboxController operator = new OCXboxController(1);
     private final OCXboxController king = new OCXboxController(0);
 
-    private final AutoOptions autoOptions = new AutoOptions(drive, intake, arm);
+    //private final AutoOptions autoOptions = new AutoOptions(drive, intake, arm);
+    private final AutoOptions autoOptions = new AutoOptions(drive);
+
 
     private final Field2d field = new Field2d();
     
-    private final PhotonCamera camera = new PhotonCamera("camera");
+    // private final PhotonCamera camera = new PhotonCamera("camera");
     private final SimPhotonCamera simCamera = new SimPhotonCamera("camera");
     private final SimVisionSystem visionSim = new SimVisionSystem("camera", 90, new Transform3d(), 10, 640, 480, .01);
-    private final PhotonPoseEstimator photonEstimator;
+    // private final PhotonPoseEstimator photonEstimator;
     private final AprilTagFieldLayout tagLayout;
     
     public RobotContainer() {
@@ -56,7 +58,7 @@ public class RobotContainer {
         } catch(Exception e) {
             throw new RuntimeException("AprilTagFieldLayout loading failed!", e);
         }
-        photonEstimator = new PhotonPoseEstimator(tagLayout, PoseStrategy.MULTI_TAG_PNP, camera, new Transform3d());
+        // photonEstimator = new PhotonPoseEstimator(tagLayout, PoseStrategy.MULTI_TAG_PNP, camera, new Transform3d());
         visionSim.addVisionTargets(tagLayout);
         
         configureEventBinds();
@@ -80,19 +82,22 @@ public class RobotContainer {
     }
 
     public void periodic() {
-        superstructure.periodic();
+        // superstructure.periodic();
         field.setRobotPose(drive.getPose());
         field.getObject("trajectory").setTrajectory(drive.getLogTrajectory());
         
-        camera.getLatestResult().getTargets();
-        photonEstimator.update().ifPresent(est -> {
-            drive.addVisionMeasurement(est.estimatedPose.toPose2d(), Timer.getFPGATimestamp() - est.timestampSeconds);
-        });
+        // camera.getLatestResult().getTargets();
+        // photonEstimator.update().ifPresent(est -> {
+        //     drive.addVisionMeasurement(est.estimatedPose.toPose2d(), Timer.getFPGATimestamp() - est.timestampSeconds);
+        // });
         
     }
     
     private void configureEventBinds() {
-        intake.setDefaultCommand(intake.setVoltageC(0.75));
+
+        //Commented out due to lack of intake
+        //intake.setDefaultCommand(intake.setVoltageC(0.75));
+        
     }
 
     private void configureDriverBinds(OCXboxController controller) {
@@ -125,11 +130,10 @@ public class RobotContainer {
             }));
 
 
-        // toggle between field-relative and robot-relative control
-        controller.back()
-        .onTrue(
-            superstructure.p1()
-        );
+        // controller.back()
+        // .onTrue(
+        //     superstructure.p1()
+        // );
 
         // reset the robot heading to 0
         controller.start()
@@ -156,7 +160,9 @@ public class RobotContainer {
     }
 
     private void configureOperatorBinds(OCXboxController controller){
-        
+
+        /*
+        Temporarily removed due to lack of arm or intake 
         controller.rightTrigger()
             .whileTrue(intake.setVoltageInC());
         controller.leftTrigger()
@@ -180,8 +186,9 @@ public class RobotContainer {
             .whileTrue(run(()->arm.setShoulderPosRadians(arm.shoulderPid.getSetpoint().position-0.05)));
         controller.rightBumper()
             .whileTrue(run(()->arm.setShoulderPosRadians(arm.shoulderPid.getSetpoint().position+0.05)));
+            */
     }
-
+ 
     public CommandBase getAutoCommand(){
         return autoOptions.getAutoCommand();
     }
@@ -189,7 +196,9 @@ public class RobotContainer {
     public void log() {
         Logger.updateEntries();
         drive.log();
-        arm.log();
+
+        //Removed due to lack of arm
+        //arm.log();
     }
 
     public void simulationPeriodic(){
