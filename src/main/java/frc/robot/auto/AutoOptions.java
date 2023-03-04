@@ -27,68 +27,44 @@ public class AutoOptions {
         autoOptions.setDefaultOption("Nothing",
             new InstantCommand(()->drive.stop(), drive)
         );
-        autoOptions.addOption("Btaxi",
-        new OCSwerveFollower(
-                    drive, 
-                    "Btaxi", 
-                    AutoConstants.kMediumSpeedConfig,
-                    true
-                )
+        autoOptions.addOption("TaxiSideDumb",
+            new OCSwerveFollower(
+                drive, 
+                "TaxiSideDumb", 
+                AutoConstants.kMediumSpeedConfig,
+                true
+            )
         
         );
-        autoOptions.addOption("Mtaxi",
-        new OCSwerveFollower(
+        autoOptions.addOption("PushTaxiSideDumb",
+            new OCSwerveFollower(
+                drive, 
+                "PushTaxiSideDumb", 
+                AutoConstants.kMediumSpeedConfig,
+                true
+            )
+        );
+        autoOptions.addOption("TaxiEngaged",
+            sequence(
+                new OCSwerveFollower(
                     drive, 
-                    "Mtaxi", 
+                    "TaxiEngaged", 
                     AutoConstants.kMediumSpeedConfig,
                     true
-                )
+                ),
+                new AutoBalance(drive)                   
+            )
         );
-        autoOptions.addOption("Ttaxi",
-        new OCSwerveFollower(
+        autoOptions.addOption("PushTaxiEngaged",
+            sequence(
+                new OCSwerveFollower(
                     drive, 
-                    "Ttaxi", 
+                    "PushTaxiEngaged", 
                     AutoConstants.kMediumSpeedConfig,
                     true
-                )
-        );
-        autoOptions.addOption("TPushScore1",
-        sequence(
-        new OCSwerveFollower(
-            drive, 
-            "TPushScore1", 
-            AutoConstants.kMediumSpeedConfig,
-            true
-            ),
-            new OCSwerveFollower(
-                    drive, 
-                    "TPushScore2", 
-                    AutoConstants.kMediumSpeedConfig,
-                    false
-                )
-        )
-        );
-        autoOptions.addOption("MTaxiEngaged",
-        sequence(
-        new OCSwerveFollower(
-            drive, 
-            "MTaxiEngaged", 
-            AutoConstants.kMediumSpeedConfig,
-            true
-            ),
-        new AutoBalance(drive)                   
-        )
-        );
-        autoOptions.addOption("MPushEngaged",
-         sequence(
-            new OCSwerveFollower(
-            drive, 
-            "MPushEngaged", 
-            AutoConstants.kMediumSpeedConfig,
-            true
-            ),
-        new AutoBalance(drive)
-         )
+                ),
+                new AutoBalance(drive)
+            )
         );
     }
 
