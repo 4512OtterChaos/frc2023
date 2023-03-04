@@ -157,6 +157,12 @@ public class RobotContainer {
         //    };
         //    drive.setModuleStates(states, false, true);
         //}, drive));
+
+        controller.back()
+            .onTrue(runOnce(
+                ()->drive.setIsFieldRelative(!drive.getIsFieldRelative())
+            ));
+   
     }
 
     private void configureOperatorBinds(OCXboxController controller){

@@ -68,28 +68,27 @@ public class AutoOptions {
                 )
         )
         );
-        autoOptions.addOption("MPushScore1",
+        autoOptions.addOption("MTaxiEngaged",
         sequence(
         new OCSwerveFollower(
             drive, 
-            "MPushScore1", 
+            "MTaxiEngaged", 
             AutoConstants.kMediumSpeedConfig,
             true
             ),
-            new OCSwerveFollower(
-                    drive, 
-                    "MPushScore2", 
-                    AutoConstants.kMediumSpeedConfig,
-                    false
-                ),
-                new OCSwerveFollower(
-                        drive, 
-                        "MPushScore3", 
-                        AutoConstants.kMediumSpeedConfig,
-                        false
-                    )
-                            
+        new AutoBalance(drive)                   
         )
+        );
+        autoOptions.addOption("MPushEngaged",
+         sequence(
+            new OCSwerveFollower(
+            drive, 
+            "MPushEngaged", 
+            AutoConstants.kMediumSpeedConfig,
+            true
+            ),
+        new AutoBalance(drive)
+         )
         );
     }
 
