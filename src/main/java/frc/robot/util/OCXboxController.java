@@ -21,18 +21,18 @@ public class OCXboxController extends CommandXboxController {
     private static final double kDeadband = 0.12;
 
     public static final double kSpeedSlow = .3;
-    public static final double kSpeedDefault = .6;
+    public static final double kSpeedDefault = .65;
     public static final double kSpeedFast = 0.8;
     public static final double kSpeedMax = 1.0;
     
     private double drivespeed = kSpeedDefault;
     private double turnSpeed = kTurnSpeed;
-    public static final double kTurnSpeedSlow = 0.3;
-    public static final double kTurnSpeed = 0.5;
+    public static final double kTurnSpeedSlow = 0.15;
+    public static final double kTurnSpeed = 0.35;
 
     private SlewRateLimiter forwardLimiter = new SlewRateLimiter(1.0 / 0.6); // 1 / x seconds to full
     private SlewRateLimiter strafeLimiter = new SlewRateLimiter(1.0 / 0.6);
-    private SlewRateLimiter turnLimiter = new SlewRateLimiter(1 / 0.33);
+    private SlewRateLimiter turnLimiter = new SlewRateLimiter(1 / 0.4);
 
     /**
      * Constructs XboxController on DS joystick port.

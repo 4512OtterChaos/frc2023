@@ -5,7 +5,8 @@
 package frc.robot.commands;
 
 import edu.wpi.first.math.controller.PIDController;
-import edu.wpi.first.math.geometry.Rotation3d;
+import edu.wpi.first.math.geometry.Rotation2d;
+import edu.wpi.first.math.kinematics.SwerveModuleState;
 import edu.wpi.first.wpilibj2.command.CommandBase;
 import frc.robot.subsystems.drive.SwerveDrive;
 
@@ -17,8 +18,8 @@ public class AutoBalance extends CommandBase {
 
     // private static final double kBalanceSpeed = 0.3;
 
-    private static final double kP = 0.01;
-    private static final double kD = 0.01;
+    private static final double kP = 2;
+    private static final double kD = 0;
     // (we manually use kP because the angle tolerance makes it nonlinear)
     private final PIDController pidPitch = new PIDController(0, 0, kD);
     private final PIDController pidRoll = new PIDController(0, 0, kD);
@@ -54,16 +55,32 @@ public class AutoBalance extends CommandBase {
         // }
 
         // Calculate slope angle
-        if(Math.atan(Math.sqrt(Math.tan(pitch)*Math.tan(pitch) + Math.tan(roll)*Math.tan(roll))) > kAngleToleranceRads) {
-            // if outside tolerance, use kP
-            vx += kP * pitch;
-            vy += kP * roll;
+        // if(Math.atan(Math.sqrt(Math.tan(pitch)*Math.tan(pitch) + Math.tan(roll)*Math.tan(roll))) > kAngleToleranceRads) {
+        //     // if outside tolerance, use kP
+        //     vx -= kP * pitch;
+        //     vx -= kP * roll;
             
+        // }
+        System.out.println("pitch deg"+Math.toDegrees(pitch) );
+        if(Math.abs(roll) > kAngleToleranceRads) {
+            vx -= kP * roll;
         }
-        vx += pidPitch.calculate(pitch);
-        vy += pidRoll.calculate(roll);
-
-        drive.drive(vx, vy, omegaRadians, true);
+        vx -= pidPitch.calculate(pitch);
+        vx -= pidRoll.calculate(roll);
+        System.out.println("pitch: "+pitch);
+        if (!(vx == 0 && vy == 0)){
+            drive.drive(vx, vy, omegaRadians, true);
+        }
+        else {
+            SwerveModuleState[] states = new SwerveModuleState[]{
+               new SwerveModuleState(0, Rotation2d.fromDegrees(-135)),
+               new SwerveModuleState(0, Rotation2d.fromDegrees(135)),
+               new SwerveModuleState(0, Rotation2d.fromDegrees(-45)),
+               new SwerveModuleState(0, Rotation2d.fromDegrees(45))
+           };
+           drive.setModuleStates(states, false, true);
+        }
+        
     }
     
     // Called once the command ends or is interrupted.

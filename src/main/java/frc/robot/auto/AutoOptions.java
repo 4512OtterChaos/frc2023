@@ -66,6 +66,17 @@ public class AutoOptions {
                 new AutoBalance(drive)
             )
         );
+        autoOptions.addOption("PushEngaged",
+            sequence(
+                new OCSwerveFollower(
+                    drive, 
+                    "PushEngaged", 
+                    AutoConstants.kMediumSpeedConfig,
+                    true
+                ),
+                new AutoBalance(drive)
+            )
+        );
     }
 
     public AutoOptions(SwerveDrive drive, Intake intake, Arm arm){

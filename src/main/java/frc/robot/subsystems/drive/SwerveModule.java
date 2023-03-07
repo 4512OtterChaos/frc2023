@@ -17,7 +17,9 @@ import edu.wpi.first.math.kinematics.SwerveModuleState;
 import edu.wpi.first.math.system.plant.DCMotor;
 import edu.wpi.first.math.system.plant.LinearSystemId;
 import edu.wpi.first.math.util.Units;
+import edu.wpi.first.wpilibj.DriverStation;
 import edu.wpi.first.wpilibj.RobotController;
+import edu.wpi.first.wpilibj.Timer;
 import edu.wpi.first.wpilibj.simulation.FlywheelSim;
 import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
 import frc.robot.Robot;
@@ -39,6 +41,8 @@ public class SwerveModule implements Loggable {
     private final WPI_TalonFX driveMotor;
     private final WPI_TalonFX steerMotor;
     private final WPI_CANCoder steerEncoder;
+
+    private double lastSeed = Timer.getFPGATimestamp();
 
     public SwerveModule(Module moduleConstants){
         this.moduleConstants = moduleConstants;
@@ -69,7 +73,9 @@ public class SwerveModule implements Loggable {
     }
     private void setupCancoder(boolean init){
         steerEncoder.configAllSettings(cancoderConfig);
-        steerEncoder.configMagnetOffset(moduleConstants.angleOffset, 50);
+        // steerEncoder.configMagnetOffset(moduleConstants.angleOffset, 50);
+        steerEncoder.configMagnetOffset(0, 50);
+
     }
     private void setupSteerMotor(boolean init){
         if(init){
@@ -90,6 +96,10 @@ public class SwerveModule implements Loggable {
         if(steerMotor.hasResetOccurred()){
             setupSteerMotor(false);
         }
+
+        if(Timer.getFPGATimestamp() - lastSeed > 1 && DriverStation.isDisabled()) {
+            resetToAbsolute();
+        }
     }
 
     /**
@@ -99,6 +109,7 @@ public class SwerveModule implements Loggable {
     public void resetToAbsolute(){
         double absolutePosition = TalonUtil.degreesToPosition(getAbsoluteHeading().getDegrees(), kSteerGearRatio);
         steerMotor.setSelectedSensorPosition(absolutePosition);
+        lastSeed = Timer.getFPGATimestamp();
     }
 
     /**
@@ -173,7 +184,7 @@ public class SwerveModule implements Loggable {
      * Module heading reported by steering cancoder
      */
     public Rotation2d getAbsoluteHeading(){
-        return Rotation2d.fromDegrees(steerEncoder.getPosition()).plus(new Rotation2d());
+        return Rotation2d.fromDegrees(steerEncoder.getAbsolutePosition()).plus(Rotation2d.fromDegrees(moduleConstants.angleOffset));
     }
 
     /**
@@ -290,9 +301,11 @@ public class SwerveModule implements Loggable {
         String prefix = "Drive/Module "+num+"/";
         
         SmartDashboard.putNumber(prefix+"Steer Degrees", state.angle.getDegrees());
+
+        SmartDashboard.putNumber(prefix+"Steer Absolute Degrees", steerEncoder.getAbsolutePosition());
         SmartDashboard.putNumber(prefix+"Steer Target Degrees", lastDesiredState.angle.getDegrees());
         SmartDashboard.putNumber(prefix+"Steer Native", steerMotor.getSelectedSensorPosition());
-        SmartDashboard.putNumber(prefix+"Steer Target Native", steerMotor.getClosedLoopTarget());
+        // SmartDashboard.putNumber(prefix+"Steer Target Native", steerMotor.getClosedLoopTarget());
         SmartDashboard.putNumber(prefix+"Steer Velocity Native", steerMotor.getSelectedSensorVelocity());
         SmartDashboard.putNumber(prefix+"Drive Velocity Feet", Units.metersToFeet(state.speedMetersPerSecond));
         SmartDashboard.putNumber(prefix+"Drive Velocity Target Feet", Units.metersToFeet(lastDesiredState.speedMetersPerSecond));

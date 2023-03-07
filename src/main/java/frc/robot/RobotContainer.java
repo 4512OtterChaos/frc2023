@@ -1,6 +1,7 @@
 package frc.robot;
 
 import frc.robot.auto.AutoOptions;
+import frc.robot.commands.AutoBalance;
 import frc.robot.subsystems.Superstructure;
 import frc.robot.subsystems.arm.Arm;
 import frc.robot.subsystems.drive.SwerveDrive;
@@ -21,6 +22,7 @@ import edu.wpi.first.apriltag.AprilTagFields;
 import edu.wpi.first.math.geometry.Pose2d;
 import edu.wpi.first.math.geometry.Rotation2d;
 import edu.wpi.first.math.geometry.Transform3d;
+import edu.wpi.first.math.kinematics.SwerveModuleState;
 import edu.wpi.first.wpilibj.Compressor;
 import edu.wpi.first.wpilibj.PneumaticsModuleType;
 import edu.wpi.first.wpilibj.Timer;
@@ -148,20 +150,22 @@ public class RobotContainer {
         );
         
         // lock the modules in a "X" alignment
-        //controller.x().whileTrue(run(()->{
-        //    SwerveModuleState[] states = new SwerveModuleState[]{
-        //        new SwerveModuleState(0, Rotation2d.fromDegrees(-135)),
-        //        new SwerveModuleState(0, Rotation2d.fromDegrees(135)),
-        //        new SwerveModuleState(0, Rotation2d.fromDegrees(-45)),
-        //        new SwerveModuleState(0, Rotation2d.fromDegrees(45))
-        //    };
-        //    drive.setModuleStates(states, false, true);
-        //}, drive));
+        controller.x().whileTrue(run(()->{
+           SwerveModuleState[] states = new SwerveModuleState[]{
+               new SwerveModuleState(0, Rotation2d.fromDegrees(-135)),
+               new SwerveModuleState(0, Rotation2d.fromDegrees(135)),
+               new SwerveModuleState(0, Rotation2d.fromDegrees(-45)),
+               new SwerveModuleState(0, Rotation2d.fromDegrees(45))
+           };
+           drive.setModuleStates(states, false, true);
+        }, drive));
 
         controller.back()
             .onTrue(runOnce(
                 ()->drive.setIsFieldRelative(!drive.getIsFieldRelative())
             ));
+        controller.y()
+            .whileTrue(new AutoBalance(drive));
    
     }
 

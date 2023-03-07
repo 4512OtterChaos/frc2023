@@ -32,8 +32,8 @@ public class AutoConstants {
         Units.feetToMeters(14)
     );
     public static final PathConstraints kMediumSpeedConfig = new PathConstraints(
-        Units.feetToMeters(9), 
-        Units.feetToMeters(11)
+        Units.feetToMeters(7), 
+        Units.feetToMeters(9)
     );
     public static final PathConstraints kSlowSpeedConfig = new PathConstraints(
         Units.feetToMeters(6), 
