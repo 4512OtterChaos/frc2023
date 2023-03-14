@@ -18,6 +18,7 @@ import edu.wpi.first.math.system.plant.DCMotor;
 import edu.wpi.first.math.system.plant.LinearSystemId;
 import edu.wpi.first.math.util.Units;
 import edu.wpi.first.wpilibj.DriverStation;
+import edu.wpi.first.wpilibj.RobotBase;
 import edu.wpi.first.wpilibj.RobotController;
 import edu.wpi.first.wpilibj.Timer;
 import edu.wpi.first.wpilibj.simulation.FlywheelSim;
@@ -184,7 +185,9 @@ public class SwerveModule implements Loggable {
      * Module heading reported by steering cancoder
      */
     public Rotation2d getAbsoluteHeading(){
-        return Rotation2d.fromDegrees(steerEncoder.getAbsolutePosition()).plus(Rotation2d.fromDegrees(moduleConstants.angleOffset));
+        var rot = Rotation2d.fromDegrees(steerEncoder.getAbsolutePosition());
+        if(RobotBase.isSimulation()) return rot;
+        return rot.plus(Rotation2d.fromDegrees(moduleConstants.angleOffset));
     }
 
     /**
