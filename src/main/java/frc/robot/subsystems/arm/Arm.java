@@ -38,13 +38,13 @@ import com.revrobotics.CANSparkMaxLowLevel.PeriodicFrame;
 @Log.Exclude
 public class Arm extends SubsystemBase implements Loggable {
 
-	private final OCSparkMax shoulderMotorA = new OCSparkMax(8, MotorType.kBrushless);
-    private final OCSparkMax shoulderMotorB = new OCSparkMax(9, MotorType.kBrushless);
-	private final OCSparkMax wristMotor = new OCSparkMax(10, MotorType.kBrushless);
+	public final OCSparkMax shoulderMotorA = new OCSparkMax(5, MotorType.kBrushless);
+    private final OCSparkMax shoulderMotorB = new OCSparkMax(10, MotorType.kBrushless);
+	public final OCSparkMax wristMotor = new OCSparkMax(9, MotorType.kBrushless);
     private final DoubleSolenoid extensionPiston = new DoubleSolenoid(PneumaticsModuleType.REVPH, 0, 1);
 
-	private DutyCycleEncoder shoulderEncoder = new DutyCycleEncoder(0);
-	private DutyCycleEncoder wristEncoder = new DutyCycleEncoder(1);
+	private DutyCycleEncoder shoulderEncoder = new DutyCycleEncoder(9);
+	private DutyCycleEncoder wristEncoder = new DutyCycleEncoder(7);
 	
 	@Config.PIDController
 	public ProfiledPIDController shoulderPid = new ProfiledPIDController(
@@ -86,7 +86,7 @@ public class Arm extends SubsystemBase implements Loggable {
             shoulderMotorA.setPeriodicFramePeriod(PeriodicFrame.kStatus5, 65535);
             shoulderMotorA.setPeriodicFramePeriod(PeriodicFrame.kStatus6, 65535);
         }
-        shoulderMotorA.setInverted(false);
+        shoulderMotorA.setInverted(true);
         shoulderMotorB.follow(shoulderMotorA, true);
 		OCConfig.setStatusNothing(shoulderMotorB);
 		OCConfig.saveConfig(shoulderMotorA, shoulderMotorB);
@@ -102,7 +102,7 @@ public class Arm extends SubsystemBase implements Loggable {
 
         OCConfig.setIdleMode(IdleMode.kBrake, shoulderMotorA, shoulderMotorB, wristMotor);
 
-		shoulderEncoder.setDistancePerRotation(2 * (Math.PI));
+		shoulderEncoder.setDistancePerRotation(-2 * (Math.PI));
 		wristEncoder.setDistancePerRotation(2 * (Math.PI));
 		
 		shoulderPid.setTolerance(Math.toRadians(kShoulderPosToleranceDeg), Math.toRadians(kShoulderVelToleranceDeg));
