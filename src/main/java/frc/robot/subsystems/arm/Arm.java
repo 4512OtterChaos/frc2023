@@ -71,7 +71,7 @@ public class Arm extends SubsystemBase implements Loggable {
     private double shoulderMinimumAngleExtensionWrist = kShoulderMinimumAngleExtensionWrist;
     
 	private final ArmSimulation armSim = new ArmSimulation(
-            shoulderMotorA, wristMotor, extensionPiston, shoulderEncoder, wristEncoder);
+            shoulderMotorA, wristMotor, shoulderEncoder, wristEncoder);
     private static final Translation2d kRobotSafetyBoxTR =
             new Translation2d(FieldUtil.kRobotLength / 2 + 1, FieldUtil.kRobotBumperHeight + 1);
 
@@ -85,9 +85,11 @@ public class Arm extends SubsystemBase implements Loggable {
             shoulderMotorA.setPeriodicFramePeriod(PeriodicFrame.kStatus4, 65535);
             shoulderMotorA.setPeriodicFramePeriod(PeriodicFrame.kStatus5, 65535);
             shoulderMotorA.setPeriodicFramePeriod(PeriodicFrame.kStatus6, 65535);
+
+            shoulderMotorA.setInverted(true);
+            shoulderMotorB.follow(shoulderMotorA, true);
         }
-        shoulderMotorA.setInverted(true);
-        shoulderMotorB.follow(shoulderMotorA, true);
+        
 		OCConfig.setStatusNothing(shoulderMotorB);
 		OCConfig.saveConfig(shoulderMotorA, shoulderMotorB);
 
@@ -96,14 +98,17 @@ public class Arm extends SubsystemBase implements Loggable {
             OCConfig.setStatusNothing(wristMotor);
             wristMotor.setPeriodicFramePeriod(PeriodicFrame.kStatus0, 50);
             wristMotor.setPeriodicFramePeriod(PeriodicFrame.kStatus1, 20);
+
+            wristMotor.setInverted(false);
         }
-        wristMotor.setInverted(false);
+        
         OCConfig.saveConfig(wristMotor);
 
         OCConfig.setIdleMode(IdleMode.kBrake, shoulderMotorA, shoulderMotorB, wristMotor);
 
-		shoulderEncoder.setDistancePerRotation(-2 * (Math.PI));
-		wristEncoder.setDistancePerRotation(2 * (Math.PI));
+        double radsPerRot = 2 * Math.PI;
+		shoulderEncoder.setDistancePerRotation(RobotBase.isReal() ? -radsPerRot : radsPerRot);
+		wristEncoder.setDistancePerRotation(radsPerRot);
 		
 		shoulderPid.setTolerance(Math.toRadians(kShoulderPosToleranceDeg), Math.toRadians(kShoulderVelToleranceDeg));
         wristPid.setTolerance(Math.toRadians(kWristPosToleranceDeg), Math.toRadians(kWristVelToleranceDeg));
@@ -115,11 +120,12 @@ public class Arm extends SubsystemBase implements Loggable {
 
 	@Override
 	public void periodic() {
-		armSim.periodic();
-
 		double shoulderPosRadians = getShoulderPosRadians();
 		double wristPosRadians = getWristPosRadians();
-        double extension = armSim.getExtension();
+        boolean extended = getExtensionState();
+
+        // visualize the current arm state to a Mechanism2d
+        armSim.visualizeState(shoulderPosRadians, wristPosRadians, extended);
 
         //TODO periodic goal safety:
         // double clampedShoulderGoal = shoulderSafety2(shoulderGoal, wristGroundRelativeGoal - shoulderGoal, extension);
@@ -131,7 +137,6 @@ public class Arm extends SubsystemBase implements Loggable {
 
 		// Calculate shoulder volts:
 		var shoulderSetpoint = shoulderPid.getSetpoint();
-		armSim.setShoulderSetpoint(shoulderSetpoint.position);
         // update profile setpoint and get PID response voltage,
 		double shoulderVolts = shoulderPid.calculate(shoulderPosRadians);
         // and feedforward voltage to follow the profile setpoint.
@@ -158,7 +163,6 @@ public class Arm extends SubsystemBase implements Loggable {
 
 		// Calculate wrist volts:
 		var wristSetpoint = wristPid.getSetpoint();
-		armSim.setWristSetpoint(wristSetpoint.position + shoulderSetpoint.position);
         // update profile setpoint and get PID response voltage,
 		double wristVolts = wristPid.calculate(wristPosRadians);
         // and feedforward voltage to follow the profile setpoint.
@@ -183,6 +187,9 @@ public class Arm extends SubsystemBase implements Loggable {
         }
 		// Set wrist motors to the clamped voltage.
 		wristMotor.setVoltage(wristVolts);
+
+        // visualize the desired arm state to a Mechanism2d
+        armSim.visualizeSetpoint(shoulderSetpoint.position, wristSetpoint.position, extended);
 	}
 	
 	private double shoulderSafety(double shoulderPosRadians, double wristPosRadians, boolean extensionState){
@@ -305,7 +312,9 @@ public class Arm extends SubsystemBase implements Loggable {
 	 * @return The shoulder position in radians.
 	 */
 	public double getShoulderPosRadians() {
-		return shoulderEncoder.getDistance() - kShoulderAngleOffset.getRadians();
+        double shoulderPos = shoulderEncoder.getDistance();
+        if(RobotBase.isSimulation()) return shoulderPos;
+        else return shoulderPos - kShoulderAngleOffset.getRadians();
 	}
 
 	/**
@@ -333,7 +342,9 @@ public class Arm extends SubsystemBase implements Loggable {
 	 * @return The wrist position in radians.
 	 */
 	public double getWristPosRadians() {
-		return wristEncoder.getDistance() - kWristAngleOffset.getRadians();
+        double wristPos = wristEncoder.getDistance();
+        if(RobotBase.isSimulation()) return wristPos;
+        else return wristPos - kWristAngleOffset.getRadians();
 	}
 
     /**

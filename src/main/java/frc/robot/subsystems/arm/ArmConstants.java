@@ -9,7 +9,7 @@ public final class ArmConstants{
 
     //----- Shoulder
     public static final double kShoulderGearing = ((58.0 / 18.0) * (48.0 / 24.0) * 3 * 5);
-    public static final Rotation2d kShoulderAngleOffset = new Rotation2d().fromDegrees(53.75);
+    public static final Rotation2d kShoulderAngleOffset = Rotation2d.fromDegrees(53.75);
 
     public static final double kShoulderks = 0.001;
     public static final double kShoulderkg = 1;
@@ -33,7 +33,7 @@ public final class ArmConstants{
 
 
     //----- Wrist
-    public static final Rotation2d kWristAngleOffset = new Rotation2d().fromDegrees(9);
+    public static final Rotation2d kWristAngleOffset = Rotation2d.fromDegrees(9);
     public static final double kWristGearing = ((22.0 / 16.0) * 4 * 4 * 5);
 
     public static final double kWristks = 0.001;
