@@ -35,7 +35,7 @@ public class RobotContainer {
     private final Intake intake = new Intake();
     // private final SwerveDrive drive = new SwerveDrive(); 
     // private final Superstructure superstructure = new Superstructure(arm, drive, intake);
-    private final Compressor compressor = new Compressor(PneumaticsModuleType.REVPH);
+    private final Compressor compressor = new Compressor(PneumaticsModuleType.CTREPCM);
 
     private final OCXboxController driver = new OCXboxController(0);
     private final OCXboxController operator = new OCXboxController(1);
@@ -170,11 +170,11 @@ public class RobotContainer {
 
     private void configureOperatorBinds(OCXboxController controller){
         controller.start()
-            .whileTrue(run(()->arm.wristMotor.setVoltage(1),arm))
-            .onFalse(runOnce(()->arm.wristMotor.setVoltage(0),arm));
+            .whileTrue(run(()->arm.shoulderTestVolts=2,arm))
+            .onFalse(runOnce(()->arm.shoulderTestVolts=0,arm));
         controller.back()
-            .whileTrue(run(()->arm.shoulderMotorA.setVoltage(1),arm))
-            .onFalse(runOnce(()->arm.shoulderMotorA.setVoltage(0),arm));
+            .whileTrue(run(()->arm.shoulderTestVolts=-2,arm))
+            .onFalse(runOnce(()->arm.shoulderTestVolts=0,arm));
         controller.rightTrigger()
             .whileTrue(intake.setVoltageInC());
         controller.leftTrigger()

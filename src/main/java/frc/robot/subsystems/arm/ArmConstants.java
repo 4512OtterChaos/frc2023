@@ -37,7 +37,7 @@ public final class ArmConstants{
     public static final double kWristGearing = ((22.0 / 16.0) * 4 * 4 * 5);
 
     public static final double kWristks = 0.001;
-    public static final double kWristkg = 0.25;
+    public static final double kWristkg = 0.3;
     public static final double kWristkv = 0.001;
     public static final double kWristka = 0.001;
     public static ArmFeedforward kWristFF = new ArmFeedforward(
