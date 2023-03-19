@@ -9,12 +9,10 @@ import edu.wpi.first.math.controller.ArmFeedforward;
 import edu.wpi.first.math.controller.ProfiledPIDController;
 import edu.wpi.first.math.geometry.Rotation2d;
 import edu.wpi.first.math.geometry.Translation2d;
-import edu.wpi.first.math.trajectory.TrapezoidProfile;
 import edu.wpi.first.math.trajectory.TrapezoidProfile.Constraints;
 import edu.wpi.first.math.util.Units;
 import edu.wpi.first.wpilibj.DoubleSolenoid;
 import edu.wpi.first.wpilibj.DutyCycleEncoder;
-import edu.wpi.first.wpilibj.Encoder;
 import edu.wpi.first.wpilibj.PneumaticsModuleType;
 import edu.wpi.first.wpilibj.RobotBase;
 import edu.wpi.first.wpilibj.DoubleSolenoid.Value;
@@ -40,7 +38,7 @@ import com.revrobotics.CANSparkMaxLowLevel.PeriodicFrame;
 public class Arm extends SubsystemBase implements Loggable {
 
 	private final OCSparkMax shoulderMotorA = new OCSparkMax(5, MotorType.kBrushless);
-    private final OCSparkMax shoulderMotorB = new OCSparkMax(10, MotorType.kBrushless);
+    private final OCSparkMax shoulderMotorB = new OCSparkMax(13, MotorType.kBrushless);
 	private final OCSparkMax wristMotor = new OCSparkMax(9, MotorType.kBrushless);
     private final DoubleSolenoid extensionPiston = new DoubleSolenoid(PneumaticsModuleType.CTREPCM, 0, 1);
 
@@ -92,10 +90,11 @@ public class Arm extends SubsystemBase implements Loggable {
             shoulderMotorA.setPeriodicFramePeriod(PeriodicFrame.kStatus6, 65535);
 
             shoulderMotorA.setInverted(true);
-            shoulderMotorB.follow(shoulderMotorA, true);
+			shoulderMotorB.setInverted(false);
+            // shoulderMotorB.follow(shoulderMotorA, true);
         }
         
-		OCConfig.setStatusNothing(shoulderMotorB);
+		// OCConfig.setStatusNothing(shoulderMotorB);
 		OCConfig.saveConfig(shoulderMotorA, shoulderMotorB);
 
         OCConfig.configMotors(kWristStallLimit, kWristStallLimit, kRampRate, wristMotor);
@@ -171,6 +170,8 @@ public class Arm extends SubsystemBase implements Loggable {
 		System.out.println("clamped shoulderVolts: " + shoulderVolts);
 		// Set shoulder motors to the clamped voltage.
 		shoulderMotorA.setVoltage(shoulderVolts);
+		shoulderMotorB.setVoltage(shoulderVolts);
+
 
 		// Calculate wrist volts:
 		var wristSetpoint = wristPid.getSetpoint();
@@ -488,14 +489,20 @@ public class Arm extends SubsystemBase implements Loggable {
 	}
 
     public void log() {
-        SmartDashboard.putNumber("Arm/Shoulder Degrees", Units.radiansToDegrees(getShoulderPosRadians()));
-        SmartDashboard.putNumber("Arm/Shoulder Setpoint Degrees", Units.radiansToDegrees(shoulderPid.getSetpoint().position));
-		SmartDashboard.putNumber("Arm/Shoulder Goal Degrees", Units.radiansToDegrees(shoulderPid.getGoal().position));
-		SmartDashboard.putNumber("Arm/Wrist Ground Relative Deg", Math.toDegrees(getWristPosGroundRelativeRadians()));
-        SmartDashboard.putNumber("Arm/Wrist Degrees", Units.radiansToDegrees(getWristPosRadians()));
-        SmartDashboard.putNumber("Arm/Wrist Setpoint Degrees", Units.radiansToDegrees(wristPid.getSetpoint().position));
-		SmartDashboard.putNumber("Arm/Wrist Goal Degrees", Units.radiansToDegrees(wristPid.getGoal().position));
-		SmartDashboard.putBoolean("Arm/Extension State", getExtensionState());
+        SmartDashboard.putNumber("Arm/States/Shoulder Degrees", Units.radiansToDegrees(getShoulderPosRadians()));
+        SmartDashboard.putNumber("Arm/States/Shoulder Setpoint Degrees", Units.radiansToDegrees(shoulderPid.getSetpoint().position));
+		SmartDashboard.putNumber("Arm/States/Shoulder Goal Degrees", Units.radiansToDegrees(shoulderPid.getGoal().position));
+		SmartDashboard.putNumber("Arm/States/Wrist Ground Relative Deg", Math.toDegrees(getWristPosGroundRelativeRadians()));
+        SmartDashboard.putNumber("Arm/States/Wrist Degrees", Units.radiansToDegrees(getWristPosRadians()));
+        SmartDashboard.putNumber("Arm/States/Wrist Setpoint Degrees", Units.radiansToDegrees(wristPid.getSetpoint().position));
+		SmartDashboard.putNumber("Arm/States/Wrist Goal Degrees", Units.radiansToDegrees(wristPid.getGoal().position));
+		SmartDashboard.putBoolean("Arm/States/Extension State", getExtensionState());
+		SmartDashboard.putNumber("Arm/Motors/Shoulder A Volts", shoulderMotorA.getAppliedOutput());
+		SmartDashboard.putNumber("Arm/Motors/Shoulder B Volts", shoulderMotorB.getAppliedOutput());
+		SmartDashboard.putNumber("Arm/Motors/Shoulder A Current", shoulderMotorA.getOutputCurrent());
+		SmartDashboard.putNumber("Arm/Motors/Shoulder B Current", shoulderMotorB.getOutputCurrent());
+		SmartDashboard.putNumber("Arm/Motors/Wrist Volts", wristMotor.getAppliedOutput());
+		SmartDashboard.putNumber("Arm/Motors/Wrist Current", wristMotor.getOutputCurrent());
     }
 
     @Override

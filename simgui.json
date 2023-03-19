@@ -108,12 +108,6 @@
       "open": false
     },
     "transitory": {
-      "FMSInfo": {
-        "open": true
-      },
-      "LiveWindow": {
-        "open": true
-      },
       "Shuffleboard": {
         "Arm": {
           "open": true
@@ -121,6 +115,9 @@
         "Arm: Config": {
           "open": true,
           "shoulderPid": {
+            "open": true
+          },
+          "wristPid": {
             "open": true
           }
         },
@@ -136,7 +133,7 @@
         "open": true
       },
       "SmartDashboard": {
-        "field": {
+        "Arm": {
           "open": true
         },
         "open": true
@@ -144,8 +141,7 @@
       "photonvision": {
         "camera": {
           "open": true
-        },
-        "open": true
+        }
       }
     }
   },
