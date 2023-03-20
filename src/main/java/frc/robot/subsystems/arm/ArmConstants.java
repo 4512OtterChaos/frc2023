@@ -9,12 +9,12 @@ public final class ArmConstants{
 
     //----- Shoulder
     public static final double kShoulderGearing = ((58.0 / 18.0) * (48.0 / 24.0) * 3 * 5);
-    public static final Rotation2d kShoulderAngleOffset = new Rotation2d();
+    public static final Rotation2d kShoulderAngleOffset = Rotation2d.fromDegrees(53.75);
 
-    public static final double kShoulderks = 0.2;
-    public static final double kShoulderkg = 0.8;
-    public static final double kShoulderkv = 2;
-    public static final double kShoulderka = 2;
+    public static final double kShoulderks = 0.001;
+    public static final double kShoulderkg = 1;
+    public static final double kShoulderkv = 0.001;
+    public static final double kShoulderka = 0.001;
     public static ArmFeedforward kShoulderFF = new ArmFeedforward(
         kShoulderks, // Voltage to break static friction
         kShoulderkg, // Voltage to counteract gravity
@@ -23,7 +23,7 @@ public final class ArmConstants{
     );
     public static final int kShoulderStallLimit = 40;
 
-    public static final double kShoulderKP = 6;
+    public static final double kShoulderKP = 0;
     public static final double kShoulderKI = 0;
     public static final double kShoulderKD = 0;
     public static final double kShoulderVelocityDeg = 90;
@@ -33,13 +33,13 @@ public final class ArmConstants{
 
 
     //----- Wrist
-    public static final Rotation2d kWristAngleOffset = new Rotation2d();
+    public static final Rotation2d kWristAngleOffset = Rotation2d.fromDegrees(9);
     public static final double kWristGearing = ((22.0 / 16.0) * 4 * 4 * 5);
 
-    public static final double kWristks = 0.2;
-    public static final double kWristkg = 0.7;
-    public static final double kWristkv = 1;
-    public static final double kWristka = 0.25;
+    public static final double kWristks = 0.001;
+    public static final double kWristkg = 0.3;
+    public static final double kWristkv = 0.001;
+    public static final double kWristka = 0.001;
     public static ArmFeedforward kWristFF = new ArmFeedforward(
         kWristks, // Voltage to break static friction
         kWristkg, // Voltage to counteract gravity
@@ -48,7 +48,7 @@ public final class ArmConstants{
     );
     public static final int kWristStallLimit = 30;
 
-    public static final double kWristKP = 6;
+    public static final double kWristKP = 0;
     public static final double kWristKI = 0;
     public static final double kWristKD = 0;
     public static final double kWristVelocityDeg = 90;

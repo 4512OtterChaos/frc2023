@@ -4,12 +4,10 @@ import com.revrobotics.CANSparkMax.IdleMode;
 import com.revrobotics.CANSparkMaxLowLevel.MotorType;
 import com.revrobotics.CANSparkMaxLowLevel.PeriodicFrame;
 
-import edu.wpi.first.wpilibj.motorcontrol.Spark;
 import edu.wpi.first.wpilibj2.command.CommandBase;
 import edu.wpi.first.wpilibj2.command.SubsystemBase;
 import frc.robot.util.OCConfig;
 import frc.robot.util.OCSparkMax;
-import io.github.oblarg.oblog.Loggable;
 
 import static frc.robot.subsystems.intake.IntakeConstants.*;
 

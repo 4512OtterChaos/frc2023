@@ -1,0 +1,15 @@
+{
+  "NetworkTables": {
+    "types": {
+      "/FMSInfo": "FMSInfo",
+      "/SmartDashboard/Arm/Mech2d": "Mechanism2d",
+      "/SmartDashboard/Arm/Subsystem": "Subsystem",
+      "/SmartDashboard/camera Sim Field": "Field2d",
+      "/SmartDashboard/field": "Field2d"
+    }
+  },
+  "NetworkTables Settings": {
+    "mode": "Client (NT4)",
+    "serverTeam": "4512"
+  }
+}

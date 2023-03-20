@@ -1,0 +1,58 @@
+{
+  "NetworkTables": {
+    "transitory": {
+      "Shuffleboard": {
+        "Arm: Config": {
+          "open": true
+        },
+        "open": true
+      },
+      "SmartDashboard": {
+        "Arm": {
+          "open": true
+        },
+        "open": true
+      }
+    },
+    "types": {
+      "/FMSInfo": "FMSInfo",
+      "/SmartDashboard/Arm/Mech2d": "Mechanism2d",
+      "/SmartDashboard/Arm/Subsystem": "Subsystem",
+      "/SmartDashboard/camera Sim Field": "Field2d",
+      "/SmartDashboard/field": "Field2d"
+    },
+    "windows": {
+      "/SmartDashboard/Arm/Mech2d": {
+        "window": {
+          "visible": true
+        }
+      },
+      "/SmartDashboard/field": {
+        "image": "C:\\Users\\FRC 4512\\Documents\\GitHub\\frc2023\\2023-field.png",
+        "window": {
+          "visible": true
+        }
+      }
+    }
+  },
+  "NetworkTables Settings": {
+    "mode": "Client (NT4)",
+    "serverTeam": "4512"
+  },
+  "Plots": {
+    "Plot <0>": {
+      "plots": [
+        {
+          "height": 151
+        },
+        {
+          "height": 151
+        }
+      ],
+      "window": {
+        "visible": false
+      }
+    }
+  },
+  "enterKey": 344
+}

@@ -5,9 +5,7 @@ import edu.wpi.first.math.geometry.Translation2d;
 import edu.wpi.first.math.system.plant.DCMotor;
 import edu.wpi.first.math.system.plant.LinearSystemId;
 import edu.wpi.first.math.util.Units;
-import edu.wpi.first.wpilibj.DoubleSolenoid;
 import edu.wpi.first.wpilibj.DutyCycleEncoder;
-import edu.wpi.first.wpilibj.DoubleSolenoid.Value;
 import edu.wpi.first.wpilibj.smartdashboard.Mechanism2d;
 import edu.wpi.first.wpilibj.smartdashboard.MechanismLigament2d;
 import edu.wpi.first.wpilibj.smartdashboard.MechanismRoot2d;
@@ -27,12 +25,8 @@ public class ArmSimulation {
     private final OCSparkMax shoulderMotor;
     private final OCSparkMax wristMotor;
 
-    private final DutyCycleEncoder shoulderEncoder;
-    private final DutyCycleEncoder wristEncoder;
     private final DutyCycleEncoderSim shoulderEncoderSim;
     private final DutyCycleEncoderSim wristEncoderSim;
-
-    private final DoubleSolenoid extensionPiston;
 
     private static final double kWristMassKg = Units.lbsToKilograms(8);
     private static final double kArmMassKg = Units.lbsToKilograms(7) + kWristMassKg; // INCLUDING wrist
@@ -73,13 +67,10 @@ public class ArmSimulation {
     private final PistonSim pistonSim = new PistonSim(false, 0.5);
 
     public ArmSimulation(
-            OCSparkMax shoulderMotor, OCSparkMax wristMotor, DoubleSolenoid extensionPiston,
+            OCSparkMax shoulderMotor, OCSparkMax wristMotor,
             DutyCycleEncoder shoulderEncoder, DutyCycleEncoder wristEncoder) {
         this.shoulderMotor = shoulderMotor;
         this.wristMotor = wristMotor;
-        this.extensionPiston = extensionPiston;
-        this.shoulderEncoder = shoulderEncoder;
-        this.wristEncoder = wristEncoder;
         shoulderEncoderSim = new DutyCycleEncoderSim(shoulderEncoder);
         shoulderEncoderSim.setDistancePerRotation(2 * Math.PI);
         wristEncoderSim = new DutyCycleEncoderSim(wristEncoder);
@@ -103,44 +94,27 @@ public class ArmSimulation {
     private final double kDefaultShoulderDeg = -180;
     private final double kDefaultWristDeg = 90;
 
-    MechanismLigament2d mechArmBase = mechRoot.append(
+    private final MechanismLigament2d mechArmBase = mechRoot.append(
             new MechanismLigament2d("base", kShoulderHeight, 90, kMechWidth, kMechBaseColor));
-    MechanismLigament2d mechArm = mechArmBase.append(
+    private final MechanismLigament2d mechArm = mechArmBase.append(
             new MechanismLigament2d("arm", kBaseStageLength, kDefaultShoulderDeg, kMechWidth, kMechBaseColor));
-    MechanismLigament2d mechExtension = mechArm.append(
+    private final MechanismLigament2d mechExtension = mechArm.append(
             new MechanismLigament2d("armExtension", kRetractedFirstStageLength, 0, kMechWidth - 2,
                     kMechExtensionColor));
-    MechanismLigament2d mechWrist = mechExtension.append(
+    private final MechanismLigament2d mechWrist = mechExtension.append(
             new MechanismLigament2d("armWrist", kWristLength, kDefaultWristDeg, kMechWidth + 1, kMechExtensionColor));
 
-    MechanismLigament2d setpointArmBase = mechRoot.append(
+    private final MechanismLigament2d setpointArmBase = mechRoot.append(
             new MechanismLigament2d("setpointArmBase", kShoulderHeight, 90, kSetpointWidth, kSetpointBaseColor));
-    MechanismLigament2d setpointArm = setpointArmBase.append(
+    private final MechanismLigament2d setpointArm = setpointArmBase.append(
             new MechanismLigament2d("setpointArm", kBaseStageLength, kDefaultShoulderDeg, kSetpointWidth,
                     kSetpointBaseColor));
-    MechanismLigament2d setpointExtension = setpointArm.append(
+    private final MechanismLigament2d setpointExtension = setpointArm.append(
             new MechanismLigament2d("setpointExtension", kRetractedFirstStageLength, 0, kSetpointWidth - 2,
                     kSetpointExtensionColor));
-    MechanismLigament2d setpointWrist = setpointExtension.append(
+    private final MechanismLigament2d setpointWrist = setpointExtension.append(
             new MechanismLigament2d("setpointWrist", kWristLength, kDefaultWristDeg, kSetpointWidth + 1,
                     kSetpointExtensionColor));
-
-    private double shoulderSetpointRadians = -Math.PI;
-    private double wristSetpointRadians = Math.PI;
-
-    /**
-     * @param radians Ground-relative shoulder angle in radians
-     */
-    public void setShoulderSetpoint(double radians) {
-        shoulderSetpointRadians = radians;
-    }
-
-    /**
-     * @param radians Ground-relative wrist angle in radians
-     */
-    public void setWristSetpoint(double radians) {
-        wristSetpointRadians = radians;
-    }
 
     /**
      * Get the extension length of this piston (0 - 1).
@@ -150,20 +124,34 @@ public class ArmSimulation {
     }
 
     /**
-     * Call this method periodically, always.
+     * Visualize the current arm state to the Mechanism2d.
+     * This method should be called periodically.
+     * 
+     * @param shoulderPosRadians Ground-relative shoulder position in radians
+     * @param wristPosRadians Shoulder-relative wrist position in radians
+     * @param extended Whether the arm is (attempting to be) extended or not
      */
-    public void periodic() {
-        mechArm.setAngle(-90 + Units.radiansToDegrees(shoulderEncoder.getDistance()));
-        mechWrist.setAngle(Units.radiansToDegrees(wristEncoder.getDistance()));
+    public void visualizeState(double shoulderPosRadians, double wristPosRadians, boolean extended) {
+        mechArm.setAngle(-90 + Units.radiansToDegrees(shoulderPosRadians));
+        mechWrist.setAngle(Units.radiansToDegrees(wristPosRadians));
 
-        setpointArm.setAngle(-90 + Units.radiansToDegrees(shoulderSetpointRadians));
-        setpointWrist.setAngle(Units.radiansToDegrees(wristSetpointRadians - shoulderSetpointRadians));
-
-        pistonSim.setExtended(extensionPiston.get() == Value.kForward);
+        pistonSim.setExtended(extended);
         pistonSim.update();
         double extensionLength = kRetractedFirstStageLength + kExtensionLength * pistonSim.getExtension();
         mechExtension.setLength(extensionLength);
-        setpointExtension.setLength(extensionLength);
+    }
+    /**
+     * Visualize the desired arm state to the Mechanism2d.
+     * 
+     * @param shoulderPosRadians Ground-relative shoulder position in radians
+     * @param wristPosRadians Shoulder-relative wrist position in radians
+     * @param extended Whether the arm is (attempting to be) extended or not
+     */
+    public void visualizeSetpoint(double shoulderPosRadians, double wristPosRadians, boolean extended) {
+        setpointArm.setAngle(-90 + Units.radiansToDegrees(shoulderPosRadians));
+        setpointWrist.setAngle(Units.radiansToDegrees(wristPosRadians));
+
+        setpointExtension.setLength(kRetractedFirstStageLength + (extended ? kExtensionLength : 0));
     }
 
     /**
