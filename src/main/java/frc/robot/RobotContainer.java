@@ -2,6 +2,7 @@ package frc.robot;
 
 import frc.robot.auto.AutoOptions;
 import frc.robot.commands.AutoBalance;
+import frc.robot.commands.TeleopDriveAngle;
 import frc.robot.subsystems.Superstructure;
 import frc.robot.subsystems.arm.Arm;
 import frc.robot.subsystems.drive.SwerveDrive;
@@ -31,18 +32,18 @@ import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
 import edu.wpi.first.wpilibj2.command.CommandBase;
 
 public class RobotContainer {
-    private final Arm arm = new Arm();
+    // private final Arm arm = new Arm();
     private final Intake intake = new Intake();
-    // private final SwerveDrive drive = new SwerveDrive(); 
+    private final SwerveDrive drive = new SwerveDrive(); 
     // private final Superstructure superstructure = new Superstructure(arm, drive, intake);
-    private final Compressor compressor = new Compressor(PneumaticsModuleType.CTREPCM);
+    private final Compressor compressor = new Compressor(PneumaticsModuleType.REVPH);
 
     private final OCXboxController driver = new OCXboxController(0);
     private final OCXboxController operator = new OCXboxController(1);
     private final OCXboxController king = new OCXboxController(0);
 
     //private final AutoOptions autoOptions = new AutoOptions(drive, intake, arm);
-    // private final AutoOptions autoOptions = new AutoOptions(intake, arm);
+    // private final AutoOptions autoOptions = new Auto Options(intake, arm);
 
 
     private final Field2d field = new Field2d();
@@ -66,7 +67,7 @@ public class RobotContainer {
         configureEventBinds();
         if (Robot.isReal()){
             configureDriverBinds(driver);
-            configureOperatorBinds(driver);
+            configureOperatorBinds(operator);
         }
         else{
             configureDriverBinds(king);
@@ -85,8 +86,8 @@ public class RobotContainer {
 
     public void periodic() {
         // superstructure.periodic();
-        // field.setRobotPose(drive.getPose());
-        // field.getObject("trajectory").setTrajectory(drive.getLogTrajectory());
+        field.setRobotPose(drive.getPose());
+        field.getObject("trajectory").setTrajectory(drive.getLogTrajectory());
         
         // camera.getLatestResult().getTargets();
         // photonEstimator.update().ifPresent(est -> {
@@ -103,101 +104,128 @@ public class RobotContainer {
 
     private void configureDriverBinds(OCXboxController controller) {
 
-    //     drive.setDefaultCommand(
-    //         run(()->
-    //             drive.drive(
-    //                 controller.getForward()*drive.getMaxLinearVelocityMeters(),
-    //                 controller.getStrafe()*drive.getMaxLinearVelocityMeters(),
-    //                 controller.getTurn()*drive.getMaxAngularVelocityRadians(),
-    //                 false
-    //             ),
-    //             drive
-    //         )
-    //     );
+        drive.setDefaultCommand(
+            run(()->
+                drive.drive(
+                    controller.getForward()*drive.getMaxLinearVelocityMeters(),
+                    controller.getStrafe()*drive.getMaxLinearVelocityMeters(),
+                    controller.getTurn()*drive.getMaxAngularVelocityRadians(),
+                    true
+                ),
+                drive
+            )
+        );
 
-    //     // push-to-change driving "speed"
-    //     controller.rightBumper()
-    //         .onTrue(runOnce(()->controller.setDriveSpeed(OCXboxController.kSpeedFast)))
-    //         .onFalse(runOnce(()->controller.setDriveSpeed(OCXboxController.kSpeedDefault)));
+        controller.povUp()
+            .onTrue(run(()->
+                drive.drive(
+                    controller.getForward()*drive.getMaxLinearVelocityMeters(),
+                    controller.getStrafe()*drive.getMaxLinearVelocityMeters(),
+                    new Rotation2d(),
+                    true
+                ),
+                drive
+            )
+            .beforeStarting(()->drive.resetPathController())
+            .until(()->Math.abs(controller.getRightX())>0.25)
+        );
+        controller.povDown()
+            .onTrue(run(()->
+                drive.drive(
+                    controller.getForward()*drive.getMaxLinearVelocityMeters(),
+                    controller.getStrafe()*drive.getMaxLinearVelocityMeters(),
+                    new Rotation2d(Math.PI),
+                    true
+                ),
+                drive
+            )
+            .beforeStarting(()->drive.resetPathController())
+            .until(()->Math.abs(controller.getRightX())>0.25)
+        );
 
-    //     controller.leftBumper()
-    //         .onTrue(runOnce(()->{
-    //             controller.setDriveSpeed(OCXboxController.kSpeedSlow);
-    //             controller.setTurnSpeed(OCXboxController.kTurnSpeedSlow);
-    //         }))
-    //         .onFalse(runOnce(()->{
-    //             controller.setDriveSpeed(OCXboxController.kSpeedDefault);
-    //             controller.setTurnSpeed(OCXboxController.kTurnSpeed);
-    //         }));
+        // push-to-change driving "speed"
+        controller.rightBumper()
+            .onTrue(runOnce(()->controller.setDriveSpeed(OCXboxController.kSpeedFast)))
+            .onFalse(runOnce(()->controller.setDriveSpeed(OCXboxController.kSpeedDefault)));
+
+        controller.leftBumper()
+            .onTrue(runOnce(()->{
+                controller.setDriveSpeed(OCXboxController.kSpeedSlow);
+                controller.setTurnSpeed(OCXboxController.kTurnSpeedSlow);
+            }))
+            .onFalse(runOnce(()->{
+                controller.setDriveSpeed(OCXboxController.kSpeedDefault);
+                controller.setTurnSpeed(OCXboxController.kTurnSpeed);
+            }));
 
 
-    //     // controller.back()
-    //     // .onTrue(
-    //     //     superstructure.p1()
-    //     // );
+        // controller.back()
+        // .onTrue(
+        //     superstructure.p1()
+        // );
 
-    //     // reset the robot heading to 0
-    //     controller.start()
-    //         .onTrue(runOnce(()->
-    //             drive.resetOdometry(
-    //                 new Pose2d(
-    //                     drive.getPose().getTranslation(),
-    //                     new Rotation2d()
-    //                 )
-    //             )
-    //         )
-    //     );
+        // reset the robot heading to 0
+        controller.start()
+            .onTrue(runOnce(()->
+                drive.resetOdometry(
+                    new Pose2d(
+                        drive.getPose().getTranslation(),
+                        new Rotation2d()
+                    )
+                )
+            )
+        );
         
-    //     // lock the modules in a "X" alignment
-    //     controller.x().whileTrue(run(()->{
-    //        SwerveModuleState[] states = new SwerveModuleState[]{
-    //            new SwerveModuleState(0, Rotation2d.fromDegrees(-135)),
-    //            new SwerveModuleState(0, Rotation2d.fromDegrees(135)),
-    //            new SwerveModuleState(0, Rotation2d.fromDegrees(-45)),
-    //            new SwerveModuleState(0, Rotation2d.fromDegrees(45))
-    //        };
-    //        drive.setModuleStates(states, false, true);
-    //     }, drive));
+        // lock the modules in a "X" alignment
+        controller.x().whileTrue(run(()->{
+           SwerveModuleState[] states = new SwerveModuleState[]{
+               new SwerveModuleState(0, Rotation2d.fromDegrees(-135)),
+               new SwerveModuleState(0, Rotation2d.fromDegrees(135)),
+               new SwerveModuleState(0, Rotation2d.fromDegrees(-45)),
+               new SwerveModuleState(0, Rotation2d.fromDegrees(45))
+           };
+           drive.setModuleStates(states, false, true);
+        }, drive));
 
-    //     controller.back()
-    //         .onTrue(runOnce(
-    //             ()->drive.setIsFieldRelative(!drive.getIsFieldRelative())
-    //         ));
-    //     controller.y()
-    //         .whileTrue(new AutoBalance(drive));
+        controller.back()
+            .onTrue(runOnce(
+                ()->drive.setIsFieldRelative(!drive.getIsFieldRelative())
+            ));
+        controller.y()
+            .whileTrue(new AutoBalance(drive));
    
     }
 
     private void configureOperatorBinds(OCXboxController controller){
-        controller.start()
-            .whileTrue(run(()->arm.shoulderTestVolts=2,arm))
-            .onFalse(runOnce(()->arm.shoulderTestVolts=0,arm));
-        controller.back()
-            .whileTrue(run(()->arm.shoulderTestVolts=-2,arm))
-            .onFalse(runOnce(()->arm.shoulderTestVolts=0,arm));
-        controller.rightTrigger()
-            .whileTrue(intake.setVoltageInC());
-        controller.leftTrigger()
-            .whileTrue(intake.setVoltageOutC());
+        // controller.start()
+        //     .whileTrue(run(()->arm.shoulderTestVolts=2,arm))
+        //     .onFalse(runOnce(()->arm.shoulderTestVolts=0,arm));
+        // controller.back()
+        //     .whileTrue(run(()->arm.shoulderTestVolts=-2,arm))
+        //     .onFalse(runOnce(()->arm.shoulderTestVolts=0,arm));
+        // controller.rightTrigger()
+        //     .whileTrue(intake.setVoltageInC());
+        // controller.leftTrigger()
+        //     .whileTrue(intake.setVoltageOutC());
 
-        controller.a()
-            .onTrue(arm.pickUpGroundC());
-        controller.b()
-            .onTrue(arm.pickUpDoubleSubC());
-        controller.x()
-            .onTrue(arm.scoreMidC());
-        controller.y()
-            .onTrue(arm.scoreUpperC());
+        // controller.a()
+        //     .onTrue(arm.pickUpGroundC());
+        // controller.b()
+        //     .onTrue(arm.pickUpDoubleSubC());
+        // controller.x()
+        //     .onTrue(arm.scoreMidC());
+        // controller.y()
+        //     .onTrue(arm.scoreUpperC());
         
 
-        controller.povDown()
-            .onTrue(arm.inC());
+        // controller.povDown()
+        //     .onTrue(arm.inC());
 
 
-        controller.leftBumper()
-            .whileTrue(run(()->arm.setShoulderPosRadians(arm.shoulderPid.getSetpoint().position-0.05)));
-        controller.rightBumper()
-            .whileTrue(run(()->arm.setShoulderPosRadians(arm.shoulderPid.getSetpoint().position+0.05)));
+        // controller.leftBumper()
+        //     .whileTrue(run(()->arm.setShoulderPosRadians(arm.shoulderPid.getSetpoint().position-0.05)));
+        // controller.rightBumper()
+        //     .whileTrue(run(()->arm.setShoulderPosRadians(arm.shoulderPid.getSetpoint().position+0.05)));
             
     }
  
@@ -207,9 +235,9 @@ public class RobotContainer {
 
     public void log() {
         Logger.updateEntries();
-        // drive.log();
+        drive.log();
 
-        arm.log();
+        // arm.log();
     }
 
     public void simulationPeriodic(){

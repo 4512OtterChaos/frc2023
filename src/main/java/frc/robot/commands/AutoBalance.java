@@ -4,6 +4,7 @@
 
 package frc.robot.commands;
 
+import edu.wpi.first.math.MathUtil;
 import edu.wpi.first.math.controller.PIDController;
 import edu.wpi.first.math.geometry.Rotation2d;
 import edu.wpi.first.math.kinematics.SwerveModuleState;
@@ -41,6 +42,7 @@ public class AutoBalance extends CommandBase {
     public void execute() {
         double pitch = drive.getGyroPitch().getRadians();
         double roll = drive.getGyroRoll().getRadians();
+        double yaw = drive.getGyroYaw().getRadians();
         double vx = 0;
         double vy = 0;
         double omegaRadians = 0;
@@ -61,13 +63,14 @@ public class AutoBalance extends CommandBase {
         //     vx -= kP * roll;
             
         // }
-        System.out.println("pitch deg"+Math.toDegrees(pitch) );
-        if(Math.abs(roll) > kAngleToleranceRads) {
-            vx -= kP * roll;
-        }
-        vx -= pidPitch.calculate(pitch);
-        vx -= pidRoll.calculate(roll);
-        System.out.println("pitch: "+pitch);
+        // // System.out.println("pitch deg"+Math.toDegrees(pitch) );
+        // // if(Math.abs(roll) > kAngleToleranceRads) {
+        // //     vx -= kP * roll;
+        // // }
+        // // vx -= pidPitch.calculate(pitch);
+        // // vx -= pidRoll.calculate(roll);
+        // // System.out.println("pitch: "+pitch);
+        vx=pitch*Math.cos(yaw)+roll*Math.sin(yaw);
         if (!(vx == 0 && vy == 0)){
             drive.drive(vx, vy, omegaRadians, true);
         }
@@ -80,6 +83,7 @@ public class AutoBalance extends CommandBase {
            };
            drive.setModuleStates(states, false, true);
         }
+        
         
     }
     

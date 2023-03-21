@@ -40,7 +40,7 @@ public class Arm extends SubsystemBase implements Loggable {
 	private final OCSparkMax shoulderMotorA = new OCSparkMax(5, MotorType.kBrushless);
     private final OCSparkMax shoulderMotorB = new OCSparkMax(13, MotorType.kBrushless);
 	private final OCSparkMax wristMotor = new OCSparkMax(9, MotorType.kBrushless);
-    private final DoubleSolenoid extensionPiston = new DoubleSolenoid(PneumaticsModuleType.CTREPCM, 0, 1);
+    private final DoubleSolenoid extensionPiston = new DoubleSolenoid(PneumaticsModuleType.REVPH, 0, 1);
 
 	private DutyCycleEncoder shoulderEncoder = new DutyCycleEncoder(9);
 	private DutyCycleEncoder wristEncoder = new DutyCycleEncoder(7);
@@ -147,14 +147,11 @@ public class Arm extends SubsystemBase implements Loggable {
         shoulderVolts += kShoulderFF.calculate(shoulderPosRadians, shoulderSetpoint.velocity);
 
 		shoulderVolts += shoulderTestVolts;
-		System.out.println("shoulderVolts: " + shoulderVolts);
 
-		// System.out.println("shoulderPos: " + shoulderPosRadians);
 		// Clamp shoulder position to an appropriate angle.
 		double clampedShoulderPos = shoulderSafety(shoulderPosRadians, wristPosRadians, getExtensionState());
         double clampedShoulderGravityVolts = kShoulderkg*Math.cos(clampedShoulderPos);
 		
-		// System.out.println("clampedShoulderPos" + clampedShoulderPos);
 		// Clamp shoulder volts to have the shoulder stay inside/go into appropriate angle range.
 		if (clampedShoulderPos > shoulderPosRadians){
 			shoulderVolts = Math.max(clampedShoulderGravityVolts, shoulderVolts);
@@ -167,7 +164,6 @@ public class Arm extends SubsystemBase implements Loggable {
             shoulderVolts = 0;
             setExtension(false);
         }
-		System.out.println("clamped shoulderVolts: " + shoulderVolts);
 		// Set shoulder motors to the clamped voltage.
 		shoulderMotorA.setVoltage(shoulderVolts);
 		shoulderMotorB.setVoltage(shoulderVolts);
