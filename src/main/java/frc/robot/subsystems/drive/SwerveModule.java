@@ -305,7 +305,7 @@ public class SwerveModule implements Loggable {
         
         SmartDashboard.putNumber(prefix+"Steer Degrees", state.angle.getDegrees());
 
-        SmartDashboard.putNumber(prefix+"Steer Absolute Degrees", steerEncoder.getAbsolutePosition());
+        // SmartDashboard.putNumber(prefix+"Steer Absolute Degrees", steerEncoder.getAbsolutePosition());
         SmartDashboard.putNumber(prefix+"Steer Target Degrees", lastDesiredState.angle.getDegrees());
         SmartDashboard.putNumber(prefix+"Steer Native", steerMotor.getSelectedSensorPosition());
         // SmartDashboard.putNumber(prefix+"Steer Target Native", steerMotor.getClosedLoopTarget());
