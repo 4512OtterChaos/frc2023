@@ -22,6 +22,7 @@ import java.util.Optional;
 
 public class ArmSimulation {
 
+    private final Arm arm;
     private final OCSparkMax shoulderMotor;
     private final OCSparkMax wristMotor;
 
@@ -39,8 +40,8 @@ public class ArmSimulation {
 
     private final VariableLengthArmSim shoulderSim = new VariableLengthArmSim(
             LinearSystemId.identifyPositionSystem(
-                    kShoulderFF.kv,
-                    kShoulderFF.ka),
+                    kShoulderFF.kv1,
+                    kShoulderFF.ka1),
             DCMotor.getNEO(2),
             kShoulderGearing,
             VariableLengthArmSim.estimateMOI(kBaseStageLength, kArmMassKg),
@@ -64,11 +65,10 @@ public class ArmSimulation {
             kWristMassKg,
             true);
 
-    private final PistonSim pistonSim = new PistonSim(false, 0.5);
-
     public ArmSimulation(
-            OCSparkMax shoulderMotor, OCSparkMax wristMotor,
+            Arm arm, OCSparkMax shoulderMotor, OCSparkMax wristMotor,
             DutyCycleEncoder shoulderEncoder, DutyCycleEncoder wristEncoder) {
+        this.arm = arm;
         this.shoulderMotor = shoulderMotor;
         this.wristMotor = wristMotor;
         shoulderEncoderSim = new DutyCycleEncoderSim(shoulderEncoder);
@@ -117,13 +117,6 @@ public class ArmSimulation {
                     kSetpointExtensionColor));
 
     /**
-     * Get the extension length of this piston (0 - 1).
-     */
-    public double getExtension() {
-        return pistonSim.getExtension();
-    }
-
-    /**
      * Visualize the current arm state to the Mechanism2d.
      * This method should be called periodically.
      * 
@@ -135,9 +128,7 @@ public class ArmSimulation {
         mechArm.setAngle(-90 + Units.radiansToDegrees(shoulderPosRadians));
         mechWrist.setAngle(Units.radiansToDegrees(wristPosRadians));
 
-        pistonSim.setExtended(extended);
-        pistonSim.update();
-        double extensionLength = kRetractedFirstStageLength + kExtensionLength * pistonSim.getExtension();
+        double extensionLength = kRetractedFirstStageLength + kExtensionLength * arm.getExtension();
         mechExtension.setLength(extensionLength);
     }
     /**
@@ -160,7 +151,7 @@ public class ArmSimulation {
     public void simulationPeriodic() {
         // dynamically change our arm's center of gravity and moment of inertia
         double armLength = kBaseStageLength + kRetractedFirstStageLength;
-        armLength += getExtension() * kExtensionLength;
+        armLength += arm.getExtension() * kExtensionLength;
         armLength += Math.cos(wristSim.getAngleRads() - shoulderSim.getAngleRads()) * kWristLength;
         shoulderSim.setCGRadius(armLength / 2.0);
         shoulderSim.setMOI(VariableLengthArmSim.estimateMOI(armLength, kArmMassKg));

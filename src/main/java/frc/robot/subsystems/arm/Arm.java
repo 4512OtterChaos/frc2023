@@ -20,6 +20,7 @@ import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
 import edu.wpi.first.wpilibj2.command.CommandBase;
 import static edu.wpi.first.wpilibj2.command.Commands.*;
 import edu.wpi.first.wpilibj2.command.SubsystemBase;
+import frc.robot.util.ArmLerpFeedforward;
 import frc.robot.util.FieldUtil;
 import frc.robot.util.OCConfig;
 import frc.robot.util.OCSparkMax;
@@ -69,8 +70,9 @@ public class Arm extends SubsystemBase implements Loggable {
     private double shoulderMinimumAngleExtension = kShoulderMinimumAngleExtension;
     private double shoulderMinimumAngleExtensionWrist = kShoulderMinimumAngleExtensionWrist;
     
+    private final PistonSim pistonSim = new PistonSim(false, 0.5);
 	private final ArmSimulation armSim = new ArmSimulation(
-            shoulderMotorA, wristMotor, shoulderEncoder, wristEncoder);
+            this, shoulderMotorA, wristMotor, shoulderEncoder, wristEncoder);
     private static final Translation2d kRobotSafetyBoxTR =
             new Translation2d(FieldUtil.kRobotLength / 2 + 1, FieldUtil.kRobotBumperHeight + 1);
 
@@ -126,7 +128,10 @@ public class Arm extends SubsystemBase implements Loggable {
 	public void periodic() {
 		double shoulderPosRadians = getShoulderPosRadians();
 		double wristPosRadians = getWristPosRadians();
-        boolean extended = getExtensionState();
+        boolean extended = getExtended();
+        pistonSim.setExtended(extended);
+        pistonSim.update();
+        double extension = getExtension();
 
         // visualize the current arm state to a Mechanism2d
         armSim.visualizeState(shoulderPosRadians, wristPosRadians, extended);
@@ -144,13 +149,13 @@ public class Arm extends SubsystemBase implements Loggable {
         // update profile setpoint and get PID response voltage,
 		double shoulderVolts = shoulderPid.calculate(shoulderPosRadians);
         // and feedforward voltage to follow the profile setpoint.
-        shoulderVolts += kShoulderFF.calculate(shoulderPosRadians, shoulderSetpoint.velocity);
+        shoulderVolts += kShoulderFF.calculate(shoulderPosRadians, shoulderSetpoint.velocity, extension);
 
 		shoulderVolts += shoulderTestVolts;
 
 		// Clamp shoulder position to an appropriate angle.
-		double clampedShoulderPos = shoulderSafety(shoulderPosRadians, wristPosRadians, getExtensionState());
-        double clampedShoulderGravityVolts = kShoulderkg*Math.cos(clampedShoulderPos);
+		double clampedShoulderPos = shoulderSafety(shoulderPosRadians, wristPosRadians, getExtended());
+        double clampedShoulderGravityVolts = kShoulderkg1*Math.cos(clampedShoulderPos);
 		
 		// Clamp shoulder volts to have the shoulder stay inside/go into appropriate angle range.
 		if (clampedShoulderPos > shoulderPosRadians){
@@ -162,7 +167,7 @@ public class Arm extends SubsystemBase implements Loggable {
         // If encoder is disconnected, make arm go limp
         if(!shoulderEncoder.isConnected()) {
             shoulderVolts = 0;
-            setExtension(false);
+            setExtended(false);
         }
 		// Set shoulder motors to the clamped voltage.
 		shoulderMotorA.setVoltage(shoulderVolts);
@@ -182,7 +187,7 @@ public class Arm extends SubsystemBase implements Loggable {
 		wristVolts += wristTestVolts;
 
 		// Clamp wrist position to an appropriate angle.
-		double clampedWristPos = wristSafety(wristPosRadians, shoulderPosRadians, getExtensionState());
+		double clampedWristPos = wristSafety(wristPosRadians, shoulderPosRadians, getExtended());
         double clampedWristGravityVolts = kWristkg*Math.cos(clampedWristPos);
 		// Clamp wrist volts to have the wrist stay inside/go into appropriate angle range.
 		if (clampedWristPos > wristPosRadians) {
@@ -367,7 +372,7 @@ public class Arm extends SubsystemBase implements Loggable {
 	/**
 	 * Toggles the extension piston between forward (out) and reverse (in).
 	 */
-	public void toggleExtension(){
+	public void toggleExtended(){
 		// if (getExtensionState() == true || getShoulderPosRadians() >= Units.degreesToRadians(-52)){
 		// 	 extensionPiston.toggle();
 		// }
@@ -380,15 +385,15 @@ public class Arm extends SubsystemBase implements Loggable {
 	 * Toggles the extension piston between forward (out) and reverse (in) in a command.
 	 * @return The command to toggle the extension piston.
 	 */
-	public CommandBase toggleExtensionC(){
-		return runOnce(()-> toggleExtension());
+	public CommandBase toggleExtendedC(){
+		return runOnce(()-> toggleExtended());
 	}
 	
 	/**
 	 * Sets the state of the extension pistion to the desired state.
 	 * @param extensionState The value to set the extension pistion to (forward, off or reverse).
 	 */
-	public void setExtension(boolean extended){
+	public void setExtended(boolean extended){
 		// if (extended && getShoulderPosRadians() >= Units.degreesToRadians(-52)){
 		// 	extensionPiston.set(Value.kForward);
 		// }
@@ -405,23 +410,21 @@ public class Arm extends SubsystemBase implements Loggable {
 	 * @param extended The value to set the extension pistion to (forward, off or reverse).
 	 * @return The command to set the extension pistion.
 	 */
-	public CommandBase setExtensionC(boolean extended){
-		return run(()-> setExtension(extended))
-			.until(() -> extended ? armSim.getExtension() == 1 : armSim.getExtension() == 0);
+	public CommandBase setExtendedC(boolean extended){
+		return run(()-> setExtended(extended))
+			.until(() -> extended ? getExtension() == 1 : getExtension() == 0);
 	}
 	
 	/**
 	 * 
 	 * @return Whether the extension is extended.
 	 */
-	public boolean getExtensionState(){
-		if (extensionPiston.get()==Value.kForward){
-			return true;
-		}
-		else{
-			return false;
-		}
+	public boolean getExtended(){
+		return extensionPiston.get()==Value.kForward;
 	}
+    public double getExtension() {
+        return pistonSim.getExtension();
+    }
 
 	/**
 	 * Sets the state of the entire arm.
@@ -432,7 +435,7 @@ public class Arm extends SubsystemBase implements Loggable {
 	public void setArmState(double shoulderPosRadians, double wristPosRadians, boolean extended){
 		setShoulderPosRadians(shoulderPosRadians);
 		setWristPosGroundRelRads(wristPosRadians);
-		setExtension(extended);
+		setExtended(extended);
 	}
 
 	/**
@@ -445,41 +448,41 @@ public class Arm extends SubsystemBase implements Loggable {
 	public CommandBase setArmStateC(double shoulderPosRadians, double wristPosRadians, boolean extended){
 		return run(()->setArmState(shoulderPosRadians, wristPosRadians, extended))
 			.until(()->{
-				return shoulderPid.atGoal() && wristPid.atGoal() && extended ? armSim.getExtension() == 1 : armSim.getExtension() == 0;
+				return shoulderPid.atGoal() && wristPid.atGoal() && extended ? getExtension() == 1 : getExtension() == 0;
 			});
 	}
 
 	public CommandBase inC(){
 		return sequence(
-			setExtensionC(false),
+			setExtendedC(false),
 			setArmStateC(Units.degreesToRadians(-90), Units.degreesToRadians(0), false)
 		);
 	}
 
 	public CommandBase pickUpGroundC(){
 		return sequence(
-			setArmStateC(Units.degreesToRadians(-46), Units.degreesToRadians(0), getExtensionState()),
-			setExtensionC(true)
+			setArmStateC(Units.degreesToRadians(-46), Units.degreesToRadians(0), getExtended()),
+			setExtendedC(true)
 		);
 	}
 
 	public CommandBase scoreMidC(){
 		return sequence(
-			setExtensionC(false),
+			setExtendedC(false),
 			setArmStateC(Units.degreesToRadians(-7), Units.degreesToRadians(0), false)
 		);
 	}
 
 	public CommandBase scoreUpperC(){
 		return sequence(
-			setArmStateC(Units.degreesToRadians(14), Units.degreesToRadians(0), getExtensionState()),
-			setExtensionC(true)
+			setArmStateC(Units.degreesToRadians(14), Units.degreesToRadians(0), getExtended()),
+			setExtendedC(true)
 		);
 	}
 
 	public CommandBase pickUpDoubleSubC(){
 		return sequence(
-			setExtensionC(false),
+			setExtendedC(false),
 			setArmStateC(Units.degreesToRadians(4.5), Units.degreesToRadians(-1), false)
 		);
 	}
@@ -492,7 +495,7 @@ public class Arm extends SubsystemBase implements Loggable {
         SmartDashboard.putNumber("Arm/States/Wrist Degrees", Units.radiansToDegrees(getWristPosRadians()));
         SmartDashboard.putNumber("Arm/States/Wrist Setpoint Degrees", Units.radiansToDegrees(wristPid.getSetpoint().position));
 		SmartDashboard.putNumber("Arm/States/Wrist Goal Degrees", Units.radiansToDegrees(wristPid.getGoal().position));
-		SmartDashboard.putBoolean("Arm/States/Extension State", getExtensionState());
+		SmartDashboard.putBoolean("Arm/States/Extension State", getExtended());
 		SmartDashboard.putNumber("Arm/Motors/Shoulder A Volts", shoulderMotorA.getAppliedOutput());
 		SmartDashboard.putNumber("Arm/Motors/Shoulder B Volts", shoulderMotorB.getAppliedOutput());
 		SmartDashboard.putNumber("Arm/Motors/Shoulder A Current", shoulderMotorA.getOutputCurrent());
@@ -548,29 +551,49 @@ public class Arm extends SubsystemBase implements Loggable {
 		this.shoulderMinimumAngleExtensionWrist = shoulderMinimumAngleExtensionWrist;
 	}
     //--- Feedforward
-	private double shoulderks = kShoulderks;
-	private double shoulderkg = kShoulderkg;
-	private double shoulderkv = kShoulderkv;
-	private double shoulderka = kShoulderka;
-	@Config(defaultValueNumeric = kShoulderks)
+	private double shoulderks1 = kShoulderks1;
+	private double shoulderkg1 = kShoulderkg1;
+	private double shoulderkv1 = kShoulderkv1;
+	private double shoulderka1 = kShoulderka1;
+    private double shoulderks2 = kShoulderks2;
+	private double shoulderkg2 = kShoulderkg2;
+	private double shoulderkv2 = kShoulderkv2;
+	private double shoulderka2 = kShoulderka2;
+	@Config(defaultValueNumeric = kShoulderks1)
 	void configShoulderks(double ks) {
-		shoulderks = ks;
-		kShoulderFF = new ArmFeedforward(shoulderks, shoulderkg, shoulderkv, shoulderka);
+        if(getExtended()) shoulderks2 = ks;
+        else shoulderks1 = ks;
+		kShoulderFF = new ArmLerpFeedforward(
+            shoulderks1, shoulderkg1, shoulderkv1, shoulderka1,
+            shoulderks2, shoulderkg2, shoulderkv2, shoulderka2
+        );
 	}
-	@Config(defaultValueNumeric = kShoulderkg)
+	@Config(defaultValueNumeric = kShoulderkg1)
 	void configShoulderkg(double kg) {
-		shoulderkg = kg;
-		kShoulderFF = new ArmFeedforward(shoulderks, shoulderkg, shoulderkv, shoulderka);
+		if(getExtended()) shoulderkg2 = kg;
+        else shoulderkg1 = kg;
+		kShoulderFF = new ArmLerpFeedforward(
+            shoulderks1, shoulderkg1, shoulderkv1, shoulderka1,
+            shoulderks2, shoulderkg2, shoulderkv2, shoulderka2
+        );
 	}
-	@Config(defaultValueNumeric = kShoulderkv)
+	@Config(defaultValueNumeric = kShoulderkv1)
 	void configShoulderkv(double kv) {
-		shoulderkv = kv;
-		kShoulderFF = new ArmFeedforward(shoulderks, shoulderkg, shoulderkv, shoulderka);
+		if(getExtended()) shoulderkv2 = kv;
+        else shoulderkv1 = kv;
+		kShoulderFF = new ArmLerpFeedforward(
+            shoulderks1, shoulderkg1, shoulderkv1, shoulderka1,
+            shoulderks2, shoulderkg2, shoulderkv2, shoulderka2
+        );
 	}
-	@Config(defaultValueNumeric = kShoulderka)
+	@Config(defaultValueNumeric = kShoulderka1)
 	void configShoulderka(double ka) {
-		shoulderka = ka;
-		kShoulderFF = new ArmFeedforward(shoulderks, shoulderkg, shoulderkv, shoulderka);
+		if(getExtended()) shoulderka2 = ka;
+        else shoulderka1 = ka;
+		kShoulderFF = new ArmLerpFeedforward(
+            shoulderks1, shoulderkg1, shoulderkv1, shoulderka1,
+            shoulderks2, shoulderkg2, shoulderkv2, shoulderka2
+        );
 	}
 
 	private double wristks = kWristks;

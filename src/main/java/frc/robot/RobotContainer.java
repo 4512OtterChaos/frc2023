@@ -32,17 +32,17 @@ import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
 import edu.wpi.first.wpilibj2.command.CommandBase;
 
 public class RobotContainer {
-    // private final Arm arm = new Arm();
+    private final Arm arm = new Arm();
     private final Intake intake = new Intake();
     private final SwerveDrive drive = new SwerveDrive(); 
-    // private final Superstructure superstructure = new Superstructure(arm, drive, intake);
+    private final Superstructure superstructure = new Superstructure(arm, drive, intake);
     private final Compressor compressor = new Compressor(PneumaticsModuleType.REVPH);
 
     private final OCXboxController driver = new OCXboxController(0);
     private final OCXboxController operator = new OCXboxController(1);
     private final OCXboxController king = new OCXboxController(0);
 
-    //private final AutoOptions autoOptions = new AutoOptions(drive, intake, arm);
+    private final AutoOptions autoOptions = new AutoOptions(drive, intake, arm);
     // private final AutoOptions autoOptions = new Auto Options(intake, arm);
 
 
@@ -76,7 +76,7 @@ public class RobotContainer {
         
         SmartDashboard.putData("field", field);
 
-        // autoOptions.submit();
+        autoOptions.submit();
 
         Logger.configureLogging(this);
 
@@ -175,6 +175,11 @@ public class RobotContainer {
                 )
             )
         );
+
+        // controller.back()
+        //     .onTrue(runOnce(
+        //         ()->drive.setIsFieldRelative(!drive.getIsFieldRelative())
+        //     ));
         
         // lock the modules in a "X" alignment
         controller.x().whileTrue(run(()->{
@@ -186,58 +191,54 @@ public class RobotContainer {
            };
            drive.setModuleStates(states, false, true);
         }, drive));
-
-        controller.back()
-            .onTrue(runOnce(
-                ()->drive.setIsFieldRelative(!drive.getIsFieldRelative())
-            ));
+        
         controller.y()
             .whileTrue(new AutoBalance(drive));
    
     }
 
     private void configureOperatorBinds(OCXboxController controller){
-        // controller.start()
-        //     .whileTrue(run(()->arm.shoulderTestVolts=2,arm))
-        //     .onFalse(runOnce(()->arm.shoulderTestVolts=0,arm));
-        // controller.back()
-        //     .whileTrue(run(()->arm.shoulderTestVolts=-2,arm))
-        //     .onFalse(runOnce(()->arm.shoulderTestVolts=0,arm));
-        // controller.rightTrigger()
-        //     .whileTrue(intake.setVoltageInC());
-        // controller.leftTrigger()
-        //     .whileTrue(intake.setVoltageOutC());
+        controller.start()
+            .whileTrue(run(()->arm.shoulderTestVolts=2,arm))
+            .onFalse(runOnce(()->arm.shoulderTestVolts=0,arm));
+        controller.back()
+            .whileTrue(run(()->arm.shoulderTestVolts=-2,arm))
+            .onFalse(runOnce(()->arm.shoulderTestVolts=0,arm));
+        controller.rightTrigger()
+            .whileTrue(intake.setVoltageInC());
+        controller.leftTrigger()
+            .whileTrue(intake.setVoltageOutC());
 
-        // controller.a()
-        //     .onTrue(arm.pickUpGroundC());
-        // controller.b()
-        //     .onTrue(arm.pickUpDoubleSubC());
-        // controller.x()
-        //     .onTrue(arm.scoreMidC());
-        // controller.y()
-        //     .onTrue(arm.scoreUpperC());
+        controller.a()
+            .onTrue(arm.pickUpGroundC());
+        controller.b()
+            .onTrue(arm.pickUpDoubleSubC());
+        controller.x()
+            .onTrue(arm.scoreMidC());
+        controller.y()
+            .onTrue(arm.scoreUpperC());
         
 
-        // controller.povDown()
-        //     .onTrue(arm.inC());
+        controller.povDown()
+            .onTrue(arm.inC());
 
 
-        // controller.leftBumper()
-        //     .whileTrue(run(()->arm.setShoulderPosRadians(arm.shoulderPid.getSetpoint().position-0.05)));
-        // controller.rightBumper()
-        //     .whileTrue(run(()->arm.setShoulderPosRadians(arm.shoulderPid.getSetpoint().position+0.05)));
+        controller.leftBumper()
+            .whileTrue(run(()->arm.setShoulderPosRadians(arm.shoulderPid.getSetpoint().position-0.05)));
+        controller.rightBumper()
+            .whileTrue(run(()->arm.setShoulderPosRadians(arm.shoulderPid.getSetpoint().position+0.05)));
             
     }
  
-    // public CommandBase getAutoCommand(){
-    //     return autoOptions.getAutoCommand();
-    // }
+    public CommandBase getAutoCommand(){
+        return autoOptions.getAutoCommand();
+    }
 
     public void log() {
         Logger.updateEntries();
         drive.log();
 
-        // arm.log();
+        arm.log();
     }
 
     public void simulationPeriodic(){

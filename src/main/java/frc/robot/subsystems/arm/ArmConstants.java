@@ -2,6 +2,7 @@ package frc.robot.subsystems.arm;
 
 import edu.wpi.first.math.controller.ArmFeedforward;
 import edu.wpi.first.math.geometry.Rotation2d;
+import frc.robot.util.ArmLerpFeedforward;
 
 public final class ArmConstants{
 
@@ -11,15 +12,26 @@ public final class ArmConstants{
     public static final double kShoulderGearing = ((58.0 / 18.0) * (48.0 / 24.0) * 3 * 5);
     public static final Rotation2d kShoulderAngleOffset = Rotation2d.fromDegrees(53.75);
 
-    public static final double kShoulderks = 0.001;
-    public static final double kShoulderkg = 1;
-    public static final double kShoulderkv = 0.001;
-    public static final double kShoulderka = 0.001;
-    public static ArmFeedforward kShoulderFF = new ArmFeedforward(
-        kShoulderks, // Voltage to break static friction
-        kShoulderkg, // Voltage to counteract gravity
-        kShoulderkv, // Volts per radian per second
-        kShoulderka // Volts per radian per second squared
+    // Retracted feedforward
+    public static final double kShoulderks1 = 0.001;
+    public static final double kShoulderkg1 = 1;
+    public static final double kShoulderkv1 = 0.001;
+    public static final double kShoulderka1 = 0.001;
+    // Extended feedforward
+    public static final double kShoulderks2 = 0.001;
+    public static final double kShoulderkg2 = 1;
+    public static final double kShoulderkv2 = 0.001;
+    public static final double kShoulderka2 = 0.001;
+    public static ArmLerpFeedforward kShoulderFF = new ArmLerpFeedforward(
+        kShoulderks1, // Voltage to break static friction
+        kShoulderkg1, // Voltage to counteract gravity
+        kShoulderkv1, // Volts per radian per second
+        kShoulderka1, // Volts per radian per second squared
+
+        kShoulderks2,
+        kShoulderkg2,
+        kShoulderkv2,
+        kShoulderka2
     );
     public static final int kShoulderStallLimit = 40;
 
@@ -46,7 +58,7 @@ public final class ArmConstants{
         kWristkv, // Volts per radian per second
         kWristka // Volts per radian per second squared
     );
-    public static final int kWristStallLimit = 30;
+    public static final int kWristStallLimit = 25;
 
     public static final double kWristKP = 0;
     public static final double kWristKI = 0;
