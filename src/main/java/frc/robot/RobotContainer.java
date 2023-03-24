@@ -54,6 +54,7 @@ public class RobotContainer {
     // private final PhotonPoseEstimator photonEstimator;
     private final AprilTagFieldLayout tagLayout;
     
+    
     public RobotContainer() {
         
         try {
@@ -82,6 +83,7 @@ public class RobotContainer {
 
         // uncomment this line for tuning mode
         Logger.configureConfig(this);
+        compressor.enableAnalog(100, 120);
     }
 
     public void periodic() {
@@ -199,10 +201,10 @@ public class RobotContainer {
 
     private void configureOperatorBinds(OCXboxController controller){
         controller.start()
-            .whileTrue(run(()->arm.shoulderTestVolts=2,arm))
+            .whileTrue(run(()->arm.shoulderTestVolts=1.5,arm))
             .onFalse(runOnce(()->arm.shoulderTestVolts=0,arm));
         controller.back()
-            .whileTrue(run(()->arm.shoulderTestVolts=-2,arm))
+            .whileTrue(run(()->arm.shoulderTestVolts=-1.5,arm))
             .onFalse(runOnce(()->arm.shoulderTestVolts=0,arm));
         controller.rightTrigger()
             .whileTrue(intake.setVoltageInC());

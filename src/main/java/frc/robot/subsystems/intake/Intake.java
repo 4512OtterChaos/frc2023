@@ -13,8 +13,8 @@ import static frc.robot.subsystems.intake.IntakeConstants.*;
 
 public class Intake extends SubsystemBase{
     
-    OCSparkMax leftMotor = new OCSparkMax(11, MotorType.kBrushless);
-    OCSparkMax rightMotor = new OCSparkMax(12, MotorType.kBrushless);
+    OCSparkMax leftMotor = new OCSparkMax(6, MotorType.kBrushless);
+    OCSparkMax rightMotor = new OCSparkMax(9, MotorType.kBrushless);
 
     public Intake(){
         OCConfig.configMotors(kMotorStallLimit, kMotorStallLimit, kRampRate, leftMotor, rightMotor);

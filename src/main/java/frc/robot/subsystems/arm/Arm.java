@@ -40,8 +40,8 @@ public class Arm extends SubsystemBase implements Loggable {
 
 	private final OCSparkMax shoulderMotorA = new OCSparkMax(5, MotorType.kBrushless);
     private final OCSparkMax shoulderMotorB = new OCSparkMax(13, MotorType.kBrushless);
-	private final OCSparkMax wristMotor = new OCSparkMax(9, MotorType.kBrushless);
-    private final DoubleSolenoid extensionPiston = new DoubleSolenoid(PneumaticsModuleType.REVPH, 0, 1);
+	private final OCSparkMax wristMotor = new OCSparkMax(12, MotorType.kBrushless);
+    private final DoubleSolenoid extensionPiston = new DoubleSolenoid(PneumaticsModuleType.REVPH, 15, 0);
 
 	private DutyCycleEncoder shoulderEncoder = new DutyCycleEncoder(9);
 	private DutyCycleEncoder wristEncoder = new DutyCycleEncoder(7);
@@ -97,12 +97,13 @@ public class Arm extends SubsystemBase implements Loggable {
         }
         
 		// OCConfig.setStatusNothing(shoulderMotorB);
+		OCConfig.setStatusSlow(shoulderMotorB);
 		OCConfig.saveConfig(shoulderMotorA, shoulderMotorB);
 
         OCConfig.configMotors(kWristStallLimit, kWristStallLimit, kRampRate, wristMotor);
         if(RobotBase.isReal()) {
             OCConfig.setStatusNothing(wristMotor);
-            wristMotor.setPeriodicFramePeriod(PeriodicFrame.kStatus0, 50);
+            wristMotor.setPeriodicFramePeriod(PeriodicFrame.kStatus0, 20);
             wristMotor.setPeriodicFramePeriod(PeriodicFrame.kStatus1, 20);
 
             wristMotor.setInverted(false);
@@ -373,9 +374,9 @@ public class Arm extends SubsystemBase implements Loggable {
 	 * Toggles the extension piston between forward (out) and reverse (in).
 	 */
 	public void toggleExtended(){
-		// if (getExtensionState() == true || getShoulderPosRadians() >= Units.degreesToRadians(-52)){
-		// 	 extensionPiston.toggle();
-		// }
+		if (getExtended() || getShoulderPosRadians() >= Units.degreesToRadians(-52)){
+			 extensionPiston.toggle();
+		}
         //TODO periodic goal safety:
 		// setShoulderPosRadians(shoulderPid.getGoal().position);
 		// setWristPosGroundRelRads(wristPid.getGoal().position);
@@ -394,12 +395,12 @@ public class Arm extends SubsystemBase implements Loggable {
 	 * @param extensionState The value to set the extension pistion to (forward, off or reverse).
 	 */
 	public void setExtended(boolean extended){
-		// if (extended && getShoulderPosRadians() >= Units.degreesToRadians(-52)){
-		// 	extensionPiston.set(Value.kForward);
-		// }
-		// else{
-		// 	extensionPiston.set(Value.kReverse);
-		// }
+		if (extended && getShoulderPosRadians() >= Units.degreesToRadians(-52)){
+			extensionPiston.set(Value.kForward);
+		}
+		else{
+			extensionPiston.set(Value.kReverse);
+		}
         //TODO periodic goal safety:
 		// setShoulderPosRadians(shoulderPid.getGoal().position);
 		// setWristPosGroundRelRads(wristPid.getGoal().position);
