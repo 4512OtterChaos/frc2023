@@ -41,7 +41,7 @@ public final class ArmConstants{
     public static final double kShoulderVelocityDeg = 90;
     public static final double kShoulderAccelDeg = 90;
     public static final double kShoulderPosToleranceDeg = 5;
-    public static final double kShoulderVelToleranceDeg = 10;
+    public static final double kShoulderVelToleranceDeg = 20;
 
 
     //----- Wrist
@@ -63,22 +63,20 @@ public final class ArmConstants{
     public static final double kWristKP = 0;
     public static final double kWristKI = 0;
     public static final double kWristKD = 0;
-    public static final double kWristVelocityDeg = 90;
-    public static final double kWristAccelDeg = 90;
+    public static final double kWristVelocityDeg = 135;
+    public static final double kWristAccelDeg = 270;
     public static final double kWristPosToleranceDeg = 5;
-    public static final double kWristVelToleranceDeg = 10;
+    public static final double kWristVelToleranceDeg = 20;
 
 
     //----- Safety angles
-    public static final double kWristMinimumDeg = -30; // equal to Units.degreesToRadians(-45)
-    public static final double kWristMaximumDeg = 90; // equal to Units.degreesToRadians(45)
+    public static final double kWristMinimumDeg = -30; // Absolute minimum wrist angle
+    public static final double kWristMaximumDeg = 90; // Absolute maximum wrist angle
 
-    public static final double kShoulderMinimumDeg = -90; // equal to Units.degreesToRadians(-90)
-    public static final double kShoulderMaximumDeg = 30; // equal to Units.degreesToRadians(30);
+    public static final double kShoulderMinimumDeg = -85; // Absolute minimum shoulder angle
+    public static final double kShoulderMaximumDeg = 30; // Absolute maximum shoulder angle
 
-    public static final double kShoulderExtensionWristLevel = -0.3; // equal to Units.degreesToRadians(-17.1887);
-    public static final double kShoulderWristLevel = -0.6; // equal to Units.degreesToRadians(-34.3775);
-    public static final double kShoulderMinimumAngleWrist = -0.75; // equal to Units.degreesToRadians(-42.97183);
-    public static final double kShoulderMinimumAngleExtension = -0.907571; // equal to Units.degreesToRadians(-52);
-    public static final double kShoulderMinimumAngleExtensionWrist = -0.4; // equal to Units.degreesToRadians(-22.9183);   
+    public static final double kShoulderMinWristDownDeg = -45; // Minimum shoulder angle when retracted and wrist is down
+    public static final double kShoulderMinExtendedDeg = -45; // Minimum shoulder angle when extended and wrist is level
+    public static final double kShoulderMinExtendedWristDownDeg = -30; // Minimum shoulder angle when extended and wrist is down
 }

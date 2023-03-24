@@ -17,6 +17,8 @@ public class Intake extends SubsystemBase{
     OCSparkMax rightMotor = new OCSparkMax(9, MotorType.kBrushless);
 
     public Intake(){
+        leftMotor.setCANTimeout(100);
+        rightMotor.setCANTimeout(100);
         OCConfig.configMotors(kMotorStallLimit, kMotorStallLimit, kRampRate, leftMotor, rightMotor);
         leftMotor.setPeriodicFramePeriod(PeriodicFrame.kStatus0, 5);
         leftMotor.setPeriodicFramePeriod(PeriodicFrame.kStatus1, 20);
@@ -28,9 +30,11 @@ public class Intake extends SubsystemBase{
         leftMotor.setInverted(false);
         rightMotor.follow(leftMotor, true);
         OCConfig.setStatusNothing(rightMotor);
+        OCConfig.setIdleMode(IdleMode.kBrake, leftMotor, rightMotor);
+        leftMotor.setCANTimeout(0);
+        rightMotor.setCANTimeout(0);
 		OCConfig.saveConfig(leftMotor, rightMotor);
 
-        OCConfig.setIdleMode(IdleMode.kBrake, leftMotor, rightMotor);
     }
  
     /**

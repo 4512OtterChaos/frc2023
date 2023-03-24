@@ -90,7 +90,7 @@ public class SwerveConstants {
     public static final double kSteerKP = 0.4;
     public static final double kSteerKI = 0;
     public static final double kSteerKD = 0.5;
-    public static final double kSteerVelocity = 11; // rotations per second
+    public static final double kSteerVelocity = 8; // rotations per second
     public static final double kSteerAcceleration = 40; // rotations per second squared
     public static final int kAllowableSteeringError = 80;
 

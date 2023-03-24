@@ -96,20 +96,25 @@ public final class MathHelp {
     }
     
     /**
-    * Linearly interpolates between 'from' and 'to' by percent amount.
-    * @param percent (0-1): 0 = from, 1 = to
-    */
-    public static double lerp(double percent, double from, double to){
-        percent = clamp(percent, 0, 1);
-        return (from+(to-from)*percent);
+     * Linear percentage from start to end
+     * @return Percentage (NOT CLAMPED)
+     */
+    public static double percentTo(double value, double start, double end) {
+        return (value-start)/(end-start);
     }
     /**
-    * Counterpart to lerp. Returns the percentage from 'from' to 'to' given value.
-    * @param value Value between from and to
-    */
-    public static double findPercentage(double value, double from, double to){
-        value = clamp(value, from, to);
-        return (from - value) / (from - to);
+     * Linearly interpolates from start to end
+     * @return Resulting value (NOT CLAMPED)
+     */
+    public static double lerp(double percent, double start, double end){
+        return start+(end-start)*percent;
+    }
+    /**
+     * Linearly maps value in [startFrom, startTo] to [endFrom, endTo]
+     * @return Resulting value (NOT CLAMPED)
+     */
+    public static double map(double value, double inStart, double inEnd, double outStart, double outEnd) {
+        return lerp(percentTo(value, inStart, inEnd), outStart, outEnd);
     }
     
     public static double getContinuousError(double error, double range){

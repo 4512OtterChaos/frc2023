@@ -241,6 +241,7 @@ public class RobotContainer {
         drive.log();
 
         arm.log();
+        SmartDashboard.putNumber("Robot/Pressure", compressor.getPressure());
     }
 
     public void simulationPeriodic(){
