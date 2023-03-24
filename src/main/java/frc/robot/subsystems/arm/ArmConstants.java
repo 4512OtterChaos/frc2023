@@ -38,8 +38,8 @@ public final class ArmConstants{
     public static final double kShoulderKP = 0;
     public static final double kShoulderKI = 0;
     public static final double kShoulderKD = 0;
-    public static final double kShoulderVelocityDeg = 90;
-    public static final double kShoulderAccelDeg = 90;
+    public static final double kShoulderVelocityDeg = 135;
+    public static final double kShoulderAccelDeg = 180;
     public static final double kShoulderPosToleranceDeg = 5;
     public static final double kShoulderVelToleranceDeg = 20;
 
@@ -63,7 +63,7 @@ public final class ArmConstants{
     public static final double kWristKP = 0;
     public static final double kWristKI = 0;
     public static final double kWristKD = 0;
-    public static final double kWristVelocityDeg = 135;
+    public static final double kWristVelocityDeg = 180;
     public static final double kWristAccelDeg = 270;
     public static final double kWristPosToleranceDeg = 5;
     public static final double kWristVelToleranceDeg = 20;
@@ -76,7 +76,7 @@ public final class ArmConstants{
     public static final double kShoulderMinimumDeg = -85; // Absolute minimum shoulder angle
     public static final double kShoulderMaximumDeg = 30; // Absolute maximum shoulder angle
 
-    public static final double kShoulderMinWristDownDeg = -45; // Minimum shoulder angle when retracted and wrist is down
+    public static final double kShoulderMinWristDownDeg = -55; // Minimum shoulder angle when retracted and wrist is down
     public static final double kShoulderMinExtendedDeg = -45; // Minimum shoulder angle when extended and wrist is level
     public static final double kShoulderMinExtendedWristDownDeg = -30; // Minimum shoulder angle when extended and wrist is down
 }

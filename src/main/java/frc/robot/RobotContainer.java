@@ -216,9 +216,9 @@ public class RobotContainer {
         controller.b()
             .onTrue(arm.pickUpDoubleSubC());
         controller.x()
-            .onTrue(arm.scoreMidC());
+            .onTrue(arm.scoreMidConeC());
         controller.y()
-            .onTrue(arm.scoreUpperC());
+            .onTrue(arm.scoreUpperConeC());
         
 
         controller.povDown()

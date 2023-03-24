@@ -340,7 +340,7 @@ public class Arm extends SubsystemBase implements Loggable {
 	 * @return The command to set the position of the shoulder.
 	 */
 	public CommandBase setShoulderPosRadiansC(double posRadians) {
-		return run(() -> setShoulderPosRadians(posRadians)).until(() -> shoulderPid.atGoal());
+		return run(() -> setShoulderPosRadians(posRadians)).until(() -> getAtShoulderGoal());
 	}
 
 	/**
@@ -371,7 +371,7 @@ public class Arm extends SubsystemBase implements Loggable {
 	 * @return The command to set the position of the wrist.
 	 */
 	public CommandBase setWristPosRadiansC(double posRadians) {
-		return run(() -> setWristPosGroundRelRads(posRadians)).until(() -> wristPid.atGoal());
+		return run(() -> setWristPosGroundRelRads(posRadians)).until(() -> getAtWristGoal());
 	}
 
 	/**
@@ -389,6 +389,15 @@ public class Arm extends SubsystemBase implements Loggable {
 	public double getWristGroundRelPosRadians() {
 		return new Rotation2d(getWristPosRadians()+getShoulderPosRadians()).getRadians();
 	}
+
+    public boolean getAtShoulderGoal() {
+        return Math.abs(getShoulderPosRadians() - shoulderGoal) < shoulderPid.getPositionTolerance()
+                && Math.abs(shoulderPid.getVelocityError()) < shoulderPid.getVelocityTolerance();
+    }
+    public boolean getAtWristGoal() {
+        return Math.abs(getWristGroundRelPosRadians() - wristGroundRelativeGoal) < wristPid.getPositionTolerance()
+                && Math.abs(wristPid.getVelocityError()) < wristPid.getVelocityTolerance();
+    }
 
 	// /**
 	//  * Toggles the extension piston between forward (out) and reverse (in).
@@ -451,82 +460,130 @@ public class Arm extends SubsystemBase implements Loggable {
 	 * Sets the state of the entire arm.
 	 * @param shoulderPos The radian value to set the shoulder angle to.
 	 * @param wristGroundRelPos The radian value to set the wrist angle to.
-	 */
-	public void setArmState(double shoulderPos, double wristGroundRelPos){
-		setShoulderPosRadians(shoulderPos);
-		setWristPosGroundRelRads(wristGroundRelPos);
-		setExtended(getExtended());
-	}
-	/**
-	 * Sets the state of the entire arm.
-	 * @param shoulderPos The radian value to set the shoulder angle to.
-	 * @param wristGroundRelPos The radian value to set the wrist angle to.
 	 * @param extended The value to set the extension pistion to (forward, off or reverse).
 	 */
-	public void setArmState(double shoulderPos, double wristGroundRelPos, boolean extended){
+	public void setShoulderWristExt(double shoulderPos, double wristGroundRelPos, boolean extended){
 		setShoulderPosRadians(shoulderPos);
 		setWristPosGroundRelRads(wristGroundRelPos);
 		setExtended(extended);
 	}
-
     /**
-	 * Sets the state of the entire arm in a command.
+	 * Sets the state of the entire arm.
 	 * @param shoulderPos The radian value to set the shoulder angle to.
 	 * @param wristGroundRelPos The radian value to set the wrist angle to.
-	 * @return The command to set the state of the arm.
 	 */
-	public CommandBase setArmStateC(double shoulderPos, double wristGroundRelPos){
-		return run(()->setArmState(shoulderPos, wristGroundRelPos))
-			.until(()->{
-				return shoulderPid.atGoal() && wristPid.atGoal();
-			});
+	public void setShoulderWrist(double shoulderPos, double wristGroundRelPos){
+		setShoulderPosRadians(shoulderPos);
+		setWristPosGroundRelRads(wristGroundRelPos);
 	}
-	/**
+    /**
+	 * Sets the state of the entire arm.
+	 * @param shoulderPos The radian value to set the shoulder angle to.
+	 * @param extended The value to set the extension pistion to (forward, off or reverse).
+	 */
+	public void setShoulderExt(double shoulderPos, boolean extended){
+		setShoulderPosRadians(shoulderPos);
+		setExtended(extended);
+	}
+    /**
+	 * Sets the state of the entire arm.
+	 * @param wristGroundRelPos The radian value to set the wrist angle to.
+	 * @param extended The value to set the extension pistion to (forward, off or reverse).
+	 */
+	public void setWristExt(double wristGroundRelPos, boolean extended){
+		setWristPosGroundRelRads(wristGroundRelPos);
+		setExtended(extended);
+	}
+	
+    /**
 	 * Sets the state of the entire arm in a command.
 	 * @param shoulderPos The radian value to set the shoulder angle to.
 	 * @param wristGroundRelPos The radian value to set the wrist angle to.
 	 * @param extended Whether the extension is extended.
 	 * @return The command to set the state of the arm.
 	 */
-	public CommandBase setArmStateC(double shoulderPos, double wristGroundRelPos, boolean extended){
-		return run(()->setArmState(shoulderPos, wristGroundRelPos, extended))
+	public CommandBase setShoulderWristExtC(double shoulderPos, double wristGroundRelPos, boolean extended){
+		return run(()->setShoulderWristExt(shoulderPos, wristGroundRelPos, extended))
 			.until(()->{
-				return shoulderPid.atGoal() && wristPid.atGoal() && extended ? getExtension() == 1 : getExtension() == 0;
+				return getAtShoulderGoal() && getAtWristGoal() && extended ? getExtension() == 1 : getExtension() == 0;
 			});
 	}
+    /**
+	 * Sets the state of the entire arm in a command.
+	 * @param shoulderPos The radian value to set the shoulder angle to.
+	 * @param wristGroundRelPos The radian value to set the wrist angle to.
+	 * @return The command to set the state of the arm.
+	 */
+	public CommandBase setShoulderWristC(double shoulderPos, double wristGroundRelPos){
+		return run(()->setShoulderWrist(shoulderPos, wristGroundRelPos))
+			.until(()->{
+				return getAtShoulderGoal() && getAtWristGoal();
+			});
+	}
+    /**
+	 * Sets the state of the entire arm in a command.
+	 * @param shoulderPos The radian value to set the shoulder angle to.
+	 * @param extended Whether the extension is extended.
+	 * @return The command to set the state of the arm.
+	 */
+	public CommandBase setShoulderExtC(double shoulderPos, boolean extended){
+		return run(()->setShoulderExt(shoulderPos, extended))
+			.until(()->{
+				return getAtShoulderGoal() && extended ? getExtension() == 1 : getExtension() == 0;
+			});
+	}
+    /**
+	 * Sets the state of the entire arm in a command.
+	 * @param wristGroundRelPos The radian value to set the wrist angle to.
+	 * @param extended Whether the extension is extended.
+	 * @return The command to set the state of the arm.
+	 */
+	public CommandBase setWristExtC(double wristGroundRelPos, boolean extended){
+		return run(()->setWristExt(wristGroundRelPos, extended))
+			.until(()->{
+				return getAtWristGoal() && extended ? getExtension() == 1 : getExtension() == 0;
+			});
+	}	
 
 	public CommandBase inC(){
 		return sequence(
 			setExtendedC(false),
-			setArmStateC(Math.toRadians(-90), Math.toRadians(90), false)
+            setWristPosRadiansC(wristMaximum),
+			setShoulderPosRadiansC(shoulderMinimum)
 		);
 	}
 
 	public CommandBase pickUpGroundC(){
 		return sequence(
-			setArmStateC(Math.toRadians(-46), Math.toRadians(0)),
-			setExtendedC(true)
+            setWristPosRadiansC(wristMaximum),
+            setShoulderPosRadiansC(Math.toRadians(-46)),
+			setShoulderWristExtC(Math.toRadians(-46), Math.toRadians(-5), true)
 		);
 	}
 
-	public CommandBase scoreMidC(){
+	public CommandBase scoreMidConeC(){
 		return sequence(
 			setExtendedC(false),
-			setArmStateC(Math.toRadians(-7), Math.toRadians(0), false)
+            setWristPosRadiansC(wristMaximum),
+			setShoulderPosRadiansC(Math.toRadians(-5)),
+			setShoulderWristExtC(Math.toRadians(-5), Math.toRadians(15), false)
 		);
 	}
 
-	public CommandBase scoreUpperC(){
+	public CommandBase scoreUpperConeC(){
 		return sequence(
-			setArmStateC(Math.toRadians(14), Math.toRadians(0)),
-			setExtendedC(true)
+            setWristPosRadiansC(wristMaximum),
+			setShoulderPosRadiansC(Math.toRadians(10)),
+			setShoulderWristExtC(Math.toRadians(10), Math.toRadians(15), true)
 		);
 	}
 
 	public CommandBase pickUpDoubleSubC(){
 		return sequence(
 			setExtendedC(false),
-			setArmStateC(Math.toRadians(4.5), Math.toRadians(-1), false)
+            setWristPosRadiansC(wristMaximum),
+			setShoulderPosRadiansC(Math.toRadians(5)),
+			setShoulderWristExtC(Math.toRadians(5), Math.toRadians(-5), false)
 		);
 	}
 
