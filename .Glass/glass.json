@@ -1,15 +1,52 @@
 {
   "NetworkTables": {
+    "transitory": {
+      "Shuffleboard": {
+        "Arm: Config": {
+          "open": true,
+          "shoulderPid": {
+            "open": true
+          },
+          "wristPid": {
+            "open": true
+          }
+        },
+        "open": true
+      },
+      "SmartDashboard": {
+        "Arm": {
+          "States": {
+            "open": true
+          },
+          "Subsystem": {
+            "open": true
+          },
+          "open": true
+        },
+        "open": true
+      }
+    },
     "types": {
       "/FMSInfo": "FMSInfo",
+      "/Shuffleboard/SwerveDrive: Config/xController": "PIDController",
+      "/Shuffleboard/SwerveDrive: Config/yController": "PIDController",
       "/SmartDashboard/Arm/Mech2d": "Mechanism2d",
       "/SmartDashboard/Arm/Subsystem": "Subsystem",
+      "/SmartDashboard/Auto Options": "String Chooser",
       "/SmartDashboard/camera Sim Field": "Field2d",
       "/SmartDashboard/field": "Field2d"
+    },
+    "windows": {
+      "/SmartDashboard/Arm/Mech2d": {
+        "window": {
+          "visible": true
+        }
+      }
     }
   },
   "NetworkTables Settings": {
     "mode": "Client (NT4)",
     "serverTeam": "4512"
-  }
+  },
+  "enterKey": 344
 }

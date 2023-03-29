@@ -227,7 +227,7 @@ public class SwerveDrive extends SubsystemBase implements Loggable {
         return gyro.getRotation2d();
     }
     public Rotation2d getGyroPitch(){
-        return Rotation2d.fromDegrees(gyro.getRoll());
+        return Rotation2d.fromDegrees(-gyro.getRoll());
     }
     public Rotation2d getGyroRoll(){
         return Rotation2d.fromDegrees(gyro.getPitch());

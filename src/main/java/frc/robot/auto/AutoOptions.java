@@ -24,6 +24,10 @@ public class AutoOptions {
     private SendableChooser<CommandBase> autoOptions = new SendableChooser<>();
 
     public AutoOptions(SwerveDrive drive){
+        addDriveOnlyOptions(drive);
+    }
+
+    private void addDriveOnlyOptions(SwerveDrive drive) {
         autoOptions.setDefaultOption("Nothing",
             new InstantCommand(()->drive.stop(), drive)
         );
@@ -80,14 +84,11 @@ public class AutoOptions {
     }
 
     public AutoOptions(SwerveDrive drive, Intake intake, Arm arm){
-
-        autoOptions.setDefaultOption("Nothing",
-            new InstantCommand(()->drive.stop(), drive)
-        );
-        
+        addDriveOnlyOptions(drive);
+                
         autoOptions.addOption("T1Cone1CubeEngaged",
             sequence(
-                arm.scoreUpperC().withTimeout(3),
+                arm.scoreUpperConeC().withTimeout(3),
                 intake.setVoltageC(-0.25).withTimeout(1),
                 arm.inC().withTimeout(2),
                 new OCSwerveFollower(
@@ -107,7 +108,7 @@ public class AutoOptions {
                     AutoConstants.kMediumSpeedConfig,
                     false
                 ),
-                arm.scoreUpperC().withTimeout(4),
+                arm.scoreUpperConeC().withTimeout(4),
                 intake.setVoltageC(-0.25).withTimeout(2),
                 arm.inC().withTimeout(4),
                 new OCSwerveFollower(
@@ -120,7 +121,7 @@ public class AutoOptions {
         );
         autoOptions.addOption("M1CubeEngaged",
             sequence(
-                arm.scoreUpperC().withTimeout(4),
+                arm.scoreUpperConeC().withTimeout(4),
                 intake.setVoltageC(-0.25).withTimeout(2),
                 arm.inC().withTimeout(4),
                 new OCSwerveFollower(
@@ -133,7 +134,7 @@ public class AutoOptions {
         );
         autoOptions.addOption("M1CubeTaxiEngaged",
             sequence(
-                arm.scoreUpperC().withTimeout(4),
+                arm.scoreUpperConeC().withTimeout(4),
                 intake.setVoltageC(-0.25).withTimeout(2),
                 arm.inC().withTimeout(4),
                 new OCSwerveFollower(
@@ -146,7 +147,7 @@ public class AutoOptions {
         );
         // autoOptions.addOption("AMOGUS",
         //     sequence(
-        //         arm.scoreUpperC().withTimeout(4),
+        //         arm.scoreUpperConeC().withTimeout(4),
         //         intake.setVoltageC(-0.25).withTimeout(2),
         //         arm.inC().withTimeout(4),
         //         new OCSwerveFollower(
@@ -192,7 +193,7 @@ public class AutoOptions {
         );
         autoOptions.addOption("T1Cubetaxi",
             sequence(
-                arm.scoreUpperC().withTimeout(4),
+                arm.scoreUpperConeC().withTimeout(4),
                 intake.setVoltageC(-0.25).withTimeout(2),
                 arm.inC().withTimeout(4),
                 new OCSwerveFollower(
@@ -205,7 +206,7 @@ public class AutoOptions {
         );
         autoOptions.addOption("M1Cubetaxi",
             sequence(
-                arm.scoreUpperC().withTimeout(4),
+                arm.scoreUpperConeC().withTimeout(4),
                 intake.setVoltageC(-0.25).withTimeout(2),
                 arm.inC().withTimeout(4),
                 new OCSwerveFollower(
@@ -218,20 +219,20 @@ public class AutoOptions {
         );
         autoOptions.addOption("B1Cubetaxi",
             sequence(
-                arm.scoreUpperC().withTimeout(4),
-                intake.setVoltageC(-0.25).withTimeout(2),
-                arm.inC().withTimeout(4),
+                arm.scoreUpperConeC().withTimeout(3),
+                intake.setVoltageOutC().withTimeout(1.5),
+                arm.inC().withTimeout(3),
                 new OCSwerveFollower(
                     drive, 
-                    "B1Cubetaxi", 
-                    AutoConstants.kMediumSpeedConfig,
+                    "B1CubeTaxi", 
+                    AutoConstants.kSlowSpeedConfig,
                     true
                 )
             )
         );
         autoOptions.addOption("T1Conetaxi",
             sequence(
-                arm.scoreUpperC().withTimeout(4),
+                arm.scoreUpperConeC().withTimeout(4),
                 intake.setVoltageC(-0.25).withTimeout(2),
                 arm.inC().withTimeout(4),
                 new OCSwerveFollower(
@@ -244,7 +245,7 @@ public class AutoOptions {
         );
         autoOptions.addOption("M1Conetaxi",
             sequence(
-                arm.scoreUpperC().withTimeout(4),
+                arm.scoreUpperConeC().withTimeout(4),
                 intake.setVoltageC(-0.25).withTimeout(2),
                 arm.inC().withTimeout(4),
                 new OCSwerveFollower(
@@ -257,7 +258,7 @@ public class AutoOptions {
         );
         autoOptions.addOption("B1Conetaxi",
             sequence(
-                arm.scoreUpperC().withTimeout(4),
+                arm.scoreUpperConeC().withTimeout(4),
                 intake.setVoltageC(-0.25).withTimeout(2),
                 arm.inC().withTimeout(4),
                 new OCSwerveFollower(

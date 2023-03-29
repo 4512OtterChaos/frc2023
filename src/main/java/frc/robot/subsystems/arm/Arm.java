@@ -16,6 +16,7 @@ import edu.wpi.first.wpilibj.DriverStation;
 import edu.wpi.first.wpilibj.DutyCycleEncoder;
 import edu.wpi.first.wpilibj.PneumaticsModuleType;
 import edu.wpi.first.wpilibj.RobotBase;
+import edu.wpi.first.wpilibj.Timer;
 import edu.wpi.first.wpilibj.DoubleSolenoid.Value;
 import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
 import edu.wpi.first.wpilibj2.command.CommandBase;
@@ -79,11 +80,16 @@ public class Arm extends SubsystemBase implements Loggable {
 	public double shoulderTestVolts = 0;
 	public double wristTestVolts = 0;
 
+	private double setShoulderTime = Timer.getFPGATimestamp();
+	private double setWristTime = Timer.getFPGATimestamp();
+	private double setPistonTime = Timer.getFPGATimestamp();
+
 	public Arm() {
         shoulderMotorA.setCANTimeout(100);
         shoulderMotorB.setCANTimeout(100);
         wristMotor.setCANTimeout(100);
 		OCConfig.configMotors(kShoulderStallLimit, kShoulderStallLimit, kRampRate, shoulderMotorA, shoulderMotorB);
+		Timer.delay(0.5);
         if(RobotBase.isReal()) {
             
             shoulderMotorA.setPeriodicFramePeriod(PeriodicFrame.kStatus0, 5);
@@ -93,9 +99,10 @@ public class Arm extends SubsystemBase implements Loggable {
             shoulderMotorA.setPeriodicFramePeriod(PeriodicFrame.kStatus4, 65535);
             shoulderMotorA.setPeriodicFramePeriod(PeriodicFrame.kStatus5, 65535);
             shoulderMotorA.setPeriodicFramePeriod(PeriodicFrame.kStatus6, 65535);
-
+			Timer.delay(0.5);
             shoulderMotorA.setInverted(true);
 			// shoulderMotorB.setInverted(false);
+			Timer.delay(0.5);
             shoulderMotorB.follow(shoulderMotorA, true);
         }
         
@@ -127,9 +134,10 @@ public class Arm extends SubsystemBase implements Loggable {
 		shoulderPid.setTolerance(Math.toRadians(kShoulderPosToleranceDeg), Math.toRadians(kShoulderVelToleranceDeg));
         wristPid.setTolerance(Math.toRadians(kWristPosToleranceDeg), Math.toRadians(kWristVelToleranceDeg));
 
-        extensionPiston.set(Value.kReverse);
+        // extensionPiston.set(Value.kReverse);
 
 		SmartDashboard.putData("Arm/Subsystem", this);
+		setShoulderWristExt(shoulderMinimum, 0, false);
 	}
 
 	@Override
@@ -154,8 +162,8 @@ public class Arm extends SubsystemBase implements Loggable {
         wristGoal = wristGroundRelativeGoal - clampedShoulderGoal;
         // double clampedShoulderGoal = shoulderSafety2(shoulderGoal, wristGroundRelativeGoal - shoulderGoal, extension);
         double clampedWristGoal = wristSafety(wristGoal, clampedShoulderGoal, extended);
-        shoulderPid.setGoal(clampedShoulderGoal);
-        wristPid.setGoal(clampedWristGoal);
+        // shoulderPid.setGoal(clampedShoulderGoal);
+        // wristPid.setGoal(clampedWristGoal);
 
 		// Calculate shoulder volts:
 		var shoulderSetpoint = shoulderPid.getSetpoint();
@@ -185,6 +193,7 @@ public class Arm extends SubsystemBase implements Loggable {
         }
 		// Set shoulder motors to the clamped voltage.
 		shoulderMotorA.setVoltage(shoulderVolts);
+		// shoulderMotorA.setVoltage(0);
 
 		// Calculate wrist volts:
 		var wristSetpoint = wristPid.getSetpoint();
@@ -215,6 +224,7 @@ public class Arm extends SubsystemBase implements Loggable {
         }
 		// Set wrist motors to the clamped voltage.
 		wristMotor.setVoltage(wristVolts);
+		// wristMotor.setVoltage(0);
 
         // visualize the desired arm state to a Mechanism2d
         armSim.visualizeSetpoint(shoulderSetpoint.position, wristSetpoint.position, extended);
@@ -231,10 +241,10 @@ public class Arm extends SubsystemBase implements Loggable {
             );
 		}
 		// if retracted and wrist is not fully up,
-		if(!extended && wristPos < Math.toRadians(80)){
+		if(!extended && wristPos < Math.toRadians(70)){
             // and stowed: dont go up unless wrist is up
-            if(shoulderPos < Math.toDegrees(-80)) {
-                maximumPosRadians = Math.toRadians(shoulderMinimum);
+            if(shoulderPos < Math.toRadians(-80)) {
+                maximumPosRadians = shoulderMinimum;
             }
             // and not stowed: dont go down unless wrist is up
             else minimumPosRadians = shoulderMinWristDown;
@@ -315,7 +325,7 @@ public class Arm extends SubsystemBase implements Loggable {
         // if retracted and stowing,
         if(!extended && shoulderPos <= shoulderMinWristDown) {
             // ensure wrist is fully up
-            minimumPosRadians = Math.toRadians(87);
+            minimumPosRadians = Math.toRadians(89.5);
         }
 		
 		return MathUtil.clamp(wristPos, minimumPosRadians, maximumPosRadians);
@@ -332,6 +342,8 @@ public class Arm extends SubsystemBase implements Loggable {
 		// setWristPosRadians(wristPid.getGoal().position);
 
         shoulderGoal = posRadians;
+		// setShoulderTime = Timer.getFPGATimestamp();
+		shoulderPid.setGoal(shoulderGoal);
 	}
 
 	/**
@@ -340,7 +352,7 @@ public class Arm extends SubsystemBase implements Loggable {
 	 * @return The command to set the position of the shoulder.
 	 */
 	public CommandBase setShoulderPosRadiansC(double posRadians) {
-		return run(() -> setShoulderPosRadians(posRadians)).until(() -> getAtShoulderGoal());
+		return runOnce(() -> setShoulderPosRadians(posRadians)).repeatedly().until(() -> shoulderPid.atGoal());
 	}
 
 	/**
@@ -363,6 +375,8 @@ public class Arm extends SubsystemBase implements Loggable {
 		// wristPid.setGoal(clampedPosRadians);
 
         wristGroundRelativeGoal = posRadians;
+		// setWristTime = Timer.getFPGATimestamp();
+		wristPid.setGoal(wristGroundRelativeGoal - shoulderGoal);
 	}
 
 	/**
@@ -371,7 +385,7 @@ public class Arm extends SubsystemBase implements Loggable {
 	 * @return The command to set the position of the wrist.
 	 */
 	public CommandBase setWristPosRadiansC(double posRadians) {
-		return run(() -> setWristPosGroundRelRads(posRadians)).until(() -> getAtWristGoal());
+		return run(() -> setWristPosGroundRelRads(getShoulderPosRadians()+posRadians)).until(() -> wristPid.atGoal());
 	}
 
 	/**
@@ -430,6 +444,7 @@ public class Arm extends SubsystemBase implements Loggable {
 		else{
 			extensionPiston.set(Value.kReverse);
 		}
+		setPistonTime = Timer.getFPGATimestamp();
         //TODO periodic goal safety:
 		// setShoulderPosRadians(shoulderPid.getGoal().position);
 		// setWristPosGroundRelRads(wristPid.getGoal().position);
@@ -550,6 +565,13 @@ public class Arm extends SubsystemBase implements Loggable {
 			setExtendedC(false),
             setWristPosRadiansC(wristMaximum),
 			setShoulderPosRadiansC(shoulderMinimum)
+		);
+	}
+	public CommandBase coneInC(){
+		return sequence(
+			setExtendedC(false),
+            setWristPosRadiansC(wristMaximum),
+			setShoulderPosRadiansC(Math.toRadians(-60))
 		);
 	}
 

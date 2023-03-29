@@ -42,8 +42,8 @@ public class RobotContainer {
     private final OCXboxController operator = new OCXboxController(1);
     private final OCXboxController king = new OCXboxController(0);
 
+    // private final AutoOptions autoOptions = new AutoOptions(drive);
     private final AutoOptions autoOptions = new AutoOptions(drive, intake, arm);
-    // private final AutoOptions autoOptions = new Auto Options(intake, arm);
 
 
     private final Field2d field = new Field2d();
@@ -100,7 +100,7 @@ public class RobotContainer {
     
     private void configureEventBinds() {
 
-        intake.setDefaultCommand(intake.setVoltageC(0.75));
+        intake.setDefaultCommand(intake.setVoltageC(1.5));
         
     }
 
@@ -201,10 +201,10 @@ public class RobotContainer {
 
     private void configureOperatorBinds(OCXboxController controller){
         controller.start()
-            .whileTrue(run(()->arm.shoulderTestVolts=1.5,arm))
+            .whileTrue(run(()->arm.shoulderTestVolts=2,arm))
             .onFalse(runOnce(()->arm.shoulderTestVolts=0,arm));
         controller.back()
-            .whileTrue(run(()->arm.shoulderTestVolts=-1.5,arm))
+            .whileTrue(run(()->arm.shoulderTestVolts=-2,arm))
             .onFalse(runOnce(()->arm.shoulderTestVolts=0,arm));
         controller.rightTrigger()
             .whileTrue(intake.setVoltageInC());
@@ -219,10 +219,21 @@ public class RobotContainer {
             .onTrue(arm.scoreMidConeC());
         controller.y()
             .onTrue(arm.scoreUpperConeC());
-        
+        // controller.a()
+        // .whileTrue(arm.setExtendedC(false));
+        // controller.y()
+        // .whileTrue(arm.setExtendedC(true));
+        // controller.x()
+        //     .whileTrue(run(()->arm.wristTestVolts=1.5,arm))
+        //     .onFalse(runOnce(()->arm.wristTestVolts=0,arm));
+        // controller.b()
+        //     .whileTrue(run(()->arm.wristTestVolts=-1.5,arm))
+        //     .onFalse(runOnce(()->arm.wristTestVolts=0,arm));
 
         controller.povDown()
             .onTrue(arm.inC());
+        controller.povRight()
+            .onTrue(arm.coneInC());
 
 
         controller.leftBumper()

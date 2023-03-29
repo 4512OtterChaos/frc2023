@@ -42,7 +42,7 @@ public class AutoBalance extends CommandBase {
     public void execute() {
         double pitch = drive.getGyroPitch().getRadians();
         double roll = drive.getGyroRoll().getRadians();
-        double yaw = drive.getGyroYaw().getRadians();
+        double yaw = drive.getHeading().getRadians();
         double vx = 0;
         double vy = 0;
         double omegaRadians = 0;
@@ -71,8 +71,8 @@ public class AutoBalance extends CommandBase {
         // // vx -= pidRoll.calculate(roll);
         // // System.out.println("pitch: "+pitch);
         vx=pitch*Math.cos(yaw)+roll*Math.sin(yaw);
-        if (!(vx == 0 && vy == 0)){
-            drive.drive(vx, vy, omegaRadians, true);
+        if (!(Math.abs(vx) < 0.1 && Math.abs(vy) == 0.1)){
+            drive.drive(vx, vy, omegaRadians, false);
         }
         else {
             SwerveModuleState[] states = new SwerveModuleState[]{

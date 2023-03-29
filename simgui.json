@@ -134,6 +134,9 @@
       },
       "SmartDashboard": {
         "Arm": {
+          "States": {
+            "open": true
+          },
           "open": true
         },
         "open": true
