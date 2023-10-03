@@ -587,16 +587,16 @@ public class Arm extends SubsystemBase implements Loggable {
 		return sequence(
 			setExtendedC(false),
             setWristPosRadiansC(wristMaximum),
-			setShoulderPosRadiansC(Math.toRadians(-5)),
-			setShoulderWristExtC(Math.toRadians(-5), Math.toRadians(15), false)
+			setShoulderPosRadiansC(Math.toRadians(0)),
+			setShoulderWristExtC(Math.toRadians(0), Math.toRadians(20), false)
 		);
 	}
 
 	public CommandBase scoreUpperConeC(){
 		return sequence(
             setWristPosRadiansC(wristMaximum),
-			setShoulderPosRadiansC(Math.toRadians(10)),
-			setShoulderWristExtC(Math.toRadians(10), Math.toRadians(15), true)
+			setShoulderPosRadiansC(Math.toRadians(16)),
+			setShoulderWristExtC(Math.toRadians(16), Math.toRadians(20), true)
 		);
 	}
 

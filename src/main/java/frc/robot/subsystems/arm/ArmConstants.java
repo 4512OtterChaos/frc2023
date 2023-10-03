@@ -45,7 +45,7 @@ public final class ArmConstants{
 
 
     //----- Wrist
-    public static final Rotation2d kWristAngleOffset = Rotation2d.fromDegrees(66.5);
+    public static final Rotation2d kWristAngleOffset = Rotation2d.fromDegrees(185);
     public static final double kWristGearing = ((22.0 / 16.0) * 4 * 4 * 5);
 
     public static final double kWristks = 0.001;

@@ -6,6 +6,7 @@ import frc.robot.commands.TeleopDriveAngle;
 import frc.robot.subsystems.Superstructure;
 import frc.robot.subsystems.arm.Arm;
 import frc.robot.subsystems.drive.SwerveDrive;
+import frc.robot.subsystems.drive.SwerveDriveAccelLimiter;
 import frc.robot.subsystems.intake.Intake;
 import frc.robot.util.OCXboxController;
 import io.github.oblarg.oblog.Logger;
@@ -23,6 +24,7 @@ import edu.wpi.first.apriltag.AprilTagFields;
 import edu.wpi.first.math.geometry.Pose2d;
 import edu.wpi.first.math.geometry.Rotation2d;
 import edu.wpi.first.math.geometry.Transform3d;
+import edu.wpi.first.math.kinematics.ChassisSpeeds;
 import edu.wpi.first.math.kinematics.SwerveModuleState;
 import edu.wpi.first.wpilibj.Compressor;
 import edu.wpi.first.wpilibj.PneumaticsModuleType;
@@ -86,6 +88,11 @@ public class RobotContainer {
         compressor.enableAnalog(100, 120);
     }
 
+    public void robotInit() {
+        SwerveDriveAccelLimiter limiter = new SwerveDriveAccelLimiter(10,10,10,10);
+        System.out.println(limiter.calculate(new ChassisSpeeds(1000, 1000, 1000), new ChassisSpeeds(-10,-10,-10), .02));
+        
+    }
     public void periodic() {
         // superstructure.periodic();
         field.setRobotPose(drive.getPose());
@@ -100,7 +107,12 @@ public class RobotContainer {
     
     private void configureEventBinds() {
 
-        intake.setDefaultCommand(intake.setVoltageC(1.5));
+        intake.setDefaultCommand(run(()->{
+            if(Math.toDegrees(arm.getShoulderPosRadians()) > -80){
+                intake.setVoltage(1.5);
+            }
+            else intake.setVoltage(0);
+        }, intake));
         
     }
 

@@ -100,7 +100,7 @@ public class Intake extends SubsystemBase{
      * Returns a RunCommand that sets the voltage for outtaking gamepieces.
      */
     public CommandBase setVoltageOutC() {
-        return run(()->setVoltage(-1.65));
+        return run(()->setVoltage(-1.9));
     }
 
     public CommandBase setVelocityC(double rpm) {

@@ -1,6 +1,7 @@
 package frc.robot.subsystems.drive;
 
 import static frc.robot.auto.AutoConstants.*;
+import static frc.robot.subsystems.drive.SwerveConstants.*;
 
 import java.util.Optional;
 
@@ -25,6 +26,7 @@ import edu.wpi.first.math.util.Units;
 import edu.wpi.first.wpilibj.Timer;
 import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
 import edu.wpi.first.wpilibj2.command.SubsystemBase;
+import frc.robot.Robot;
 import frc.robot.auto.AutoConstants;
 import frc.robot.subsystems.drive.SwerveModule.SwerveModulesLog;
 import frc.robot.util.LogUtil;
@@ -51,7 +53,7 @@ public class SwerveDrive extends SubsystemBase implements Loggable {
         swerveMods[3].getModuleConstants().centerOffset
     );
 
-    private final WPI_Pigeon2 gyro = new WPI_Pigeon2(SwerveConstants.kPigeonID);
+    private final WPI_Pigeon2 gyro = new WPI_Pigeon2(kPigeonID);
     
     private final SwerveDrivePoseEstimator poseEstimator;
     private ChassisSpeeds targetChassisSpeeds = new ChassisSpeeds();
@@ -70,11 +72,14 @@ public class SwerveDrive extends SubsystemBase implements Loggable {
         AutoConstants.kThetaControllerConstraints
     );
 
+    //SwerveDriveAccelLimiter
+    private final SwerveDriveAccelLimiter limiter = new SwerveDriveAccelLimiter(kLinearAcceleration, kLinearDeceleration, kRotationalAcceleration, kRotationalDeceleration);
+
     private Trajectory logTrajectory;
     
     public SwerveDrive() {
         
-        gyro.configAllSettings(SwerveConstants.kPigeon2Config);
+        gyro.configAllSettings(kPigeon2Config);
         
         zeroGyro();
         
@@ -113,13 +118,12 @@ public class SwerveDrive extends SubsystemBase implements Loggable {
         double vx = vxMeters;
         double vy = vyMeters;
         double omega = omegaRadians;
-        ChassisSpeeds targetChassisSpeeds;
+        ChassisSpeeds targetChassisSpeeds = new ChassisSpeeds(vx, vy, omega);
+        targetChassisSpeeds = limiter.calculate(targetChassisSpeeds, getChassisSpeeds(), Robot.kDefaultPeriod);
         if(isFieldRelative){
             targetChassisSpeeds = ChassisSpeeds.fromFieldRelativeSpeeds(vx, vy, omega, getHeading());
         }
-        else{
-            targetChassisSpeeds = new ChassisSpeeds(vx,vy,omega);
-        }
+        
         setChassisSpeeds(targetChassisSpeeds, openLoop, false);
     }
     /**

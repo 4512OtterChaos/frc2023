@@ -8,6 +8,7 @@ import edu.wpi.first.wpilibj.RobotBase;
 import edu.wpi.first.wpilibj.TimedRobot;
 import edu.wpi.first.wpilibj.Timer;
 import edu.wpi.first.wpilibj2.command.CommandScheduler;
+import frc.robot.subsystems.drive.SwerveDriveAccelLimiter;
 
 /**
 * The VM is configured to automatically run this class, and to call the functions corresponding to
@@ -23,6 +24,7 @@ public class Robot extends TimedRobot {
     public void robotInit() {
         if(RobotBase.isReal()) Timer.delay(3);
         container = new RobotContainer();
+        container.robotInit();
     }
     
     
