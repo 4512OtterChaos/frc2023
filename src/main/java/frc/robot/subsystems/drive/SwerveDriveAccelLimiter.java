@@ -20,13 +20,13 @@ public class SwerveDriveAccelLimiter {
     public ChassisSpeeds calculate(ChassisSpeeds targetSpeeds, ChassisSpeeds currentSpeeds, double dt){
         double currentXVelocity = currentSpeeds.vxMetersPerSecond;
         double currentYVelocity = currentSpeeds.vyMetersPerSecond;
-        double currentRotationVelocity = currentSpeeds.vxMetersPerSecond;
-        double targetXAccel = (targetSpeeds.vxMetersPerSecond - currentSpeeds.vxMetersPerSecond)/dt;
+        double currentRotationVelocity = currentSpeeds.omegaRadiansPerSecond;
+        double targetXAccel = (targetSpeeds.vxMetersPerSecond - currentXVelocity)/dt;
         double targetYAccel = (targetSpeeds.vyMetersPerSecond - currentYVelocity)/dt;
         Rotation2d velHeading = new Rotation2d(targetXAccel, targetYAccel);    
         double cosVelHeading = Math.abs(Math.cos(velHeading.getRadians()));
         double sinVelHeading = Math.abs(Math.sin(velHeading.getRadians()));
-        double targetRotationalAccel = targetSpeeds.omegaRadiansPerSecond - currentRotationVelocity;
+        double targetRotationalAccel = (targetSpeeds.omegaRadiansPerSecond - currentRotationVelocity) / dt;
         if (Math.signum(targetXAccel)>0){
             targetXAccel = MathUtil.clamp(targetXAccel, -linearDeceleration*cosVelHeading, linearAcceleration*cosVelHeading);
         }
@@ -45,7 +45,7 @@ public class SwerveDriveAccelLimiter {
         else{
             targetRotationalAccel = MathUtil.clamp(targetRotationalAccel, -rotationalAcceleration, rotationalDeceleration);
         }
-        return new ChassisSpeeds(currentXVelocity+(targetXAccel*dt), currentYVelocity+(targetXAccel*dt), currentRotationVelocity+(targetRotationalAccel)*dt);
+        return new ChassisSpeeds(currentXVelocity+(targetXAccel*dt), currentYVelocity+(targetYAccel*dt), currentRotationVelocity+(targetRotationalAccel*dt));
     }
 }
 

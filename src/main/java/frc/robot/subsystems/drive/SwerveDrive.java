@@ -57,6 +57,7 @@ public class SwerveDrive extends SubsystemBase implements Loggable {
     
     private final SwerveDrivePoseEstimator poseEstimator;
     private ChassisSpeeds targetChassisSpeeds = new ChassisSpeeds();
+    private ChassisSpeeds lastTargetChassisSpeeds = new ChassisSpeeds();
     private boolean isFieldRelative = true;
 
     // path controller and its dimension-specific controllers
@@ -119,11 +120,11 @@ public class SwerveDrive extends SubsystemBase implements Loggable {
         double vy = vyMeters;
         double omega = omegaRadians;
         ChassisSpeeds targetChassisSpeeds = new ChassisSpeeds(vx, vy, omega);
-        targetChassisSpeeds = limiter.calculate(targetChassisSpeeds, getChassisSpeeds(), Robot.kDefaultPeriod);
+        targetChassisSpeeds = limiter.calculate(targetChassisSpeeds, lastTargetChassisSpeeds, Robot.kDefaultPeriod);
+        lastTargetChassisSpeeds = targetChassisSpeeds;
         if(isFieldRelative){
-            targetChassisSpeeds = ChassisSpeeds.fromFieldRelativeSpeeds(vx, vy, omega, getHeading());
+            targetChassisSpeeds = ChassisSpeeds.fromFieldRelativeSpeeds(targetChassisSpeeds.vxMetersPerSecond, targetChassisSpeeds.vyMetersPerSecond, targetChassisSpeeds.omegaRadiansPerSecond, getHeading());
         }
-        
         setChassisSpeeds(targetChassisSpeeds, openLoop, false);
     }
     /**

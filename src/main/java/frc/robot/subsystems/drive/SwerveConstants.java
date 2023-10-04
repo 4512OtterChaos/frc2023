@@ -16,10 +16,10 @@ import frc.robot.util.TalonUtil;
 
 public class SwerveConstants {
 
-    public static final double kLinearAcceleration = 10;
-    public static final double kLinearDeceleration = 10;
-    public static final double kRotationalAcceleration = 10;
-    public static final double kRotationalDeceleration = 10;
+    public static final double kLinearAcceleration = Units.feetToMeters(40); //m/s/s
+    public static final double kLinearDeceleration = Units.feetToMeters(75);
+    public static final double kRotationalAcceleration = Units.rotationsToRadians(6);
+    public static final double kRotationalDeceleration = Units.rotationsToRadians(10);
 
     private static final boolean isReal = RobotBase.isReal();
     public static final int kPigeonID = 0;
