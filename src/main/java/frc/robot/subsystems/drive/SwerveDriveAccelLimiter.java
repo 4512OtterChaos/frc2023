@@ -27,23 +27,32 @@ public class SwerveDriveAccelLimiter {
         double cosVelHeading = Math.abs(Math.cos(velHeading.getRadians()));
         double sinVelHeading = Math.abs(Math.sin(velHeading.getRadians()));
         double targetRotationalAccel = (targetSpeeds.omegaRadiansPerSecond - currentRotationVelocity) / dt;
-        if (Math.signum(targetXAccel)>0){
+        if (Math.signum(currentXVelocity)>0){
             targetXAccel = MathUtil.clamp(targetXAccel, -linearDeceleration*cosVelHeading, linearAcceleration*cosVelHeading);
         }
-        else{
+        else if ((Math.signum(currentXVelocity)<0)) {
             targetXAccel = MathUtil.clamp(targetXAccel, -linearAcceleration*cosVelHeading, linearDeceleration*cosVelHeading);
+        } 
+        else {
+            targetXAccel = MathUtil.clamp(targetXAccel, -linearAcceleration*cosVelHeading, linearAcceleration*cosVelHeading);
         }
-        if (Math.signum(targetYAccel)>0){
+        if (Math.signum(currentYVelocity)>0){
             targetYAccel = MathUtil.clamp(targetYAccel, -linearDeceleration*sinVelHeading, linearAcceleration*sinVelHeading);
         }
-        else{
+        else if (Math.signum(currentYVelocity)<0){
             targetYAccel = MathUtil.clamp(targetYAccel, -linearAcceleration*sinVelHeading, linearDeceleration*sinVelHeading);
         }
-        if (Math.signum(targetRotationalAccel)>0){
+        else {
+            targetYAccel = MathUtil.clamp(targetYAccel, -linearAcceleration*sinVelHeading, linearAcceleration*sinVelHeading);
+        }
+        if (Math.signum(currentRotationVelocity)>0){
             targetRotationalAccel = MathUtil.clamp(targetRotationalAccel, -rotationalDeceleration, rotationalAcceleration);
         }
-        else{
+        else if (Math.signum(currentRotationVelocity)<0){
             targetRotationalAccel = MathUtil.clamp(targetRotationalAccel, -rotationalAcceleration, rotationalDeceleration);
+        }
+        else {
+            targetRotationalAccel = MathUtil.clamp(targetRotationalAccel, -rotationalAcceleration, rotationalAcceleration);
         }
         return new ChassisSpeeds(currentXVelocity+(targetXAccel*dt), currentYVelocity+(targetYAccel*dt), currentRotationVelocity+(targetRotationalAccel*dt));
     }

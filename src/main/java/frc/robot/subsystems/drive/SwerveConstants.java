@@ -16,8 +16,8 @@ import frc.robot.util.TalonUtil;
 
 public class SwerveConstants {
 
-    public static final double kLinearAcceleration = Units.feetToMeters(40); //m/s/s
-    public static final double kLinearDeceleration = Units.feetToMeters(75);
+    public static final double kLinearAcceleration = Units.feetToMeters(20); //m/s/s
+    public static final double kLinearDeceleration = Units.feetToMeters(30);
     public static final double kRotationalAcceleration = Units.rotationsToRadians(6);
     public static final double kRotationalDeceleration = Units.rotationsToRadians(10);
 

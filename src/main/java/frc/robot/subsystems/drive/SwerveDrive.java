@@ -95,6 +95,8 @@ public class SwerveDrive extends SubsystemBase implements Loggable {
             VecBuilder.fill(0.05, 0.05, Units.degreesToRadians(5)),
             calculateVisionNoise()
         );
+
+        setBrakeOn(true);
     }
 
     @Override
