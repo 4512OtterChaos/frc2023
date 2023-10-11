@@ -88,9 +88,9 @@ public class RobotContainer {
         compressor.enableAnalog(100, 120);
     }
 
-    public void robotInit() {
-        SwerveDriveAccelLimiter limiter = new SwerveDriveAccelLimiter(10,10,10,10);
-        System.out.println(limiter.calculate(new ChassisSpeeds(1000, 1000, 1000), new ChassisSpeeds(-10,-10,-10), .02));
+    public void initMode(boolean auto) {
+        arm.init(auto);
+        
         
     }
     public void periodic() {

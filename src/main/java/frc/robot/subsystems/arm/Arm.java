@@ -140,6 +140,11 @@ public class Arm extends SubsystemBase implements Loggable {
 		setShoulderWristExt(shoulderMinimum, 0, false);
 	}
 
+	public void init(boolean auto){
+		shoulderPid.reset(getShoulderPosRadians());
+		wristPid.reset(getWristPosRadians());
+	}
+
 	@Override
 	public void periodic() {
 		double shoulderPos = getShoulderPosRadians();

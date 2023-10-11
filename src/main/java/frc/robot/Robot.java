@@ -24,7 +24,6 @@ public class Robot extends TimedRobot {
     public void robotInit() {
         if(RobotBase.isReal()) Timer.delay(3);
         container = new RobotContainer();
-        container.robotInit();
     }
     
     
@@ -38,6 +37,7 @@ public class Robot extends TimedRobot {
     
     @Override
     public void autonomousInit() {
+        container.initMode(true);
         container.getAutoCommand().schedule();
     }
     
@@ -48,7 +48,9 @@ public class Robot extends TimedRobot {
     
     /** This function is called once when teleop is enabled. */
     @Override
-    public void teleopInit() {}
+    public void teleopInit() {
+        container.initMode(false);
+    }
     
     /** This function is called periodically during operator control. */
     @Override
