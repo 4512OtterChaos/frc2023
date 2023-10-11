@@ -153,8 +153,10 @@ public class SwerveModule implements Loggable {
             kDriveGearRatio,
             kWheelCircumference
         );
+
+        double angleError = MathUtil.angleModulus(targetConstrainedAngle - currentConstrainedAngle);
         // perform onboard PID with inputted feedforward to drive the module to the target velocity
-        double driveFFOutput = kDriveFF.calculate(this.lastDesiredState.speedMetersPerSecond)/kVoltageSaturation;
+        double driveFFOutput = kDriveFF.calculate(this.lastDesiredState.speedMetersPerSecond*Math.cos(angleError))/kVoltageSaturation;
         if(!openLoop){
             driveMotor.set(
                 ControlMode.Velocity, velocityNative, // Native falcon counts per 100ms
