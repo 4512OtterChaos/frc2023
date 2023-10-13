@@ -1,18 +1,14 @@
 package frc.robot.subsystems.drive;
 
-import com.ctre.phoenix.motorcontrol.SupplyCurrentLimitConfiguration;
-import com.ctre.phoenix.motorcontrol.can.TalonFXConfiguration;
-import com.ctre.phoenix.sensors.AbsoluteSensorRange;
-import com.ctre.phoenix.sensors.CANCoderConfiguration;
-import com.ctre.phoenix.sensors.Pigeon2Configuration;
-import com.ctre.phoenix.sensors.SensorInitializationStrategy;
-import com.ctre.phoenix.sensors.SensorVelocityMeasPeriod;
+
+
+import com.ctre.phoenix6.configs.CurrentLimitsConfigs;
+import com.ctre.phoenix6.configs.Slot0Configs;
 
 import edu.wpi.first.math.controller.SimpleMotorFeedforward;
 import edu.wpi.first.math.geometry.Translation2d;
 import edu.wpi.first.math.util.Units;
 import edu.wpi.first.wpilibj.RobotBase;
-import frc.robot.util.TalonUtil;
 
 public class SwerveConstants {
 
@@ -63,7 +59,7 @@ public class SwerveConstants {
     }
 
     // Current limits
-    public static final int kDriveContinuousCurrentLimit = 40;
+    public static final double kDriveContinuousCurrentLimit = 40;
     public static final int kDrivePeakCurrentLimit = 65;
     public static final double kDrivePeakCurrentDuration = 0.1;
     public static final int kSteerContinuousCurrentLimit = 25;
@@ -100,36 +96,34 @@ public class SwerveConstants {
     public static final int kAllowableSteeringError = 80;
 
     // The configurations applied to swerve CTRE devices
-    public static final TalonFXConfiguration driveConfig = new TalonFXConfiguration();
-    public static final TalonFXConfiguration steerConfig = new TalonFXConfiguration();
-    public static final CANCoderConfiguration cancoderConfig = new CANCoderConfiguration();
-    public static final Pigeon2Configuration kPigeon2Config = new Pigeon2Configuration();
+    public static final Slot0Configs drivePIDConfig = new Slot0Configs();
+    public static final CurrentLimitsConfigs driveCurrentLimitsConfig = new CurrentLimitsConfigs();
+    public static final CurrentLimitsConfigs driveCurrentLimitsConfig = new CurrentLimitsConfigs();
+    public static final Slot0Configs steerConfig = new Slot0Configs();
+    public static final Slot0Configs cancoderConfig = new Slot0Configs();
+    public static final Slot0Configs kPigeon2Config = new Slot0Configs();
     public static final int kCANTimeout = 100;
 
     static {
-        driveConfig.initializationStrategy = SensorInitializationStrategy.BootToZero;
-        driveConfig.slot0.kP = kDriveKP;
-        driveConfig.slot0.kI = kDriveKI;
-        driveConfig.slot0.kD = kDriveKD;
-        driveConfig.supplyCurrLimit = new SupplyCurrentLimitConfiguration(
-            true,
-            kDriveContinuousCurrentLimit,
-            kDrivePeakCurrentLimit,
-            kDrivePeakCurrentDuration
-        );
+        drivePIDConfig.kP = kDriveKP;
+        drivePIDConfig.kI = kDriveKI;
+        drivePIDConfig.kD = kDriveKD;
+        driveCurrentLimitsConfig.StatorCurrentLimit = kDriveContinuousCurrentLimit;
+        driveCurrentLimitsConfig.StatorCurrentLimitEnable = true;
+
         driveConfig.voltageCompSaturation = kVoltageSaturation;
         driveConfig.voltageMeasurementFilter = kVoltageMeasurementSamples;
         driveConfig.velocityMeasurementPeriod = SensorVelocityMeasPeriod.Period_20Ms;
         driveConfig.velocityMeasurementWindow = 32;
 
         steerConfig.initializationStrategy = SensorInitializationStrategy.BootToZero;
-        steerConfig.slot0.kP = kSteerKP;
-        steerConfig.slot0.kI = kSteerKI;
-        steerConfig.slot0.kD = kSteerKD;
-        steerConfig.slot0.kF = kSteerFF.kv;
+        steerConfig.kP = kSteerKP;
+        steerConfig.kI = kSteerKI;
+        steerConfig.kD = kSteerKD;
+        steerConfig.kF = kSteerFF.kv;
         steerConfig.motionCruiseVelocity = TalonUtil.rotationsToVelocity(kSteerVelocity, kSteerGearRatio);
         steerConfig.motionAcceleration = TalonUtil.rotationsToVelocity(kSteerAcceleration, kSteerGearRatio);
-        steerConfig.slot0.allowableClosedloopError = kAllowableSteeringError;
+        steerConfig.allowableClosedloopError = kAllowableSteeringError;
         steerConfig.neutralDeadband = isReal ? 0.01 : 0.001;
         steerConfig.supplyCurrLimit = new SupplyCurrentLimitConfiguration(
             true,

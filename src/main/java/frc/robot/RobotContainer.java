@@ -212,12 +212,12 @@ public class RobotContainer {
     }
 
     private void configureOperatorBinds(OCXboxController controller){
-        controller.start()
-            .whileTrue(run(()->arm.shoulderTestVolts=2,arm))
-            .onFalse(runOnce(()->arm.shoulderTestVolts=0,arm));
-        controller.back()
-            .whileTrue(run(()->arm.shoulderTestVolts=-2,arm))
-            .onFalse(runOnce(()->arm.shoulderTestVolts=0,arm));
+        // controller.start()
+        //     .whileTrue(run(()->arm.shoulderTestVolts=2,arm))
+        //     .onFalse(runOnce(()->arm.shoulderTestVolts=0,arm));
+        // controller.back()
+        //     .whileTrue(run(()->arm.shoulderTestVolts=-2,arm))
+        //     .onFalse(runOnce(()->arm.shoulderTestVolts=0,arm));
         controller.rightTrigger()
             .whileTrue(intake.setVoltageInC());
         controller.leftTrigger()

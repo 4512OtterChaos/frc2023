@@ -2,13 +2,10 @@ package frc.robot.subsystems.drive;
 
 import static frc.robot.subsystems.drive.SwerveConstants.*;
 
-import com.ctre.phoenix.motorcontrol.ControlMode;
-import com.ctre.phoenix.motorcontrol.DemandType;
-import com.ctre.phoenix.motorcontrol.NeutralMode;
-import com.ctre.phoenix.motorcontrol.TalonFXSimCollection;
-import com.ctre.phoenix.motorcontrol.can.WPI_TalonFX;
-import com.ctre.phoenix.sensors.CANCoderSimCollection;
-import com.ctre.phoenix.sensors.WPI_CANCoder;
+import com.ctre.phoenix6.hardware.CANcoder;
+import com.ctre.phoenix6.hardware.TalonFX;
+import com.ctre.phoenix6.sim.CANcoderSimState;
+import com.ctre.phoenix6.sim.TalonFXSimState;
 
 import edu.wpi.first.math.MathUtil;
 import edu.wpi.first.math.geometry.Rotation2d;
@@ -25,7 +22,6 @@ import edu.wpi.first.wpilibj.simulation.FlywheelSim;
 import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
 import frc.robot.Robot;
 import frc.robot.subsystems.drive.SwerveConstants.Module;
-import frc.robot.util.TalonUtil;
 import io.github.oblarg.oblog.Loggable;
 import io.github.oblarg.oblog.annotations.*;
 
@@ -39,38 +35,41 @@ public class SwerveModule implements Loggable {
     private double lastTargetTotalAngle = 0;
 
     // Hardware
-    private final WPI_TalonFX driveMotor;
-    private final WPI_TalonFX steerMotor;
-    private final WPI_CANCoder steerEncoder;
+    private final TalonFX driveMotor;
+    private final TalonFX steerMotor;
+    private final CANcoder steerEncoder;
 
     private double lastSeed = Timer.getFPGATimestamp();
 
     public SwerveModule(Module moduleConstants){
         this.moduleConstants = moduleConstants;
 
-        driveMotor = new WPI_TalonFX(moduleConstants.driveMotorID);
-        steerMotor = new WPI_TalonFX(moduleConstants.steerMotorID);
-        steerEncoder = new WPI_CANCoder(moduleConstants.cancoderID);
+        driveMotor = new TalonFX(moduleConstants.driveMotorID);
+        steerMotor = new TalonFX(moduleConstants.steerMotorID);
+        steerEncoder = new CANcoder(moduleConstants.cancoderID);
 
         setupDriveMotor(true);
         setupCancoder(true);
         setupSteerMotor(true);
 
         // Simulation
-        driveMotorSim = driveMotor.getSimCollection();
-        steerMotorSim = steerMotor.getSimCollection();
-        steerEncoderSim = steerEncoder.getSimCollection();
+        driveMotorSim = driveMotor.getSimState();
+        steerMotorSim = steerMotor.getSimState();
+        steerEncoderSim = steerEncoder.getSimState();
     }
-
+    
     private void setupDriveMotor(boolean init){
         if(init){
             driveMotor.configAllSettings(driveConfig);
         }
-        driveMotor.enableVoltageCompensation(true);
-        driveMotor.setSelectedSensorPosition(0);
+        driveMotor.setRotorPosition(0);
         driveMotor.setInverted(kInvertDrive);
-        TalonUtil.configStatusSolo(driveMotor);
-        if(Robot.isSimulation()) TalonUtil.configStatusSim(driveMotor);
+
+        //TODO: Config status frame
+
+        // TalonUtil.configStatusSolo(driveMotor);
+        // if(Robot.isSimulation()) TalonUtil.configStatusSim(driveMotor);
+        
     }
     private void setupCancoder(boolean init){
         steerEncoder.configAllSettings(cancoderConfig);
@@ -216,7 +215,7 @@ public class SwerveModule implements Loggable {
     }
 
     public void resetPosition(){
-        driveMotor.setSelectedSensorPosition(0);
+        driveMotor.setRotorPosition(0);
     }
     public SwerveModulePosition getPosition() {
         return new SwerveModulePosition(
@@ -309,16 +308,16 @@ public class SwerveModule implements Loggable {
 
         // SmartDashboard.putNumber(prefix+"Steer Absolute Degrees", steerEncoder.getAbsolutePosition());
         SmartDashboard.putNumber(prefix+"Steer Target Degrees", lastDesiredState.angle.getDegrees());
-        SmartDashboard.putNumber(prefix+"Steer Native", steerMotor.getSelectedSensorPosition());
+        SmartDashboard.putNumber(prefix+"Steer Native", steerMotor.getRotorPosition().getValue());
         // SmartDashboard.putNumber(prefix+"Steer Target Native", steerMotor.getClosedLoopTarget());
-        SmartDashboard.putNumber(prefix+"Steer Velocity Native", steerMotor.getSelectedSensorVelocity());
+        SmartDashboard.putNumber(prefix+"Steer Velocity Native", steerMotor.getRotorVelocity().getValue());
         SmartDashboard.putNumber(prefix+"Drive Velocity Feet", Units.metersToFeet(state.speedMetersPerSecond));
         SmartDashboard.putNumber(prefix+"Drive Velocity Target Feet", Units.metersToFeet(lastDesiredState.speedMetersPerSecond));
     }
 
 
     // Simulation
-    private final TalonFXSimCollection driveMotorSim;
+    private final TalonFXSimState driveMotorSim;
     private final FlywheelSim driveWheelSim = new FlywheelSim(
         LinearSystemId.identifyVelocitySystem(
             kDriveFF.kv * kWheelCircumference / (2*Math.PI),
@@ -327,22 +326,22 @@ public class SwerveModule implements Loggable {
         DCMotor.getFalcon500(1),
         kDriveGearRatio
     );
-    private final TalonFXSimCollection steerMotorSim;
+    private final TalonFXSimState steerMotorSim;
     private final FlywheelSim steeringSim = new FlywheelSim(
         LinearSystemId.identifyVelocitySystem(kSteerFF.kv, kSteerFF.ka),
         DCMotor.getFalcon500(1),
         kSteerGearRatio
     );
-    private final CANCoderSimCollection steerEncoderSim;
+    private final CANcoderSimState steerEncoderSim;
 
     public void simulationPeriodic(){
         // apply our commanded voltage to our simulated physics mechanisms
-        double driveVoltage = driveMotorSim.getMotorOutputLeadVoltage();
+        double driveVoltage = driveMotorSim.getMotorVoltage();
         if(driveVoltage >= 0) driveVoltage = Math.max(0, driveVoltage-kSteerFF.ks);
         else driveVoltage = Math.min(0, driveVoltage+kSteerFF.ks);
         driveWheelSim.setInputVoltage(driveVoltage);
 
-        double steerVoltage = steerMotorSim.getMotorOutputLeadVoltage();
+        double steerVoltage = steerMotorSim.getMotorVoltage();
         if(steerVoltage >= 0) steerVoltage = Math.max(0, steerVoltage-kSteerFF.ks);
         else steerVoltage = Math.min(0, steerVoltage+kSteerFF.ks);
         steeringSim.setInputVoltage(steerVoltage);
@@ -351,31 +350,31 @@ public class SwerveModule implements Loggable {
         steeringSim.update(0.02);
 
         // update our simulated devices with our simulated physics results
-        double driveMotorVelocityNative = TalonUtil.rotationsToVelocity(driveWheelSim.getAngularVelocityRPM()/60, kDriveGearRatio);
-        double driveMotorPositionDeltaNative = driveMotorVelocityNative*10*0.02;
-        driveMotorSim.setIntegratedSensorVelocity((int)driveMotorVelocityNative);
-        driveMotorSim.addIntegratedSensorPosition((int)(driveMotorPositionDeltaNative));
-        driveMotorSim.setSupplyCurrent(driveWheelSim.getCurrentDrawAmps()/2);
+        double driveMotorVelocity = (driveWheelSim.getAngularVelocityRPM()/60)*kDriveGearRatio;
+        double driveMotorPositionDelta = driveMotorVelocity*0.02;
+        driveMotorSim.setRotorVelocity(driveMotorVelocity);
+        driveMotorSim.setRotorVelocity((driveMotorPositionDelta));
+        // driveMotorSim.setSupplyCurrent(driveWheelSim.getCurrentDrawAmps()/2);
 
         //SmartDashboard.putNumber("Steer Sim Model Velocity", steeringSim.getAngularVelocityRPM());
-        double steerMotorVelocityNative = TalonUtil.rotationsToVelocity(steeringSim.getAngularVelocityRPM()/60, kSteerGearRatio);
-        double steerMotorPositionDeltaNative = steerMotorVelocityNative*10*0.02;
-        steerMotorSim.setIntegratedSensorVelocity((int)steerMotorVelocityNative);
-        steerMotorSim.addIntegratedSensorPosition((int)(steerMotorPositionDeltaNative));
-        steerMotorSim.setSupplyCurrent(steeringSim.getCurrentDrawAmps()/2);
+        double steerMotorVelocity = (steeringSim.getAngularVelocityRPM()/60)*kSteerGearRatio;
+        double steerMotorPositionDelta = steerMotorVelocity*0.02;
+        steerMotorSim.setRotorVelocity(steerMotorVelocity);
+        steerMotorSim.addRotorPosition((steerMotorPositionDelta));
+        // steerMotorSim.setSupplyCurrent(steeringSim.getCurrentDrawAmps()/2);
         
-        steerEncoderSim.setVelocity((int)(TalonUtil.rotationsToVelocity(steeringSim.getAngularVelocityRPM()/60, 1)*2));
-        steerEncoderSim.setRawPosition((int)(getIntegratedHeading().getDegrees()/360.0*4096));
+        steerEncoderSim.setVelocity(steerMotorVelocity/kSteerGearRatio);
+        steerEncoderSim.setRawPosition((getIntegratedHeading().getRotations()));
 
-        driveMotorSim.setBusVoltage(RobotController.getBatteryVoltage());
-        steerMotorSim.setBusVoltage(RobotController.getBatteryVoltage());
-        steerEncoderSim.setBusVoltage(RobotController.getBatteryVoltage());
+        driveMotorSim.setSupplyVoltage(RobotController.getBatteryVoltage());
+        steerMotorSim.setSupplyVoltage(RobotController.getBatteryVoltage());
+        steerEncoderSim.setSupplyVoltage(RobotController.getBatteryVoltage());
     }
 
     public double getDriveCurrentDraw(){
-        return driveMotor.getSupplyCurrent();
+        return driveMotor.getSupplyCurrent().getValue();
     }
     public double getSteerCurrentDraw(){
-        return steerMotor.getSupplyCurrent();
+        return steerMotor.getSupplyCurrent().getValue();
     }
 }
