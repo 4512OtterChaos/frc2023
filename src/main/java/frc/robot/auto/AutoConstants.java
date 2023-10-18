@@ -15,13 +15,13 @@ public class AutoConstants {
 
     public static final double kPXController = 3; // pose PID control. 1 meter error in x = kP meters per second in target x velocity 
     public static final double kPYController = 3;
-    public static final double kPThetaController = 5;
-    public static final double kDThetaController = 0.1;
+    public static final double kPThetaController = 4;
+    public static final double kDThetaController = 0;
 
     // constraints for the theta controller on velocity (omega) and acceleration (alpha)
     public static final TrapezoidProfile.Constraints kThetaControllerConstraints = new TrapezoidProfile.Constraints(
-        Units.rotationsToRadians(1.5),
-        Units.rotationsToRadians(3)
+        Units.rotationsToRadians(0.75),
+        Units.rotationsToRadians(1)
     );
     public static final double kThetaPositionTolerance = Units.degreesToRadians(3.5);
     public static final double kThetaVelocityTolerance = Units.degreesToRadians(10);
