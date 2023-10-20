@@ -605,11 +605,28 @@ public class Arm extends SubsystemBase implements Loggable {
 		);
 	}
 
+	public CommandBase scoreMidCubeC(){
+		return sequence(
+			setExtendedC(false),
+            setWristPosRadiansC(wristMaximum),
+			setShoulderPosRadiansC(Math.toRadians(0)),
+			setShoulderWristExtC(Math.toRadians(0), Math.toRadians(20), false)
+		);
+	}
+
+	public CommandBase scoreUpperCubeC(){
+		return sequence(
+            setWristPosRadiansC(wristMaximum),
+			setShoulderPosRadiansC(Math.toRadians(16)),
+			setShoulderWristExtC(Math.toRadians(16), Math.toRadians(20), true)
+		);
+	}
+
 	public CommandBase pickUpDoubleSubC(){
 		return sequence(
 			setExtendedC(false),
             setWristPosRadiansC(wristMaximum),
-			setShoulderPosRadiansC(Math.toRadians(5)),
+			setShoulderPosRadiansC(Math.toRadians(8)),
 			setShoulderWristExtC(Math.toRadians(5), Math.toRadians(-5), false)
 		);
 	}

@@ -82,6 +82,13 @@ public class Intake extends SubsystemBase{
         return false;
     }
 
+    public double getLeftCurrent(){
+        return leftMotor.getOutputCurrent();
+    }
+    
+    public double getRightCurrent(){
+        return rightMotor.getOutputCurrent();
+    }
 
     //---- Command Factories
     /**
@@ -112,4 +119,5 @@ public class Intake extends SubsystemBase{
     public CommandBase setVelocityOutC() {
         return setVelocityC(-300);
     }
+
 }

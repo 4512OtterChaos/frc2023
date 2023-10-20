@@ -121,20 +121,20 @@ public class RobotContainer {
         drive.setDefaultCommand(
             run(()->
                 drive.drive(
-                    controller.getForward()*drive.getMaxLinearVelocityMeters(),
-                    controller.getStrafe()*drive.getMaxLinearVelocityMeters(),
-                    controller.getTurn()*drive.getMaxAngularVelocityRadians(),
+                    controller.getLeftY(2) * superstructure.getDriveSpeed()*drive.getMaxLinearVelocityMeters(),
+                    controller.getLeftX(2) * superstructure.getDriveSpeed()*drive.getMaxLinearVelocityMeters(),
+                    controller.getRightX(2) * superstructure.getTurnSpeed()*drive.getMaxAngularVelocityRadians(),
                     true
                 ),
                 drive
             )
         );
 
-        controller.povUp()
+        controller.y()
             .onTrue(run(()->
                 drive.drive(
-                    controller.getForward()*drive.getMaxLinearVelocityMeters(),
-                    controller.getStrafe()*drive.getMaxLinearVelocityMeters(),
+                    controller.getLeftY(2) * superstructure.getDriveSpeed()*drive.getMaxLinearVelocityMeters(),
+                    controller.getLeftX(2) * superstructure.getDriveSpeed()*drive.getMaxLinearVelocityMeters(),
                     new Rotation2d(),
                     true
                 ),
@@ -143,11 +143,11 @@ public class RobotContainer {
             .beforeStarting(()->drive.resetPathController())
             .until(()->Math.abs(controller.getRightX())>0.25)
         );
-        controller.povDown()
+        controller.a()
             .onTrue(run(()->
                 drive.drive(
-                    controller.getForward()*drive.getMaxLinearVelocityMeters(),
-                    controller.getStrafe()*drive.getMaxLinearVelocityMeters(),
+                    controller.getLeftY(2) * superstructure.getDriveSpeed()*drive.getMaxLinearVelocityMeters(),
+                    controller.getLeftX(2) * superstructure.getDriveSpeed()*drive.getMaxLinearVelocityMeters(),
                     new Rotation2d(Math.PI),
                     true
                 ),
@@ -159,17 +159,17 @@ public class RobotContainer {
 
         // push-to-change driving "speed"
         controller.rightBumper()
-            .onTrue(runOnce(()->controller.setDriveSpeed(OCXboxController.kSpeedFast)))
-            .onFalse(runOnce(()->controller.setDriveSpeed(OCXboxController.kSpeedDefault)));
+            .onTrue(runOnce(()->superstructure.setDriveSpeed(Superstructure.kSpeedFast)))
+            .onFalse(runOnce(()->superstructure.setDriveSpeed(Superstructure.kSpeedDefault)));
 
         controller.leftBumper()
             .onTrue(runOnce(()->{
-                controller.setDriveSpeed(OCXboxController.kSpeedSlow);
-                controller.setTurnSpeed(OCXboxController.kTurnSpeedSlow);
+                superstructure.setDriveSpeed(Superstructure.kSpeedSlow);
+                superstructure.setTurnSpeed(Superstructure.kTurnSpeedSlow);
             }))
             .onFalse(runOnce(()->{
-                controller.setDriveSpeed(OCXboxController.kSpeedDefault);
-                controller.setTurnSpeed(OCXboxController.kTurnSpeed);
+                superstructure.setDriveSpeed(Superstructure.kSpeedDefault);
+                superstructure.setTurnSpeed(Superstructure.kTurnSpeed);
             }));
 
 
@@ -206,7 +206,7 @@ public class RobotContainer {
            drive.setModuleStates(states, false, true);
         }, drive));
         
-        controller.y()
+        controller.b()
             .whileTrue(new AutoBalance(drive));
    
     }
@@ -228,9 +228,9 @@ public class RobotContainer {
         controller.b()
             .onTrue(arm.pickUpDoubleSubC());
         controller.x()
-            .onTrue(arm.scoreMidConeC());
+            .onTrue(arm.scoreMidCubeC());
         controller.y()
-            .onTrue(arm.scoreUpperConeC());
+            .onTrue(arm.scoreUpperCubeC());
         // controller.a()
         // .whileTrue(arm.setExtendedC(false));
         // controller.y()

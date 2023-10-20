@@ -86,7 +86,7 @@ public class AutoOptions {
     public AutoOptions(SwerveDrive drive, Intake intake, Arm arm){
         addDriveOnlyOptions(drive);
                 
-        autoOptions.addOption("T1Cone1CubeEngaged",
+        autoOptions.addOption("NoBump1Cone1Cube",
             sequence(
                 arm.scoreUpperConeC().withTimeout(3),
                 intake.setVoltageC(-0.25).withTimeout(1),
