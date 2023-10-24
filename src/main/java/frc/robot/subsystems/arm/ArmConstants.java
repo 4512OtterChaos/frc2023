@@ -38,14 +38,14 @@ public final class ArmConstants{
     public static final double kShoulderKP = 14;
     public static final double kShoulderKI = 0;
     public static final double kShoulderKD = 0.5;
-    public static final double kShoulderVelocityDeg = 135;
-    public static final double kShoulderAccelDeg = 180;
+    public static final double kShoulderVelocityDeg = 180;
+    public static final double kShoulderAccelDeg = 250;
     public static final double kShoulderPosToleranceDeg = 5;
     public static final double kShoulderVelToleranceDeg = 30;
 
 
     //----- Wrist
-    public static final Rotation2d kWristAngleOffset = Rotation2d.fromDegrees(185);
+    public static final Rotation2d kWristAngleOffset = Rotation2d.fromDegrees(195.5);
     public static final double kWristGearing = ((22.0 / 16.0) * 4 * 4 * 5);
 
     public static final double kWristks = 0.001;

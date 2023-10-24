@@ -7,6 +7,7 @@ import com.revrobotics.CANSparkMaxLowLevel.PeriodicFrame;
 
 import edu.wpi.first.math.controller.PIDController;
 import edu.wpi.first.math.controller.SimpleMotorFeedforward;
+import edu.wpi.first.wpilibj.Timer;
 import edu.wpi.first.wpilibj2.command.CommandBase;
 import edu.wpi.first.wpilibj2.command.SubsystemBase;
 import frc.robot.util.OCConfig;
@@ -26,6 +27,7 @@ public class Intake extends SubsystemBase{
     private PIDController leftPid = new PIDController(0.005, 0, 0);
     private PIDController rightPid = new PIDController(0.005, 0, 0);
     boolean isManual = true;
+    double lastIntakeTime = 0;
 
     public Intake(){
         leftMotor.setCANTimeout(100);
@@ -78,7 +80,10 @@ public class Intake extends SubsystemBase{
         // rightPid.setSetpoint(0);
     }
 
-    public boolean stallDetection(double volts){
+    public boolean stallDetection(){
+        if ((getLeftCurrent() > kMotorStallDetection) && ((Timer.getFPGATimestamp()-0.5)>lastIntakeTime)){
+            return true;
+        }
         return false;
     }
 
@@ -88,6 +93,10 @@ public class Intake extends SubsystemBase{
     
     public double getRightCurrent(){
         return rightMotor.getOutputCurrent();
+    }
+
+    public void setLastIntakeTime(){
+        lastIntakeTime = Timer.getFPGATimestamp();
     }
 
     //---- Command Factories

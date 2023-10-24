@@ -104,9 +104,6 @@
     }
   },
   "NetworkTables": {
-    "Persistent Values": {
-      "open": false
-    },
     "transitory": {
       "Shuffleboard": {
         "Arm": {

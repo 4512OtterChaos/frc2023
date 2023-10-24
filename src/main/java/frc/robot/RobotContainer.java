@@ -156,6 +156,32 @@ public class RobotContainer {
             .beforeStarting(()->drive.resetPathController())
             .until(()->Math.abs(controller.getRightX())>0.25)
         );
+        controller.b()
+            .onTrue(run(()->
+                drive.drive(
+                    controller.getLeftY(2) * superstructure.getDriveSpeed()*drive.getMaxLinearVelocityMeters(),
+                    controller.getLeftX(2) * superstructure.getDriveSpeed()*drive.getMaxLinearVelocityMeters(),
+                    new Rotation2d((-Math.PI)/2),
+                    true
+                ),
+                drive
+            )
+            .beforeStarting(()->drive.resetPathController())
+            .until(()->Math.abs(controller.getRightX())>0.25)
+        );
+        controller.x()
+            .onTrue(run(()->
+                drive.drive(
+                    controller.getLeftY(2) * superstructure.getDriveSpeed()*drive.getMaxLinearVelocityMeters(),
+                    controller.getLeftX(2) * superstructure.getDriveSpeed()*drive.getMaxLinearVelocityMeters(),
+                    new Rotation2d((Math.PI)/2),
+                    true
+                ),
+                drive
+            )
+            .beforeStarting(()->drive.resetPathController())
+            .until(()->Math.abs(controller.getRightX())>0.25)
+        );
 
         // push-to-change driving "speed"
         controller.rightBumper()
@@ -175,7 +201,7 @@ public class RobotContainer {
 
         // controller.back()
         // .onTrue(
-        //     superstructure.p1()
+            // superstructure.p1()
         // );
 
         // reset the robot heading to 0
@@ -195,19 +221,19 @@ public class RobotContainer {
         //         ()->drive.setIsFieldRelative(!drive.getIsFieldRelative())
         //     ));
         
-        // lock the modules in a "X" alignment
-        controller.x().whileTrue(run(()->{
-           SwerveModuleState[] states = new SwerveModuleState[]{
-               new SwerveModuleState(0, Rotation2d.fromDegrees(-135)),
-               new SwerveModuleState(0, Rotation2d.fromDegrees(135)),
-               new SwerveModuleState(0, Rotation2d.fromDegrees(-45)),
-               new SwerveModuleState(0, Rotation2d.fromDegrees(45))
-           };
-           drive.setModuleStates(states, false, true);
-        }, drive));
+        // // lock the modules in a "X" alignment
+        // controller.x().whileTrue(run(()->{
+        //    SwerveModuleState[] states = new SwerveModuleState[]{
+        //        new SwerveModuleState(0, Rotation2d.fromDegrees(-135)),
+        //        new SwerveModuleState(0, Rotation2d.fromDegrees(135)),
+        //        new SwerveModuleState(0, Rotation2d.fromDegrees(-45)),
+        //        new SwerveModuleState(0, Rotation2d.fromDegrees(45))
+        //    };
+        //    drive.setModuleStates(states, false, true);
+        // }, drive));
         
-        controller.b()
-            .whileTrue(new AutoBalance(drive));
+        // controller.b()
+        //     .whileTrue(new AutoBalance(drive));
    
     }
 
@@ -221,16 +247,39 @@ public class RobotContainer {
         controller.rightTrigger()
             .whileTrue(intake.setVoltageInC());
         controller.leftTrigger()
-            .whileTrue(intake.setVoltageOutC());
-
+            .whileTrue(superstructure.cubeConeOuttake())
+            .onFalse(either(
+                either(
+                    arm.scoreHighConeC(), 
+                    arm.scoreMidConeC(), 
+                    ()->arm.getIsOuttakingHigh()), 
+                none(), 
+                ()->arm.getIsOuttakingCone()));
         controller.a()
-            .onTrue(arm.pickUpGroundC());
-        controller.b()
-            .onTrue(arm.pickUpDoubleSubC());
-        controller.x()
             .onTrue(arm.scoreMidCubeC());
+        controller.b()
+            .onTrue(arm.scoreHighCubeC());
+        controller.x()
+            .onTrue(arm.scoreMidConeC());
         controller.y()
-            .onTrue(arm.scoreUpperCubeC());
+            .onTrue(arm.scoreHighConeC());
+            
+        controller.povDown()
+            .onTrue(arm.inC());
+        controller.povRight()
+            .onTrue(arm.coneInC());
+        controller.povUp()
+            .onTrue(arm.pickUpDoubleSubC());
+        controller.povLeft()
+            .onTrue(arm.pickUpSingleSubC());
+        controller.leftBumper()
+            .whileTrue(run(()->arm.setShoulderPosRadians(arm.shoulderPid.getSetpoint().position-0.05)));
+        controller.rightBumper()
+            .whileTrue(run(()->arm.setShoulderPosRadians(arm.shoulderPid.getSetpoint().position+0.05)));
+
+        controller.start()
+            .onTrue(arm.pickUpGroundC());
+        
         // controller.a()
         // .whileTrue(arm.setExtendedC(false));
         // controller.y()
@@ -241,17 +290,6 @@ public class RobotContainer {
         // controller.b()
         //     .whileTrue(run(()->arm.wristTestVolts=-1.5,arm))
         //     .onFalse(runOnce(()->arm.wristTestVolts=0,arm));
-
-        controller.povDown()
-            .onTrue(arm.inC());
-        controller.povRight()
-            .onTrue(arm.coneInC());
-
-
-        controller.leftBumper()
-            .whileTrue(run(()->arm.setShoulderPosRadians(arm.shoulderPid.getSetpoint().position-0.05)));
-        controller.rightBumper()
-            .whileTrue(run(()->arm.setShoulderPosRadians(arm.shoulderPid.getSetpoint().position+0.05)));
             
     }
  

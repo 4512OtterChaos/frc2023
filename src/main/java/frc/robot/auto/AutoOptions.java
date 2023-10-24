@@ -48,26 +48,33 @@ public class AutoOptions {
                 true
             )
         );
-        autoOptions.addOption("TaxiEngaged",
+        autoOptions.addOption("Engaged",
             sequence(
                 new OCSwerveFollower(
                     drive, 
-                    "TaxiEngaged", 
-                    AutoConstants.kMediumSpeedConfig,
+                    "Engaged", 
+                    AutoConstants.kSlowSpeedConfig,
                     true
                 ),
                 new AutoBalance(drive)                   
             )
         );
-        autoOptions.addOption("PushTaxiEngaged",
+        autoOptions.addOption("TaxiEngaged",
             sequence(
                 new OCSwerveFollower(
                     drive, 
-                    "PushTaxiEngaged", 
-                    AutoConstants.kMediumSpeedConfig,
+                    "TaxiEngaged1", 
+                    AutoConstants.kSlowSpeedConfig,
                     true
                 ),
-                new AutoBalance(drive)
+                waitSeconds(0.7),
+                new OCSwerveFollower(
+                    drive, 
+                    "TaxiEngaged2", 
+                    AutoConstants.kSlowSpeedConfig,
+                    true
+                ),
+                new AutoBalance(drive)                   
             )
         );
         autoOptions.addOption("PushEngaged",
@@ -81,70 +88,124 @@ public class AutoOptions {
                 new AutoBalance(drive)
             )
         );
+        autoOptions.addOption("PushTaxiEngaged",
+            sequence(
+                new OCSwerveFollower(
+                    drive, 
+                    "PushTaxiEngaged", 
+                    AutoConstants.kMediumSpeedConfig,
+                    true
+                ),
+                new AutoBalance(drive)
+            )
+        );
     }
 
     public AutoOptions(SwerveDrive drive, Intake intake, Arm arm){
         addDriveOnlyOptions(drive);
                 
-        autoOptions.addOption("NoBump1Cone1Cube",
+        autoOptions.addOption("NoBumpCubetaxi",
             sequence(
-                arm.scoreUpperConeC().withTimeout(3),
-                intake.setVoltageC(-0.25).withTimeout(1),
-                arm.inC().withTimeout(2),
+                arm.scoreHighCubeC().withTimeout(4),
+                waitSeconds(0.5),
+                intake.setVoltageOutC().withTimeout(2),
+                arm.inC().withTimeout(4),
                 new OCSwerveFollower(
                     drive, 
-                    "T1Cone1CubeEngaged1", 
-                    AutoConstants.kMediumSpeedConfig,
+                    "T1CubeTaxi", 
+                    AutoConstants.kSlowSpeedConfig,
                     true
-                ),
-                parallel(
-                    intake.setVoltageC(0.75).withTimeout(5),
-                    arm.pickUpGroundC().withTimeout(5)
-                ),
-                arm.inC().withTimeout(4),
-                new OCSwerveFollower(
-                    drive, 
-                    "T1Cone1CubeEngaged2", 
-                    AutoConstants.kMediumSpeedConfig,
-                    false
-                ),
-                arm.scoreUpperConeC().withTimeout(4),
-                intake.setVoltageC(-0.25).withTimeout(2),
-                arm.inC().withTimeout(4),
-                new OCSwerveFollower(
-                    drive, 
-                    "T1Cone1CubeEngaged3", 
-                    AutoConstants.kMediumSpeedConfig,
-                    false
                 )
             )
         );
-        autoOptions.addOption("M1CubeEngaged",
+        // autoOptions.addOption("MiddleCubetaxi",
+        //     sequence(
+        //         arm.scoreHighCubeC().withTimeout(4),
+        //         intake.setVoltageOutC().withTimeout(2),
+        //         arm.inC().withTimeout(4),
+        //         new OCSwerveFollower(
+        //             drive, 
+        //             "M1Cubetaxi", 
+        //             AutoConstants.kMediumSpeedConfig,
+        //             true
+        //         )
+        //     )
+        // );
+        autoOptions.addOption("BumpCubetaxi",
             sequence(
-                arm.scoreUpperConeC().withTimeout(4),
+                arm.scoreHighCubeC().withTimeout(3),
+                waitSeconds(0.5),
+                intake.setVoltageOutC().withTimeout(1.5),
+                arm.inC().withTimeout(3),
+                new OCSwerveFollower(
+                    drive, 
+                    "B1CubeTaxi", 
+                    AutoConstants.kSlowSpeedConfig,
+                    true
+                )
+            )
+        );
+        autoOptions.addOption("MiddleCubeEngaged",
+            sequence(
+                arm.scoreHighCubeC().withTimeout(4),
+                waitSeconds(0.5),
                 intake.setVoltageC(-0.25).withTimeout(2),
                 arm.inC().withTimeout(4),
                 new OCSwerveFollower(
                     drive, 
                     "M1CubeEngaged", 
-                    AutoConstants.kMediumSpeedConfig,
+                    AutoConstants.kSlowSpeedConfig,
                     true
-                )
+                ),
+                new AutoBalance(drive)
             )
         );
-        autoOptions.addOption("M1CubeTaxiEngaged",
-            sequence(
-                arm.scoreUpperConeC().withTimeout(4),
-                intake.setVoltageC(-0.25).withTimeout(2),
-                arm.inC().withTimeout(4),
-                new OCSwerveFollower(
-                    drive, 
-                    "M1CubeTaxiEngaged", 
-                    AutoConstants.kMediumSpeedConfig,
-                    true
-                )
-            )
-        );
+        // autoOptions.addOption("NoBump1Cone1Cube",
+        //     sequence(
+        //         arm.scoreUpperConeC().withTimeout(3),
+        //         intake.setVoltageC(-0.25).withTimeout(1),
+        //         arm.inC().withTimeout(2),
+        //         new OCSwerveFollower(
+        //             drive, 
+        //             "T1Cone1CubeEngaged1", 
+        //             AutoConstants.kMediumSpeedConfig,
+        //             true
+        //         ),
+        //         parallel(
+        //             intake.setVoltageC(0.75).withTimeout(5),
+        //             arm.pickUpGroundC().withTimeout(5)
+        //         ),
+        //         arm.inC().withTimeout(4),
+        //         new OCSwerveFollower(
+        //             drive, 
+        //             "T1Cone1CubeEngaged2", 
+        //             AutoConstants.kMediumSpeedConfig,
+        //             false
+        //         ),
+        //         arm.scoreUpperConeC().withTimeout(4),
+        //         intake.setVoltageC(-0.25).withTimeout(2),
+        //         arm.inC().withTimeout(4),
+        //         new OCSwerveFollower(
+        //             drive, 
+        //             "T1Cone1CubeEngaged3", 
+        //             AutoConstants.kMediumSpeedConfig,
+        //             false
+        //         )
+        //     )
+        // );
+        // autoOptions.addOption("Middle1CubeTaxiEngaged",
+        //     sequence(
+        //         arm.scoreUpperConeC().withTimeout(4),
+        //         intake.setVoltageC(-0.25).withTimeout(2),
+        //         arm.inC().withTimeout(4),
+        //         new OCSwerveFollower(
+        //             drive, 
+        //             "M1CubeTaxiEngaged", 
+        //             AutoConstants.kMediumSpeedConfig,
+        //             true
+        //         )
+        //     )
+        // );
         // autoOptions.addOption("AMOGUS",
         //     sequence(
         //         arm.scoreUpperConeC().withTimeout(4),
@@ -158,117 +219,78 @@ public class AutoOptions {
         //         )
         //     )
         // );
-        autoOptions.addOption("Ttaxi",
-            sequence(
+        // autoOptions.addOption("NoBumptaxi",
+        //     sequence(
 
-                new OCSwerveFollower(
-                    drive, 
-                    "Ttaxi", 
-                    AutoConstants.kMediumSpeedConfig,
-                    true
-                )
-            )
-        );
-        autoOptions.addOption("Btaxi",
-            sequence(
+        //         new OCSwerveFollower(
+        //             drive, 
+        //             "Ttaxi", 
+        //             AutoConstants.kMediumSpeedConfig,
+        //             true
+        //         )
+        //     )
+        // );
+        // autoOptions.addOption("Middletaxi",
+        //     sequence(
 
-                new OCSwerveFollower(
-                    drive, 
-                    "Btaxi", 
-                    AutoConstants.kMediumSpeedConfig,
-                    true
-                )
-            )
-        );
-        autoOptions.addOption("Mtaxi",
-            sequence(
+        //         new OCSwerveFollower(
+        //             drive, 
+        //             "Mtaxi", 
+        //             AutoConstants.kMediumSpeedConfig,
+        //             true
+        //         )
+        //     )
+        // );
+        // autoOptions.addOption("Bumptaxi",
+        //     sequence(
 
-                new OCSwerveFollower(
-                    drive, 
-                    "Mtaxi", 
-                    AutoConstants.kMediumSpeedConfig,
-                    true
-                )
-            )
-        );
-        autoOptions.addOption("T1Cubetaxi",
-            sequence(
-                arm.scoreUpperConeC().withTimeout(4),
-                intake.setVoltageC(-0.25).withTimeout(2),
-                arm.inC().withTimeout(4),
-                new OCSwerveFollower(
-                    drive, 
-                    "T1Cubetaxi", 
-                    AutoConstants.kMediumSpeedConfig,
-                    true
-                )
-            )
-        );
-        autoOptions.addOption("M1Cubetaxi",
-            sequence(
-                arm.scoreUpperConeC().withTimeout(4),
-                intake.setVoltageC(-0.25).withTimeout(2),
-                arm.inC().withTimeout(4),
-                new OCSwerveFollower(
-                    drive, 
-                    "M1Cubetaxi", 
-                    AutoConstants.kMediumSpeedConfig,
-                    true
-                )
-            )
-        );
-        autoOptions.addOption("B1Cubetaxi",
-            sequence(
-                arm.scoreUpperConeC().withTimeout(3),
-                intake.setVoltageOutC().withTimeout(1.5),
-                arm.inC().withTimeout(3),
-                new OCSwerveFollower(
-                    drive, 
-                    "B1CubeTaxi", 
-                    AutoConstants.kSlowSpeedConfig,
-                    true
-                )
-            )
-        );
-        autoOptions.addOption("T1Conetaxi",
-            sequence(
-                arm.scoreUpperConeC().withTimeout(4),
-                intake.setVoltageC(-0.25).withTimeout(2),
-                arm.inC().withTimeout(4),
-                new OCSwerveFollower(
-                    drive, 
-                    "T1Conetaxi", 
-                    AutoConstants.kMediumSpeedConfig,
-                    true
-                )
-            )
-        );
-        autoOptions.addOption("M1Conetaxi",
-            sequence(
-                arm.scoreUpperConeC().withTimeout(4),
-                intake.setVoltageC(-0.25).withTimeout(2),
-                arm.inC().withTimeout(4),
-                new OCSwerveFollower(
-                    drive, 
-                    "M1Conetaxi", 
-                    AutoConstants.kMediumSpeedConfig,
-                    true
-                )
-            )
-        );
-        autoOptions.addOption("B1Conetaxi",
-            sequence(
-                arm.scoreUpperConeC().withTimeout(4),
-                intake.setVoltageC(-0.25).withTimeout(2),
-                arm.inC().withTimeout(4),
-                new OCSwerveFollower(
-                    drive, 
-                    "B1Conetaxi", 
-                    AutoConstants.kMediumSpeedConfig,
-                    true
-                )
-            )
-        );
+        //         new OCSwerveFollower(
+        //             drive, 
+        //             "Btaxi", 
+        //             AutoConstants.kMediumSpeedConfig,
+        //             true
+        //         )@
+        //     )
+        // );
+        // autoOptions.addOption("NoBump1Conetaxi",
+        //     sequence(
+        //         arm.scoreUpperConeC().withTimeout(4),
+        //         intake.setVoltageC(-0.25).withTimeout(2),
+        //         arm.inC().withTimeout(4),
+        //         new OCSwerveFollower(
+        //             drive, 
+        //             "T1Conetaxi", 
+        //             AutoConstants.kMediumSpeedConfig,
+        //             true
+        //         )
+        //     )
+        // );
+        // autoOptions.addOption("Middle1Conetaxi",
+        //     sequence(
+        //         arm.scoreUpperConeC().withTimeout(4),
+        //         intake.setVoltageC(-0.25).withTimeout(2),
+        //         arm.inC().withTimeout(4),
+        //         new OCSwerveFollower(
+        //             drive, 
+        //             "M1Conetaxi", 
+        //             AutoConstants.kMediumSpeedConfig,
+        //             true
+        //         )
+        //     )
+        // );
+        // autoOptions.addOption("Bump1Conetaxi",
+        //     sequence(
+        //         arm.scoreUpperConeC().withTimeout(4),
+        //         intake.setVoltageC(-0.25).withTimeout(2),
+        //         arm.inC().withTimeout(4),
+        //         new OCSwerveFollower(
+        //             drive, 
+        //             "B1Conetaxi", 
+        //             AutoConstants.kMediumSpeedConfig,
+        //             true
+        //         )
+        //     )
+        // );
     }
     
     

@@ -11,6 +11,7 @@ import edu.wpi.first.math.MathUtil;
 import edu.wpi.first.math.geometry.Pose2d;
 import edu.wpi.first.math.geometry.Rotation2d;
 import edu.wpi.first.math.geometry.Translation2d;
+import edu.wpi.first.math.util.Units;
 import edu.wpi.first.wpilibj.Timer;
 import edu.wpi.first.wpilibj2.command.Command;
 import edu.wpi.first.wpilibj2.command.CommandBase;
@@ -32,7 +33,7 @@ public class Superstructure {
     private final Intake intake;
 
     public static final double kSpeedSlow = .3;
-    public static final double kSpeedDefault = .6;
+    public static final double kSpeedDefault = .65;
     public static final double kSpeedFast = 0.8;
     public static final double kSpeedMax = 1.0;
     
@@ -40,6 +41,9 @@ public class Superstructure {
     private double turnSpeed = kTurnSpeed;
     public static final double kTurnSpeedSlow = 0.15;
     public static final double kTurnSpeed = 0.35;
+
+    public static final double kConeOutakeAngleDecrease = Units.degreesToRadians(16);
+
 
     public Superstructure(Arm arm, SwerveDrive drive, Intake intake) {
         this.arm = arm;
@@ -81,11 +85,22 @@ public class Superstructure {
                 false);
     }
 
-    // public Command rumbleIntakeHeld(OCXboxController... controllers) {
+    public CommandBase cubeConeOuttake() {
+        return either(
+            sequence(
+                runOnce(()->arm.setShoulderPosRadians(arm.shoulderPid.getSetpoint().position-kConeOutakeAngleDecrease)),
+                waitSeconds(1),
+                intake.setVoltageOutC()
+            ), 
+            intake.setVoltageOutC(), 
+            ()->(arm.getIsOuttakingCone() && arm.getIsOuttakingHigh()));
+    }
+
+    // public Command rumbleIntakeStall(OCXboxController... controllers) {
     //     return new FunctionalCommand(
     //         ()->{},
     //         ()->{
-    //             if(intake.getLeftCurrent() && intake.getRightCurrent()) {
+                // if(intake.stallDetection()) {
     //                 double time = Timer.getFPGATimestamp() / 0.1; // time / x seconds per pulse
     //                 boolean pulse = ((int) time) % 2 == 0;
     //                 for(OCXboxController controller : controllers) {

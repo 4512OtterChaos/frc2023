@@ -19,7 +19,7 @@ public class AutoBalance extends CommandBase {
 
     // private static final double kBalanceSpeed = 0.3;
 
-    private static final double kP = 2;
+    private static final double kP = 1.5;
     private static final double kD = 0;
     // (we manually use kP because the angle tolerance makes it nonlinear)
     private final PIDController pidPitch = new PIDController(0, 0, kD);
@@ -71,6 +71,7 @@ public class AutoBalance extends CommandBase {
         // // vx -= pidRoll.calculate(roll);
         // // System.out.println("pitch: "+pitch);
         vx=pitch*Math.cos(yaw)+roll*Math.sin(yaw);
+        vx*=kP;
         if (!(Math.abs(vx) < 0.1 && Math.abs(vy) == 0.1)){
             drive.drive(vx, vy, omegaRadians, false);
         }
