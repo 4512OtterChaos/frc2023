@@ -7,10 +7,6 @@ package frc.robot.subsystems;
 import com.pathplanner.lib.PathPlanner;
 import com.pathplanner.lib.PathPoint;
 
-import edu.wpi.first.math.MathUtil;
-import edu.wpi.first.math.geometry.Pose2d;
-import edu.wpi.first.math.geometry.Rotation2d;
-import edu.wpi.first.math.geometry.Translation2d;
 import edu.wpi.first.math.util.Units;
 import edu.wpi.first.wpilibj.Timer;
 import edu.wpi.first.wpilibj2.command.Command;
@@ -49,9 +45,6 @@ public class Superstructure {
         this.arm = arm;
         this.drive = drive;
         this.intake = intake;
-    }
-
-    public void periodic() {
     }
 
     public double getDriveSpeed() {
@@ -96,31 +89,31 @@ public class Superstructure {
             ()->(arm.getIsOuttakingCone() && arm.getIsOuttakingHigh()));
     }
 
-    // public Command rumbleIntakeStall(OCXboxController... controllers) {
-    //     return new FunctionalCommand(
-    //         ()->{},
-    //         ()->{
-                // if(intake.stallDetection()) {
-    //                 double time = Timer.getFPGATimestamp() / 0.1; // time / x seconds per pulse
-    //                 boolean pulse = ((int) time) % 2 == 0;
-    //                 for(OCXboxController controller : controllers) {
-    //                     if(pulse) controller.rumble(false, 1);
-    //                     else controller.rumble(false, 0);
-    //                 }
-    //             }
-    //             else {
-    //                 for(OCXboxController controller : controllers) {
-    //                     controller.rumble(false, 0);
-    //                 }
-    //             }
-    //         },
-    //         (interrupted)->{
-    //             for(OCXboxController controller : controllers) {
-    //                 controller.rumble(false, 0);
-    //             } 
-    //         },
-    //         ()->false
-    //     );
-    // }
+    public Command rumbleIntakeStall(OCXboxController... controllers) {
+        return new FunctionalCommand(
+            ()->{},
+            ()->{
+                if(intake.stallDetection()) {
+                    double time = Timer.getFPGATimestamp() / 0.1; // time / x seconds per pulse
+                    boolean pulse = ((int) time) % 2 == 0;
+                    for(OCXboxController controller : controllers) {
+                        if(pulse) controller.rumble(false, 1);
+                        else controller.rumble(false, 0);
+                    }
+                }
+                else {
+                    for(OCXboxController controller : controllers) {
+                        controller.rumble(false, 0);
+                    }
+                }
+            },
+            (interrupted)->{
+                for(OCXboxController controller : controllers) {
+                    controller.rumble(false, 0);
+                } 
+            },
+            ()->false
+        );
+    }
 
 }

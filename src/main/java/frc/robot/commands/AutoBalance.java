@@ -4,8 +4,6 @@
 
 package frc.robot.commands;
 
-import edu.wpi.first.math.MathUtil;
-import edu.wpi.first.math.controller.PIDController;
 import edu.wpi.first.math.geometry.Rotation2d;
 import edu.wpi.first.math.kinematics.SwerveModuleState;
 import edu.wpi.first.wpilibj2.command.CommandBase;
@@ -15,15 +13,7 @@ public class AutoBalance extends CommandBase {
 
     private final SwerveDrive drive;
 
-    private static final double kAngleToleranceRads = Math.toRadians(15);
-
-    // private static final double kBalanceSpeed = 0.3;
-
     private static final double kP = 1.5;
-    private static final double kD = 0;
-    // (we manually use kP because the angle tolerance makes it nonlinear)
-    private final PIDController pidPitch = new PIDController(0, 0, kD);
-    private final PIDController pidRoll = new PIDController(0, 0, kD);
 
     public AutoBalance(SwerveDrive drive) {
         // Use addRequirements() here to declare subsystem dependencies.
@@ -46,30 +36,6 @@ public class AutoBalance extends CommandBase {
         double vx = 0;
         double vy = 0;
         double omegaRadians = 0;
-        // if(Math.abs(pitch) > kAngleToleranceRads){
-        //     vx = kBalanceSpeed * -Math.signum(pitch);
-        // }
-        // if(Math.abs(roll) > kAngleToleranceRads){
-        //     vy = kBalanceSpeed * -Math.signum(roll);
-        // }
-        // if((vx != 0 || vy != 0) && (Math.abs(yaw) > kAngleToleranceDeg)){
-        //     omegaRadians = kBalanceSpeed * -Math.signum(yaw);
-        // }
-
-        // Calculate slope angle
-        // if(Math.atan(Math.sqrt(Math.tan(pitch)*Math.tan(pitch) + Math.tan(roll)*Math.tan(roll))) > kAngleToleranceRads) {
-        //     // if outside tolerance, use kP
-        //     vx -= kP * pitch;
-        //     vx -= kP * roll;
-            
-        // }
-        // // System.out.println("pitch deg"+Math.toDegrees(pitch) );
-        // // if(Math.abs(roll) > kAngleToleranceRads) {
-        // //     vx -= kP * roll;
-        // // }
-        // // vx -= pidPitch.calculate(pitch);
-        // // vx -= pidRoll.calculate(roll);
-        // // System.out.println("pitch: "+pitch);
         vx=pitch*Math.cos(yaw)+roll*Math.sin(yaw);
         vx*=kP;
         if (!(Math.abs(vx) < 0.1 && Math.abs(vy) == 0.1)){

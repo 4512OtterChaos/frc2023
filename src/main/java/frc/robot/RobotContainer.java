@@ -2,11 +2,9 @@ package frc.robot;
 
 import frc.robot.auto.AutoOptions;
 import frc.robot.commands.AutoBalance;
-import frc.robot.commands.TeleopDriveAngle;
 import frc.robot.subsystems.Superstructure;
 import frc.robot.subsystems.arm.Arm;
 import frc.robot.subsystems.drive.SwerveDrive;
-import frc.robot.subsystems.drive.SwerveDriveAccelLimiter;
 import frc.robot.subsystems.intake.Intake;
 import frc.robot.util.OCXboxController;
 import io.github.oblarg.oblog.Logger;
@@ -94,7 +92,6 @@ public class RobotContainer {
         
     }
     public void periodic() {
-        // superstructure.periodic();
         field.setRobotPose(drive.getPose());
         field.getObject("trajectory").setTrajectory(drive.getLogTrajectory());
         
@@ -198,12 +195,6 @@ public class RobotContainer {
                 superstructure.setTurnSpeed(Superstructure.kTurnSpeed);
             }));
 
-
-        // controller.back()
-        // .onTrue(
-            // superstructure.p1()
-        // );
-
         // reset the robot heading to 0
         controller.start()
             .onTrue(runOnce(()->
@@ -215,6 +206,11 @@ public class RobotContainer {
                 )
             )
         );
+
+        // controller.back()
+        // .onTrue(
+            // superstructure.p1()
+        // );
 
         // controller.back()
         //     .onTrue(runOnce(
@@ -279,17 +275,6 @@ public class RobotContainer {
 
         controller.start()
             .onTrue(arm.pickUpGroundC());
-        
-        // controller.a()
-        // .whileTrue(arm.setExtendedC(false));
-        // controller.y()
-        // .whileTrue(arm.setExtendedC(true));
-        // controller.x()
-        //     .whileTrue(run(()->arm.wristTestVolts=1.5,arm))
-        //     .onFalse(runOnce(()->arm.wristTestVolts=0,arm));
-        // controller.b()
-        //     .whileTrue(run(()->arm.wristTestVolts=-1.5,arm))
-        //     .onFalse(runOnce(()->arm.wristTestVolts=0,arm));
             
     }
  
