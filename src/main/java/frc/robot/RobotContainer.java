@@ -106,7 +106,7 @@ public class RobotContainer {
 
         intake.setDefaultCommand(run(()->{
             if(Math.toDegrees(arm.getShoulderPosRadians()) > -80){
-                intake.setVoltage(1.5);
+                intake.setVoltage(0.5);
             }
             else intake.setVoltage(0);
         }, intake));
@@ -235,13 +235,10 @@ public class RobotContainer {
 
     private void configureOperatorBinds(OCXboxController controller){
         controller.start()
-            .whileTrue(run(()->arm.shoulderTestVolts=2,arm))
-            .onFalse(runOnce(()->arm.shoulderTestVolts=0,arm));
-        controller.back()
-            .whileTrue(run(()->arm.shoulderTestVolts=-2,arm))
-            .onFalse(runOnce(()->arm.shoulderTestVolts=0,arm));
+            .onTrue(arm.pickUpGroundCubeC());
+
         controller.rightTrigger()
-            .whileTrue(intake.setVoltageInC());
+            .whileTrue(superstructure.cubeConeIntake());
         controller.leftTrigger()
             .whileTrue(superstructure.cubeConeOuttake())
             .onFalse(either(
@@ -250,7 +247,18 @@ public class RobotContainer {
                     arm.scoreMidConeC(), 
                     ()->arm.getIsOuttakingHigh()), 
                 none(), 
-                ()->arm.getIsOuttakingCone()));
+                ()->arm.getIsManipulatingCone()));
+
+        controller.leftBumper()
+            .whileTrue(run(()->arm.setShoulderPosRadians(arm.shoulderPid.getSetpoint().position-0.05)));
+        controller.rightBumper()
+            .whileTrue(run(()->arm.setShoulderPosRadians(arm.shoulderPid.getSetpoint().position+0.05)));
+
+        controller.leftStick()
+            .onTrue(arm.inC());
+        controller.rightStick()
+            .onTrue(arm.coneInC());
+
         controller.a()
             .onTrue(arm.scoreMidCubeC());
         controller.b()
@@ -260,22 +268,14 @@ public class RobotContainer {
         controller.y()
             .onTrue(arm.scoreHighConeC());
             
-        controller.povDown()
-            .onTrue(arm.inC());
-        controller.povRight()
-            .onTrue(arm.coneInC());
         controller.povUp()
-            .onTrue(arm.pickUpDoubleSubC());
+            .onTrue(arm.pickUpDoubleSubConeC());
+        controller.povRight()
+            .onTrue(arm.pickUpDoubleSubCubeC());
         controller.povLeft()
-            .onTrue(arm.pickUpSingleSubC());
-        controller.leftBumper()
-            .whileTrue(run(()->arm.setShoulderPosRadians(arm.shoulderPid.getSetpoint().position-0.05)));
-        controller.rightBumper()
-            .whileTrue(run(()->arm.setShoulderPosRadians(arm.shoulderPid.getSetpoint().position+0.05)));
-
-        controller.start()
-            .onTrue(arm.pickUpGroundC());
-            
+            .onTrue(arm.pickUpSingleSubConeC());
+        controller.povDown()
+            .onTrue(arm.pickUpSingleSubCubeC());
     }
  
     public CommandBase getAutoCommand(){

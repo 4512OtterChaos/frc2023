@@ -11,6 +11,7 @@ import edu.wpi.first.math.util.Units;
 import edu.wpi.first.wpilibj.Timer;
 import edu.wpi.first.wpilibj2.command.Command;
 import edu.wpi.first.wpilibj2.command.CommandBase;
+import edu.wpi.first.wpilibj2.command.Commands;
 import edu.wpi.first.wpilibj2.command.FunctionalCommand;
 
 import static edu.wpi.first.wpilibj2.command.Commands.*;
@@ -39,6 +40,9 @@ public class Superstructure {
     public static final double kTurnSpeed = 0.35;
 
     public static final double kConeOutakeAngleDecrease = Units.degreesToRadians(16);
+    public static final double kConeIntakeAngleDecrease = Units.degreesToRadians(7);
+    public static final double kCubeIntakeAngleDecrease = Units.degreesToRadians(7);
+
 
 
     public Superstructure(Arm arm, SwerveDrive drive, Intake intake) {
@@ -79,14 +83,36 @@ public class Superstructure {
     }
 
     public CommandBase cubeConeOuttake() {
-        return either(
-            sequence(
-                runOnce(()->arm.setShoulderPosRadians(arm.shoulderPid.getSetpoint().position-kConeOutakeAngleDecrease)),
-                waitSeconds(1),
-                intake.setVoltageOutC()
+        return 
+        either(
+            either(
+                sequence(
+                    runOnce(()->arm.setShoulderPosRadians(arm.shoulderPid.getSetpoint().position-kConeOutakeAngleDecrease)),
+                    waitSeconds(1),
+                    intake.setConeVoltageOutC()
+                ), 
+                
+                intake.setConeVoltageOutC(), 
+                ()->(arm.getIsOuttakingHigh())
             ), 
-            intake.setVoltageOutC(), 
-            ()->(arm.getIsOuttakingCone() && arm.getIsOuttakingHigh()));
+
+            intake.setCubeVoltageOutC(), 
+            ()->(arm.getIsManipulatingCone())
+        );
+    }
+
+    public CommandBase cubeConeIntake() {
+        return either(
+            parallel(
+                runOnce(()->arm.setShoulderPosRadians(arm.shoulderPid.getSetpoint().position-kConeIntakeAngleDecrease)),
+                intake.setConeVoltageInC()
+            ), 
+            parallel(
+                runOnce(()->arm.setShoulderPosRadians(arm.shoulderPid.getSetpoint().position-kCubeIntakeAngleDecrease)),
+                intake.setCubeVoltageInC()
+            ), 
+            ()->(arm.getIsManipulatingCone())
+        );
     }
 
     public Command rumbleIntakeStall(OCXboxController... controllers) {

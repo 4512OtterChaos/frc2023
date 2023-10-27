@@ -70,7 +70,7 @@ public class Arm extends SubsystemBase implements Loggable {
     private double shoulderMinExtended = Math.toRadians(kShoulderMinExtendedDeg);
     private double shoulderMinExtendedWristDown = Math.toRadians(kShoulderMinExtendedWristDownDeg);
 
-    private boolean isOuttakingCone = false;
+    private boolean isManipulatingCone = false;
     private boolean isOuttakingHigh = false;
     
     private final PistonSim pistonSim = new PistonSim(false, 0.5);
@@ -517,16 +517,16 @@ public class Arm extends SubsystemBase implements Loggable {
 		setExtended(extended);
 	}
 
-	public void setIsOuttakingCone(boolean isOuttakingCone) {
-        this.isOuttakingCone = isOuttakingCone;
+	public void setIsUsingCone(boolean isOuttakingCone) {
+        this.isManipulatingCone = isOuttakingCone;
     }
 
     public void setIsOuttakingHigh(boolean isOuttakingHigh) {
         this.isOuttakingHigh = isOuttakingHigh;
     }
 
-    public boolean getIsOuttakingCone() {
-        return isOuttakingCone;
+    public boolean getIsManipulatingCone() {
+        return isManipulatingCone;
     }
 
     public boolean getIsOuttakingHigh() {
@@ -598,8 +598,22 @@ public class Arm extends SubsystemBase implements Loggable {
 		);
 	}
 
-	public CommandBase pickUpGroundC(){
+	public CommandBase pickUpGroundConeC(){
 		return sequence(
+			runOnce(()->setIsUsingCone(true)),
+			either(sequence(
+				setWristPosRadiansC(wristMaximum).withTimeout(1.5),
+				setShoulderPosRadiansC(Math.toRadians(8))
+			), 
+			none(), 
+			()->getShoulderPosRadians()<kShoulderMinWristDownDeg),
+			setShoulderWristExtC(Math.toRadians(-46), Math.toRadians(-5), true)
+		);
+	}
+
+	public CommandBase pickUpGroundCubeC(){
+		return sequence(
+			runOnce(()->setIsUsingCone(false)),
 			either(sequence(
 				setWristPosRadiansC(wristMaximum).withTimeout(1.5),
 				setShoulderPosRadiansC(Math.toRadians(8))
@@ -612,7 +626,7 @@ public class Arm extends SubsystemBase implements Loggable {
 
 	public CommandBase scoreMidConeC(){
 		return sequence(
-			runOnce(()->setIsOuttakingCone(true)),
+			runOnce(()->setIsUsingCone(true)),
 			runOnce(()->setIsOuttakingHigh(false)),
 			setExtendedC(false),
 			either(sequence(
@@ -627,7 +641,7 @@ public class Arm extends SubsystemBase implements Loggable {
 
 	public CommandBase scoreHighConeC(){
 		return sequence(
-			runOnce(()->setIsOuttakingCone(true)),
+			runOnce(()->setIsUsingCone(true)),
 			runOnce(()->setIsOuttakingHigh(true)),
 			either(sequence(
 				setWristPosRadiansC(wristMaximum).withTimeout(1.5),
@@ -641,7 +655,7 @@ public class Arm extends SubsystemBase implements Loggable {
 
 	public CommandBase scoreMidCubeC(){
 		return sequence(
-			runOnce(()->setIsOuttakingCone(false)),
+			runOnce(()->setIsUsingCone(false)),
 			runOnce(()->setIsOuttakingHigh(false)),
 			setExtendedC(false),
 			either(sequence(
@@ -656,7 +670,7 @@ public class Arm extends SubsystemBase implements Loggable {
 
 	public CommandBase scoreHighCubeC(){
 		return sequence(
-			runOnce(()->setIsOuttakingCone(false)),
+			runOnce(()->setIsUsingCone(false)),
 			runOnce(()->setIsOuttakingHigh(true)),
 			setExtendedC(false),
             either(sequence(
@@ -669,8 +683,9 @@ public class Arm extends SubsystemBase implements Loggable {
 		);
 	}
 
-	public CommandBase pickUpDoubleSubC(){
+	public CommandBase pickUpDoubleSubConeC(){
 		return sequence(
+			runOnce(()->setIsUsingCone(true)),
 			setExtendedC(false),
 			either(sequence(
 				setWristPosRadiansC(wristMaximum).withTimeout(1.5),
@@ -681,8 +696,36 @@ public class Arm extends SubsystemBase implements Loggable {
 			setShoulderWristExtC(Math.toRadians(8), Math.toRadians(-5), false)
 		);
 	}
-	public CommandBase pickUpSingleSubC(){
+	public CommandBase pickUpSingleSubConeC(){
 		return sequence(
+			runOnce(()->setIsUsingCone(true)),
+			setExtendedC(false),
+			either(sequence(
+				setWristPosRadiansC(wristMaximum).withTimeout(1.5),
+				setShoulderPosRadiansC(Math.toRadians(-65))
+			), 
+			none(), 
+			()->getShoulderPosRadians()<-60),
+			setShoulderWristExtC(Math.toRadians(-23), Math.toRadians(28), false)
+		);
+	}
+
+	public CommandBase pickUpDoubleSubCubeC(){
+		return sequence(
+			runOnce(()->setIsUsingCone(false)),
+			setExtendedC(false),
+			either(sequence(
+				setWristPosRadiansC(wristMaximum).withTimeout(1.5),
+				setShoulderPosRadiansC(Math.toRadians(-65))
+			), 
+			none(), 
+			()->getShoulderPosRadians()<-60),
+			setShoulderWristExtC(Math.toRadians(8), Math.toRadians(-5), false)
+		);
+	}
+	public CommandBase pickUpSingleSubCubeC(){
+		return sequence(
+			runOnce(()->setIsUsingCone(false)),
 			setExtendedC(false),
 			either(sequence(
 				setWristPosRadiansC(wristMaximum).withTimeout(1.5),
