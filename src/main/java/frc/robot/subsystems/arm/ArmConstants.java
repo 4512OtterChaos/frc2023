@@ -10,7 +10,7 @@ public final class ArmConstants{
 
     //----- Shoulder
     public static final double kShoulderGearing = ((58.0 / 18.0) * (48.0 / 24.0) * 3 * 5);
-    public static final Rotation2d kShoulderAngleOffset = Rotation2d.fromDegrees(41);
+    public static final Rotation2d kShoulderAngleOffset = Rotation2d.fromDegrees(-54);
 
     // Retracted feedforward
     public static final double kShoulderks1 = 0.001;
@@ -38,14 +38,14 @@ public final class ArmConstants{
     public static final double kShoulderKP = 14;
     public static final double kShoulderKI = 0;
     public static final double kShoulderKD = 0.5;
-    public static final double kShoulderVelocityDeg = 180;
-    public static final double kShoulderAccelDeg = 250;
+    public static final double kShoulderVelocityDeg = 200;
+    public static final double kShoulderAccelDeg = 280;
     public static final double kShoulderPosToleranceDeg = 5;
     public static final double kShoulderVelToleranceDeg = 30;
 
 
     //----- Wrist
-    public static final Rotation2d kWristAngleOffset = Rotation2d.fromDegrees(195.5);
+    public static final Rotation2d kWristAngleOffset = Rotation2d.fromDegrees(371.5-2.7);
     public static final double kWristGearing = ((22.0 / 16.0) * 4 * 4 * 5);
 
     public static final double kWristks = 0.001;
@@ -64,7 +64,7 @@ public final class ArmConstants{
     public static final double kWristKI = 0;
     public static final double kWristKD = 0.5;
     public static final double kWristVelocityDeg = 250;
-    public static final double kWristAccelDeg = 400;
+    public static final double kWristAccelDeg = 450;
     public static final double kWristPosToleranceDeg = 5;
     public static final double kWristVelToleranceDeg = 30;
 
@@ -76,7 +76,7 @@ public final class ArmConstants{
     public static final double kShoulderMinimumDeg = -90; // Absolute minimum shoulder angle
     public static final double kShoulderMaximumDeg = 30; // Absolute maximum shoulder angle
 
-    public static final double kShoulderMinWristDownDeg = -55; // Minimum shoulder angle when retracted and wrist is down
+    public static final double kShoulderMinWristDownDeg = -65; // Minimum shoulder angle when retracted and wrist is down
     public static final double kShoulderMinExtendedDeg = -50; // Minimum shoulder angle when extended and wrist is level
     public static final double kShoulderMinExtendedWristDownDeg = -32; // Minimum shoulder angle when extended and wrist is down
 }

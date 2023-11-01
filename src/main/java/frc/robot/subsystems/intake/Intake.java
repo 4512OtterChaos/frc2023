@@ -65,7 +65,7 @@ public class Intake extends SubsystemBase{
     public void setVoltage(double volts){
         isManual = true;
         leftMotor.setVoltage(volts);
-        rightMotor.setVoltage(volts+0.6);
+        rightMotor.setVoltage(volts);
         // leftMotor.setVoltage(0);
         // rightMotor.setVoltage(0);
 

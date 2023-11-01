@@ -1,9 +1,14 @@
 package frc.robot.auto;
 
+import static edu.wpi.first.wpilibj2.command.Commands.none;
+import static edu.wpi.first.wpilibj2.command.Commands.parallel;
+import static edu.wpi.first.wpilibj2.command.Commands.runOnce;
+import static edu.wpi.first.wpilibj2.command.Commands.sequence;
+import static edu.wpi.first.wpilibj2.command.Commands.waitSeconds;
+
 import edu.wpi.first.wpilibj.smartdashboard.SendableChooser;
 import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
 import edu.wpi.first.wpilibj2.command.CommandBase;
-import static edu.wpi.first.wpilibj2.command.Commands.*;
 import edu.wpi.first.wpilibj2.command.InstantCommand;
 import frc.robot.commands.AutoBalance;
 import frc.robot.subsystems.arm.Arm;
@@ -98,6 +103,7 @@ public class AutoOptions {
                 
         autoOptions.addOption("NoBumpCubetaxi",
             sequence(
+                runOnce(()->intake.setVoltage(1.93), intake),
                 arm.scoreHighCubeC().withTimeout(4),
                 waitSeconds(0.5),
                 intake.setVoltageOutC().withTimeout(2),
@@ -108,6 +114,77 @@ public class AutoOptions {
                     AutoConstants.kSlowSpeedConfig,
                     true
                 )
+            )
+        );
+        autoOptions.addOption("BumpCubetaxi",
+            sequence(
+                runOnce(()->intake.setVoltage(1.93), intake),
+                arm.scoreHighCubeC().withTimeout(3),
+                waitSeconds(0.5),
+                intake.setVoltageOutC().withTimeout(1.5),
+                arm.inC().withTimeout(3),
+                new OCSwerveFollower(
+                    drive, 
+                    "B1CubeTaxi", 
+                    AutoConstants.kSlowSpeedConfig,
+                    true
+                )
+            )
+        );
+        autoOptions.addOption("MiddleCubeEngaged",
+            sequence(
+                runOnce(()->intake.setVoltage(1.93), intake),
+                arm.scoreHighCubeC().withTimeout(4),
+                waitSeconds(0.5),
+                intake.setVoltageC(-0.25).withTimeout(2),
+                arm.inC().withTimeout(4),
+                new OCSwerveFollower(
+                    drive, 
+                    "M1CubeEngaged", 
+                    AutoConstants.kSlowSpeedConfig,
+                    true
+                ),
+                new AutoBalance(drive)
+            )
+        );
+
+        
+
+        autoOptions.addOption("BumpDoubleCube",
+            sequence(
+                runOnce(()->intake.setVoltage(1.93), intake),
+                arm.scoreHighCubeC().withTimeout(3),
+                waitSeconds(0.25),
+                intake.setVoltageOutC().withTimeout(1.5),
+                arm.inC().withTimeout(3),
+                parallel(
+                    sequence(
+                        waitSeconds(1.5),
+                        arm.pickUpCubeGroundC()
+                    ),
+                    new OCSwerveFollower(
+                        drive, 
+                        "B1CubeTaxi", 
+                        AutoConstants.kSlowSpeedConfig,
+                        true
+                    )
+                ),
+                parallel(
+                    sequence(
+                        intake.setVoltageInC().withTimeout(3),
+                        runOnce(()->intake.setVoltage(1.93), intake),
+                        arm.coneInC().withTimeout(1)
+                    ),
+                    new OCSwerveFollower(
+                        drive, 
+                        "B1CubeTaxi2", 
+                        AutoConstants.kSlowSpeedConfig,
+                        false
+                    )
+                ),
+                intake.setVoltageOutC().withTimeout(1),
+                intake.setVoltageC(0),
+                arm.inC()
             )
         );
         // autoOptions.addOption("MiddleCubetaxi",
@@ -123,35 +200,6 @@ public class AutoOptions {
         //         )
         //     )
         // );
-        autoOptions.addOption("BumpCubetaxi",
-            sequence(
-                arm.scoreHighCubeC().withTimeout(3),
-                waitSeconds(0.5),
-                intake.setVoltageOutC().withTimeout(1.5),
-                arm.inC().withTimeout(3),
-                new OCSwerveFollower(
-                    drive, 
-                    "B1CubeTaxi", 
-                    AutoConstants.kSlowSpeedConfig,
-                    true
-                )
-            )
-        );
-        autoOptions.addOption("MiddleCubeEngaged",
-            sequence(
-                arm.scoreHighCubeC().withTimeout(4),
-                waitSeconds(0.5),
-                intake.setVoltageC(-0.25).withTimeout(2),
-                arm.inC().withTimeout(4),
-                new OCSwerveFollower(
-                    drive, 
-                    "M1CubeEngaged", 
-                    AutoConstants.kSlowSpeedConfig,
-                    true
-                ),
-                new AutoBalance(drive)
-            )
-        );
         // autoOptions.addOption("NoBump1Cone1Cube",
         //     sequence(
         //         arm.scoreUpperConeC().withTimeout(3),

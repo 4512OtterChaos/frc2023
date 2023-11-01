@@ -106,7 +106,7 @@ public class RobotContainer {
 
         intake.setDefaultCommand(run(()->{
             if(Math.toDegrees(arm.getShoulderPosRadians()) > -80){
-                intake.setVoltage(1.5);
+                intake.setVoltage(1.93);
             }
             else intake.setVoltage(0);
         }, intake));
@@ -234,12 +234,6 @@ public class RobotContainer {
     }
 
     private void configureOperatorBinds(OCXboxController controller){
-        controller.start()
-            .whileTrue(run(()->arm.shoulderTestVolts=2,arm))
-            .onFalse(runOnce(()->arm.shoulderTestVolts=0,arm));
-        controller.back()
-            .whileTrue(run(()->arm.shoulderTestVolts=-2,arm))
-            .onFalse(runOnce(()->arm.shoulderTestVolts=0,arm));
         controller.rightTrigger()
             .whileTrue(intake.setVoltageInC());
         controller.leftTrigger()
@@ -275,6 +269,8 @@ public class RobotContainer {
 
         controller.start()
             .onTrue(arm.pickUpGroundC());
+        controller.back()
+            .onTrue(arm.pickUpCubeGroundC());
             
     }
  

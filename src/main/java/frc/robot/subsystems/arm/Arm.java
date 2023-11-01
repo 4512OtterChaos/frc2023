@@ -359,7 +359,7 @@ public class Arm extends SubsystemBase implements Loggable {
 	 * @return The command to set the position of the shoulder.
 	 */
 	public CommandBase setShoulderPosRadiansC(double posRadians) {
-		return runOnce(() -> setShoulderPosRadians(posRadians)).repeatedly().until(() -> shoulderPid.atGoal());
+		return run(() -> setShoulderPosRadians(posRadians)).until(() -> shoulderPid.atGoal());
 	}
 
 	/**
@@ -543,7 +543,7 @@ public class Arm extends SubsystemBase implements Loggable {
 	public CommandBase setShoulderWristExtC(double shoulderPos, double wristGroundRelPos, boolean extended){
 		return run(()->setShoulderWristExt(shoulderPos, wristGroundRelPos, extended))
 			.until(()->{
-				return getAtShoulderGoal() && getAtWristGoal() && extended ? getExtension() == 1 : getExtension() == 0;
+				return getAtShoulderGoal() && getAtWristGoal() && (extended ? getExtension() == 1 : getExtension() == 0);
 			});
 	}
     /**
@@ -592,6 +592,7 @@ public class Arm extends SubsystemBase implements Loggable {
 	}
 	public CommandBase coneInC(){
 		return sequence(
+			runOnce(()->setIsOuttakingCone(false)),
 			setExtendedC(false),
             setWristPosRadiansC(wristMaximum).withTimeout(0.5),
 			setShoulderWristExtC(Math.toRadians(-69), wristMaximum, false)
@@ -602,11 +603,24 @@ public class Arm extends SubsystemBase implements Loggable {
 		return sequence(
 			either(sequence(
 				setWristPosRadiansC(wristMaximum).withTimeout(1.5),
-				setShoulderPosRadiansC(Math.toRadians(8))
+				setShoulderPosRadiansC(Math.toRadians(-65))
 			), 
 			none(), 
-			()->getShoulderPosRadians()<kShoulderMinWristDownDeg),
+			()->getShoulderPosRadians()<Math.toRadians(kShoulderMinWristDownDeg)),
 			setShoulderWristExtC(Math.toRadians(-46), Math.toRadians(-5), true)
+		);
+	}
+
+	public CommandBase pickUpCubeGroundC(){
+		return sequence(
+			either(sequence(
+				setWristPosRadiansC(wristMaximum).withTimeout(1.5),
+				setShoulderPosRadiansC(Math.toRadians(-60)),
+				waitSeconds(0.25)
+			), 
+			none(), 
+			()->getShoulderPosRadians()<Math.toRadians(kShoulderMinWristDownDeg)),
+			setShoulderWristExtC(Math.toRadians(-53), Math.toRadians(-62), false)
 		);
 	}
 
@@ -617,10 +631,10 @@ public class Arm extends SubsystemBase implements Loggable {
 			setExtendedC(false),
 			either(sequence(
 				setWristPosRadiansC(wristMaximum).withTimeout(1.5),
-				setShoulderPosRadiansC(Math.toRadians(8))
+				setShoulderPosRadiansC(Math.toRadians(-65))
 			), 
 			none(), 
-			()->getShoulderPosRadians()<kShoulderMinWristDownDeg),
+			()->getShoulderPosRadians()<Math.toRadians(kShoulderMinWristDownDeg)),
 			setShoulderWristExtC(Math.toRadians(-6.5), Math.toRadians(48.5), false)
 		);
 	}
@@ -631,10 +645,10 @@ public class Arm extends SubsystemBase implements Loggable {
 			runOnce(()->setIsOuttakingHigh(true)),
 			either(sequence(
 				setWristPosRadiansC(wristMaximum).withTimeout(1.5),
-				setShoulderPosRadiansC(Math.toRadians(8))
+				setShoulderPosRadiansC(Math.toRadians(-65))
 			), 
 			none(), 
-			()->getShoulderPosRadians()<kShoulderMinWristDownDeg),
+			()->getShoulderPosRadians()<Math.toRadians(kShoulderMinWristDownDeg)),
 			setShoulderWristExtC(Math.toRadians(16.8), Math.toRadians(28.5), true)
 		);
 	}
@@ -646,10 +660,10 @@ public class Arm extends SubsystemBase implements Loggable {
 			setExtendedC(false),
 			either(sequence(
 				setWristPosRadiansC(wristMaximum).withTimeout(1.5),
-				setShoulderPosRadiansC(Math.toRadians(8))
+				setShoulderPosRadiansC(Math.toRadians(-65))
 			), 
 			none(), 
-			()->getShoulderPosRadians()<kShoulderMinWristDownDeg),
+			()->getShoulderPosRadians()<Math.toRadians(kShoulderMinWristDownDeg)),
 			setShoulderWristExtC(Math.toRadians(-24.5), Math.toRadians(30), false)
 		);
 	}
@@ -661,10 +675,10 @@ public class Arm extends SubsystemBase implements Loggable {
 			setExtendedC(false),
             either(sequence(
 				setWristPosRadiansC(wristMaximum).withTimeout(1.5),
-				setShoulderPosRadiansC(Math.toRadians(8))
+				setShoulderPosRadiansC(Math.toRadians(-65))
 			), 
 			none(), 
-			()->getShoulderPosRadians()<kShoulderMinWristDownDeg),
+			()->getShoulderPosRadians()<Math.toRadians(kShoulderMinWristDownDeg)),
 			setShoulderWristExtC(Math.toRadians(-7), Math.toRadians(32.3), false)
 		);
 	}
@@ -677,8 +691,8 @@ public class Arm extends SubsystemBase implements Loggable {
 				setShoulderPosRadiansC(Math.toRadians(-65))
 			), 
 			none(), 
-			()->getShoulderPosRadians()<-60),
-			setShoulderWristExtC(Math.toRadians(8), Math.toRadians(-5), false)
+			()->getShoulderPosRadians()<Math.toRadians(kShoulderMinWristDownDeg)),
+			setShoulderWristExtC(Math.toRadians(4.7), Math.toRadians(-5), false)
 		);
 	}
 	public CommandBase pickUpSingleSubC(){
@@ -689,7 +703,7 @@ public class Arm extends SubsystemBase implements Loggable {
 				setShoulderPosRadiansC(Math.toRadians(-65))
 			), 
 			none(), 
-			()->getShoulderPosRadians()<-60),
+			()->getShoulderPosRadians()<Math.toRadians(kShoulderMinWristDownDeg)),
 			setShoulderWristExtC(Math.toRadians(-23), Math.toRadians(28), false)
 		);
 	}

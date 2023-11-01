@@ -28,9 +28,9 @@ public class Superstructure {
     private final SwerveDrive drive;
     private final Intake intake;
 
-    public static final double kSpeedSlow = .3;
-    public static final double kSpeedDefault = .65;
-    public static final double kSpeedFast = 0.8;
+    public static final double kSpeedSlow = .45;
+    public static final double kSpeedDefault = .7;
+    public static final double kSpeedFast = 1.0;
     public static final double kSpeedMax = 1.0;
     
     private double drivespeed = kSpeedDefault;
